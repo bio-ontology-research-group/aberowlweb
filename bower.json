@@ -1,0 +1,20 @@
+{
+  "name": "AberOWLWeb",
+  "version": "0.1",
+  "authors": [
+    "Maxat Kulmanov <coolmaksat@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+      "bootstrap": "3.3.7",
+      "jquery": "3.2.1",
+      "react": "16.0.0"
+  }
+}

@@ -1,4 +1,4 @@
 *.pyc
 venv/
 data/
-aberowlweb/static/bower/
+node_modules/

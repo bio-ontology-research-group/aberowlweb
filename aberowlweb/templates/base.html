@@ -11,7 +11,7 @@
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title>DeepGO</title>
+    <title>AberOWL</title>
 
     <!-- Bootstrap core CSS -->
     <link href="{% static "bower/bootstrap/dist/css/bootstrap.min.css" %}" rel="stylesheet">
@@ -43,8 +43,14 @@
       </div>
     </div><!-- /.container -->
 
-    <footer class="deepgo-footer">
-      <p>DeepGO by <a href="http://borg.kaust.edu.sa">BORG</a>.</p>
+    <footer class="aberowl-footer">
+      <p>
+	AberOWL is jointly developed by researchers
+	from <a href="http://borg.kaust.edu.sa">KAUST BORG</a>,
+	the <a href="http://www.birmingham.ac.uk/research/activity/mds/centres/computational-biology/index.aspx">University
+	  of Birmingham</a>,
+	the <a href="http://www.pdn.cam.ac.uk/staff/schofield/index.shtml"> </a>
+      </p>
     </footer>
 
     <!-- Bootstrap core JavaScript
@@ -52,6 +58,9 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="{% static "bower/jquery/dist/jquery.min.js" %}"></script>
     <script src="{% static "bower/bootstrap/dist/js/bootstrap.min.js" %}"></script>
+    <script src="{% static "bower/react/react.production.min.js" %}"></script>
+    <script src="{% static "bower/react/react-dom.production.min.js" %}"></script>
+    <script src="{% static "bower/babel/browser.min.js" %}"></script>
     {% block scripts %}
     {% endblock %}
   </body>

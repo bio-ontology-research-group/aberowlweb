@@ -1,0 +1,14 @@
+{% extends 'aberowl/base.html' %}
+{% load static from staticfiles %}
+
+{% block content %}
+<div id="ontologies"></div> 
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.ontoList = {{ ontologies|safe }};
+  window.react_mount = document.getElementById('ontologies');
+</script>
+<script type="text/babel" src="{% static "js/ontologies.js" %}"></script>
+{% endblock %}

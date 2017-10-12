@@ -1,20 +1,27 @@
 {
-  "name": "AberOWLWeb",
-  "version": "0.1",
+  "name": "aberowlweb",
+  "description": "AberOWL Repository",
+  "main": "index.js",
   "authors": [
-    "Maxat Kulmanov <coolmaksat@gmail.com>"
+    "Maxat Kulmanov"
   ],
-  "license": "MIT",
+  "license": "ISC",
+  "keywords": [
+    "ontology",
+    "semantics"
+  ],
+  "homepage": "https://github.com/bio-ontology-research-group/aberowlweb",
+  "moduleType": [],
   "ignore": [
     "**/.*",
     "node_modules",
     "bower_components",
+    "aberowlweb/static/bower",
     "test",
     "tests"
   ],
   "dependencies": {
-      "bootstrap": "3.3.7",
-      "jquery": "3.2.1",
-      "react": "16.0.0"
+    "react": "^16.0.0",
+    "bootstrap": "^3.3.7"
   }
 }

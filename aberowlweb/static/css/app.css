@@ -1,0 +1,70 @@
+body {
+  padding-top: 70px;
+}
+
+.content {
+  padding: 15px 15px;
+}
+
+.navbar-aberowl {
+  background-color: #c7b58a;
+  border-color: #c7b58a;
+  min-height:70px;
+}
+.navbar-aberowl .navbar-brand {
+  color: #cdddeb;
+  font-weight: bold;
+}
+.navbar-aberowl .navbar-brand:hover,
+.navbar-aberowl .navbar-brand:focus {
+  color: #fff;
+  background-color: transparent;
+}
+.navbar-aberowl .navbar-text {
+    color: #cdddeb;
+}
+
+.navbar-aberowl .navbar-nav > li > a {
+  color: #cdddeb;
+  min-height: 70px;
+}
+
+.navbar-aberowl .navbar-nav > li > a:hover,
+.navbar-aberowl .navbar-nav > li > a:focus {
+  color: #fff;
+  background-color: transparent;
+}
+
+.navbar-aberowl .navbar-nav > .active > a,
+.navbar-aberowl .navbar-nav > .active > a:hover,
+.navbar-aberowl .navbar-nav > .active > a:focus {
+  color: #fff;
+  background-color: #c7b5aa;
+}
+
+.aberowl-footer {
+    padding: 40px 0;
+    color: #999;
+    text-align: center;
+    background-color: #f9f9f9;
+    border-top: 1px solid #e5e5e5;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+.aberowl-footer p:last-child {
+  margin-bottom: 0;
+}
+
+.table-ontologies {
+    table-layout: fixed;
+    word-wrap: break-word;
+}
+
+.table-ontologies > tr > td {
+    width:25%;
+}
+
+.aberowl-topic {
+    display: inline-block;
+}

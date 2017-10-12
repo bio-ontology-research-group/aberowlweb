@@ -204,6 +204,9 @@ class BaseConfiguration(Configuration):
     CELERY_SEND_TASK_ERROR_EMAILS = False
     CELERY_TASK_RESULT_EXPIRES = 600
 
+    # AberOWL setttings
+    ABEROWL_API_SERVER = 'http://aber-owl.net/'
+
 
 class Development(BaseConfiguration):
     pass

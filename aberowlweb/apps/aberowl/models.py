@@ -67,7 +67,7 @@ class Submission(models.Model):
     date_released = models.DateTimeField()
     date_created = models.DateTimeField()
     home_page = models.CharField(max_length=127, blank=True, null=True)
-    version = models.CharField(max_length=127, blank=True, null=True)
+    version = models.TextField(blank=True, null=True)
     has_ontology_language = models.CharField(max_length=15)
     nb_classes = models.PositiveIntegerField(default=0, blank=True, null=True)
     nb_individuals = models.PositiveIntegerField(

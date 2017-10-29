@@ -230,3 +230,18 @@ class Production(BaseConfiguration):
 
     DEBUG = False
     SITE_DOMAIN = 'aber-owl.net'
+
+
+class OntologyAPIWorker(BaseConfiguration):
+
+    DEBUG = False
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'aberowlweb',
+            'HOST': '10.254.145.17',
+            'USER': 'postgres',
+            'PASSWORD': '111'
+        }
+    }

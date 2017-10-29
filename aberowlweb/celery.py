@@ -4,7 +4,7 @@ from celery import Celery
 import configurations
 
 # set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'deepgoweb.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aberowlweb.settings')
 os.environ.setdefault('DJANGO_CONFIGURATION', 'Development')
 
 configurations.setup()

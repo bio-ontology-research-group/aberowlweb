@@ -3,5 +3,6 @@ venv/
 data/
 aberowlweb/static/app/
 media/
+public/
 *.out
 *.log

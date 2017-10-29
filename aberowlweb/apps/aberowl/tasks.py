@@ -9,6 +9,8 @@ import shutil
 from aberowl.models import Ontology, Submission
 from subprocess import Popen, PIPE
 import json
+import random
+
 
 BIOPORTAL_API_URL = getattr(
     settings, 'BIOPORTAL_API_URL', 'http://data.bioontology.org/')
@@ -16,6 +18,8 @@ BIOPORTAL_API_KEY = getattr(
     settings, 'BIOPORTAL_API_KEY', '24e0413e-54e0-11e0-9d7b-005056aa3316')
 ABEROWL_API_URL = getattr(
     settings, 'ABEROWL_API_URL', 'http://localhost/')
+ABEROWL_API_SERVERS_POOL = getattr(
+    settings, 'ABEROWL_API_SERVERS_POOL', ['127.0.0.1'])
 
 
 @periodic_task(run_every=crontab(hour=12, minute=0)):
@@ -59,9 +63,16 @@ def sync_bioportal():
 
         port = Ontology.objects.aggregate(Max('port'))['port__max'] or 10000
         port += 1
+        server_ip = ABEROWL_API_SERVERS_POOL[random.randint(
+            0, len(ABEROWL_API_SERVERS_POOL) - 1)]
         ontology, created = Ontology.objects.get_or_create(
             acronym=acronym,
-            defaults={'name': onto['name'], 'created_by': user, port: port}
+            defaults={
+                'name': onto['name'],
+                'created_by': user,
+                'server_ip': server_ip,
+                'port': port,
+            }
         )
         
         queryset = ontology.submissions.filter(

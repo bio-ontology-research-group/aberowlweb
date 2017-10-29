@@ -22,7 +22,7 @@ ABEROWL_API_SERVERS_POOL = getattr(
     settings, 'ABEROWL_API_SERVERS_POOL', ['127.0.0.1'])
 
 
-@periodic_task(run_every=crontab(hour=12, minute=0)):
+@periodic_task(run_every=crontab(hour=12, minute=0))
 def sync_bioportal():
     user = User.objects.get(pk=1)
     params = {

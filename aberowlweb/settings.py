@@ -245,3 +245,6 @@ class OntologyAPIWorker(BaseConfiguration):
             'PASSWORD': '111'
         }
     }
+
+    ABEROWL_SERVER_URL = 'http://10.254.145.17/'
+

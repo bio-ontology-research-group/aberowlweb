@@ -43,7 +43,9 @@ class Command(BaseCommand):
         while True:
             try: 
                 ontologies = Ontology.objects.filter(
-                    status=Ontology.CLASSIFIED, is_running=False)
+                    status=Ontology.CLASSIFIED,
+                    is_running=False,
+                    server_ip=server_ip)
                 for ontology in ontologies:
                     oid = ontology.acronym
                     if oid not in self.processes:

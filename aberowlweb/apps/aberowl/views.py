@@ -1,33 +1,75 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, DetailView, ListView
 import requests
 from django.conf import settings
+from django.http import Http404
 import redis
 from aberowl import redis_pool
 import json
 
+from aberowl.models import Ontology, Submission
+from aberowl.serializers import OntologySerializer, SubmissionSerializer
+from rest_framework.renderers import JSONRenderer
 
-ABEROWL_API_SERVER = getattr(
-    settings, 'ABEROWL_API_SERVER', 'http://localhost/')
+
+ABEROWL_API_URL = getattr(
+    settings, 'ABEROWL_API_URL', 'http://localhost/')
 
 
-class OntologiesListView(TemplateView):
+class MainView(TemplateView):
 
-    template_name = 'aberowl/list_ontologies.html'
+    template_name = 'aberowl/main.html'
 
     def get_context_data(self, *args, **kwargs):
         context = super(TemplateView, self).get_context_data(*args, **kwargs)
+        return context
 
-        rq = requests.get(ABEROWL_API_SERVER + 'service/api/listOntologies.groovy')
-        onto_list = rq.json()
-        rd = redis.Redis(connection_pool=redis_pool)
-        ontologies = []
-        for onto in onto_list:
-            data = rd.get('ontos:' + onto)
-            if data:
-                ontologies.append(data)
-        ontologies = '[' + ', '.join(ontologies) + ']'
-        context['ontologies'] = ontologies
+
+class OntologyListView(ListView):
+
+    template_name = 'aberowl/list_ontologies.html'
+    model = Ontology
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(ListView, self).get_context_data(*args, **kwargs)
+        ontologies = self.get_queryset().filter(
+            status=Ontology.CLASSIFIED, is_running=True)
+        data = OntologySerializer(ontologies, many=True).data
+        context['ontologies'] = JSONRenderer().render(data)
+        return context
+
+
+class OntologyDetailView(DetailView):
+
+    template_name = 'aberowl/view_ontology.html'
+    model = Ontology
+    slug_field = 'acronym'
+    slug_url_kwarg = 'onto'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(DetailView, self).get_context_data(*args, **kwargs)
+        ontology = self.get_object()
+        submission = ontology.get_latest_submission()
+        if submission is None:
+            raise Http404
+        
+        data = OntologySerializer(ontology).data
+        rq = requests.get(
+            ABEROWL_API_URL +
+            'api/backend?script=runQuery.groovy&type=subclass&direct=true&query=<http://www.w3.org/2002/07/owl%23Thing>&ontology='
+            + ontology.acronym)
+        res = rq.json()
+        data['classes'] = []
+        if 'result' in res:
+            data['classes'] = res['result']
+        downloads = []
+        for sub in ontology.submissions.all().order_by('-date_released'):
+            downloads.append([
+                sub.version,
+                sub.date_released.strftime('%Y-%m-%d'),
+                sub.get_filepath()])
+        data['downloads'] = downloads
+        context['ontology'] = json.dumps(data)
         return context

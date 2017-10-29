@@ -2,13 +2,13 @@
 {% load static from staticfiles %}
 
 {% block content %}
-<div id="ontologies"></div> 
+<div id="mount"></div> 
 {% endblock %}
 
 {% block scripts %}
 <script>
   window.ontoList = {{ ontologies|safe }};
-  window.react_mount = document.getElementById('ontologies');
+  window.react_mount = document.getElementById('mount');
 </script>
 <script type="text/babel" src="{% static "js/ontologies.js" %}"></script>
 {% endblock %}

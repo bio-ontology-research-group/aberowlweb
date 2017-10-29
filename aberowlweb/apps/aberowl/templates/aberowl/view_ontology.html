@@ -1,0 +1,18 @@
+{% extends 'aberowl/base.html' %}
+{% load static from staticfiles %}
+
+{% block head %}
+<link href="{% static "css/tree.css" %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div id="mount"></div> 
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.ontology = {{ ontology|safe }};
+  window.react_mount = document.getElementById('mount');
+</script>
+<script type="text/babel" src="{% static "js/ontology.js" %}"></script>
+{% endblock %}

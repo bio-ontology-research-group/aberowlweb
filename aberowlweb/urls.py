@@ -16,12 +16,13 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 from django.conf.urls.static import static
-from views import HomePageView
+from aberowlweb.views import HomePageView, AboutPageView
 from django.conf import settings
 
 urlpatterns = [
-    url(r'^$', HomePageView.as_view(), name='home'),
+    # url(r'^$', HomePageView.as_view(), name='home'),
+    url(r'^', include('aberowl.urls')),
     url(r'^admin/', admin.site.urls),
     url(r'^accounts/', include('accounts.urls')),
-    url(r'^aberowl/', include('aberowl.urls')),
+    url(r'^about/$', AboutPageView.as_view(), name='about'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

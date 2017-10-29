@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>AberOWL</h1>
+
+<p>AberOWL is a framework for ontology-based access to biological data. It
+consists of a repository of bio-ontologies, a set of webservices which
+provide access to OWL(-EL) reasoning over the ontologies, and several
+frontends which utilise the ontology repository and reasoning services
+to provide access to specific biological datasets.</p>
+
+<h2>Web Repository</h2>
+<p>
+  The web-based repository front-end provides many features
+  underpinned by reasoned access to ontologies.
+</p>
+
+<ul>
+  <li>Upload and immediate classification of ontologies.</li>
+  <li>Semantic querying of ontologies using Manchester OWL
+    Syntax.</li>
+  <li>Query Pubmed and PubMed central articles using ontology
+    terms.</li>
+  <li>Ontology-based access to RDF/Linked data through SPARQL
+    integration.</li>
+</ul>
+
+<h3 class="api">Uploading ontologies</h3>
+<p>
+  To do this you must first create an account, then fill out the form
+  on the <a href="/ontology/upload">upload page</a><span>. It is
+  probably a good idea to check whether an ontology exists first.
+  You can also upload new versions of an existing ontology once you
+    have claimed it.</span>
+</p>
+
+<h3 class="api">Querying ontologies</h3>
+<h4>Class Query</h4>
+<p>AberOWL provides semantic access to ontologies. It performs OWL-EL
+reasoning over a repository of ontologies using
+the <a href="https://code.google.com/p/elk-reasoner/">ELK reasoner</a>
+and answers queries over single ontologies or the full AberOWL
+ontology repository. Ontologies in AberOWL are identified by their
+name, and queries are performed
+in <a href="http://www.w3.org/TR/owl2-manchester-syntax/">Manchester
+OWL Syntax</a>. Class names in Manchester OWL syntax are rendered
+using the <tt>rdfs:label</tt> property of the class, and class names
+containing a space are surrounded by single quotes.  To query an OWL
+class description, type the class description in Manchester OWL syntax
+in the query box.  Make sure to select the kind of query: retrieve
+subclasses, equivalent classes, or superclasses of the class
+description.</p>
+
+{% endblock %}

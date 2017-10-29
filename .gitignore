@@ -1,4 +1,7 @@
 *.pyc
 venv/
 data/
-node_modules/
+aberowlweb/static/app/
+media/
+*.out
+*.log

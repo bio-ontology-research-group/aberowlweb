@@ -54,7 +54,7 @@ class BaseConfiguration(Configuration):
         'allauth.socialaccount',
         'rest_framework',
         'widget_tweaks',
-        'aberowl'
+        'aberowl',
     ]
 
     MIDDLEWARE = [
@@ -157,12 +157,16 @@ class BaseConfiguration(Configuration):
     # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
     STATIC_URL = '/static/'
-    STATIC_ROOT = 'aberowlweb/public'
-    MEDIA_ROOT = 'aberowlweb/media'
+    STATIC_ROOT = 'public/'
+    MEDIA_ROOT = 'media/'
     MEDIA_URL = '/media/'
 
     # User profile module
     AUTH_PROFILE_MODULE = 'accounts.models.UserProfile'
+    ACCOUNT_EMAIL_REQUIRED = True
+    ACCOUNT_AUTHENTICATION_METHOD = "username_email"
+    ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+    ACCOUNT_PRESERVE_USERNAME_CASING = "False"
 
     STATICFILES_DIRS = (
         rel('static'),)
@@ -205,7 +209,13 @@ class BaseConfiguration(Configuration):
     CELERY_TASK_RESULT_EXPIRES = 600
 
     # AberOWL setttings
-    ABEROWL_API_SERVER = 'http://aber-owl.net/'
+    ABEROWL_API_URL = 'http://localhost/'
+    ABEROWL_SERVER_URL = 'http://localhost/'
+
+    # List of ip addresses of servers for running ontology api
+    ABEROWL_API_SERVERS_POOL = [
+        '127.0.0.1'
+    ]
 
 
 class Development(BaseConfiguration):

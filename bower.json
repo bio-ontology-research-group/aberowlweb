@@ -23,6 +23,7 @@
   "dependencies": {
     "react": "^16.0.0",
     "bootstrap": "^3.3.7",
-    "babel": "^5.8.38"
+    "babel": "^5.8.38",
+    "fetch": "^2.0.3"
   }
 }

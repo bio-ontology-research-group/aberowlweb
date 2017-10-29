@@ -4,6 +4,7 @@ body {
 
 .content {
   padding: 15px 15px;
+  min-height:80vh;
 }
 
 .navbar-aberowl {

@@ -1,0 +1,13 @@
+{% extends 'aberowl/base.html' %}
+{% load static from staticfiles %}
+
+{% block content %}
+<div id="mount"></div> 
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.react_mount = document.getElementById('mount');
+</script>
+<script type="text/babel" src="{% static "js/main.js" %}"></script>
+{% endblock %}

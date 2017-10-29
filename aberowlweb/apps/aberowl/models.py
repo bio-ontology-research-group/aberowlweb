@@ -21,7 +21,7 @@ class Ontology(models.Model):
         (UNKNOWN, UNKNOWN),
     )
     acronym = models.CharField(max_length=31, unique=True)
-    name = models.CharField(max_length=127)
+    name = models.CharField(max_length=255)
     created_by = models.ForeignKey(
         User, on_delete=models.CASCADE,
         related_name='created_ontologies')
@@ -62,11 +62,11 @@ class Submission(models.Model):
         Ontology, on_delete=models.CASCADE, related_name='submissions')
     submission_id = models.PositiveIntegerField()
     description = models.TextField(blank=True, null=True)
-    documentation = models.CharField(max_length=127, blank=True, null=True)
-    publication = models.CharField(max_length=127, blank=True, null=True)
+    documentation = models.CharField(max_length=255, blank=True, null=True)
+    publication = models.CharField(max_length=255, blank=True, null=True)
     date_released = models.DateTimeField()
     date_created = models.DateTimeField()
-    home_page = models.CharField(max_length=127, blank=True, null=True)
+    home_page = models.CharField(max_length=255, blank=True, null=True)
     version = models.TextField(blank=True, null=True)
     has_ontology_language = models.CharField(max_length=15)
     nb_classes = models.PositiveIntegerField(default=0, blank=True, null=True)

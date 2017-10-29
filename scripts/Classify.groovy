@@ -42,7 +42,7 @@ try {
     if (incon >= MAX_UNSATISFIABLE_CLASSES) {
 	status = "Incoherent"
     } else {
-	status = "Classifiable"
+	status = "Classified"
     }
 } catch (Exception e) {
     status = "Unloadable"

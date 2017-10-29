@@ -59,6 +59,12 @@ class Command(BaseCommand):
                             cwd='aberowlapi/', stdout=PIPE, universal_newlines=True)
                         self.processes[oid] = proc
                         processInThread(proc, oid)
+                        time.sleep(30)
+                    else:
+                        proc = self.processes[oid]
+                        if proc.poll() is not None:
+                            del self.processes[oid]
+                        
                 else:
                     if len(self.processes) == 0:
                         logging.info('No ontologies assigned to this server')

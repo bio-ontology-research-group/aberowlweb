@@ -55,6 +55,7 @@ class RequestManager {
 	} catch (Exception e) {
 	    println("Failed loading $ont")
 	    e.printStackTrace();
+	    System.exit(-1);
 	}
     }
 

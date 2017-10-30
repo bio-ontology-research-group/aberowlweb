@@ -78,6 +78,9 @@ def sync_bioportal():
         queryset = ontology.submissions.filter(
             submission_id=sub['submissionId'])
         if queryset.exists(): # Already uptodate
+            submission = queryset.get()
+            if not submission.indexed:
+                index_submission(submission)
             continue
 
         r = requests.get(
@@ -139,26 +142,30 @@ def sync_bioportal():
         if not submission.classifiable:
             continue
         
-        p = Popen(
-            ['groovy', 'IndexElastic.groovy', '../' + submission.get_filepath()],
-            stdin=PIPE,
-            cwd='scripts/')
-        data = {
-            'acronym': acronym,
-            'name': ontology.name,
-            'description': submission.description
-        }
-        p.stdin.write(json.dumps(data).encode('utf-8'))
-        p.stdin.close()
+        index_submission(submission)
 
-        if p.wait() == 0:
-            print('Indexing ontology %s finished' % (acronym))
-            submission.indexed = True
-        else:
-            print('Indexing ontology %s failed!' % (acronym))
 
-        submission.save()
-        # Reloading ontology
-        # r = requests.get(
-        #     ABEROWL_API_URL + 'service/api/reloadOntology.groovy',
-        #     params={'name': acronym})
+def index_submission(submission):
+    p = Popen(
+        ['groovy', 'IndexElastic.groovy', '../' + submission.get_filepath()],
+        stdin=PIPE,
+        cwd='scripts/')
+    data = {
+        'acronym': acronym,
+        'name': ontology.name,
+        'description': submission.description
+    }
+    p.stdin.write(json.dumps(data).encode('utf-8'))
+    p.stdin.close()
+
+    if p.wait() == 0:
+        print('Indexing ontology %s finished' % (acronym))
+        submission.indexed = True
+    else:
+        print('Indexing ontology %s failed!' % (acronym))
+
+    submission.save()
+    # Reloading ontology
+    # r = requests.get(
+    #     ABEROWL_API_URL + 'service/api/reloadOntology.groovy',
+    #     params={'name': acronym})

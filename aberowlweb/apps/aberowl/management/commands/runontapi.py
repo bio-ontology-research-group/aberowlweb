@@ -4,8 +4,7 @@ from aberowl.models import Ontology
 from subprocess import Popen, PIPE
 import time
 import logging
-from multiprocessing import Pool
-from threading import Thread
+import gevent
 
 ABEROWL_SERVER_URL = getattr(settings, 'ABEROWL_SERVER_URL', 'http://localhost/')
 
@@ -26,10 +25,9 @@ def processInThread(proc, oid):
         logging.info('API Server for %s has been stopped' % (oid, ))
         Ontology.objects.filter(acronym=oid).update(is_running=False)
 
-    thread = Thread(target=runInThread, args=(proc, oid))
-    thread.start()
+    g = gevent.spawn(runInThread, proc, oid)
     # returns immediately after the thread starts
-    return thread        
+    return g        
 
 class Command(BaseCommand):
     help = 'Starts API servers for all ontologies'
@@ -45,7 +43,8 @@ class Command(BaseCommand):
                 ontologies = Ontology.objects.filter(
                     status=Ontology.CLASSIFIED,
                     is_running=False,
-                    server_ip=server_ip)
+                    server_ip=server_ip, acronym__in=['SIO', 'AGRO', 'IDO'])
+                print('Ontologies', len(ontologies))
                 for ontology in ontologies:
                     oid = ontology.acronym
                     if oid not in self.processes:

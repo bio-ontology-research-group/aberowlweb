@@ -13,6 +13,8 @@ from aberowl.models import Ontology
 ELASTIC_SEARCH_URL = getattr(
     settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/aberowl/')
 
+event_pool = Pool(1000)
+
 
 def make_request(url):
     r = requests.get(url)
@@ -114,7 +116,6 @@ class BackendAPIView(APIView):
 
     def __init__(self, *args, **kwargs):
         super(BackendAPIView, self).__init__(*args, **kwargs)
-        self.pool = Pool(100)
     
 
     def get(self, request, format=None):
@@ -149,7 +150,7 @@ class BackendAPIView(APIView):
                 url = ontology.get_api_url() + script + '?' + query_string
                 urls.append(url)
             start_time = time.time()
-            results = self.pool.map(make_request, urls)
+            results = event_pool.map(make_request, urls)
             result = list(itertools.chain.from_iterable(results))
             print('Finished in', time.time() - start_time)
             return Response({'result': result})

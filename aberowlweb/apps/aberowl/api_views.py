@@ -17,19 +17,26 @@ event_pool = Pool(1000)
 
 
 def make_request(url):
-    r = requests.get(url)
-    if r.status_code == 200:
-        res = r.json()
-        if 'result' in res:
-            return res['result']
+    try:
+        r = requests.get(url, timeout=2)
+        if r.status_code == 200:
+            res = r.json()
+            if 'result' in res:
+                return res['result']
+    except Exception as e:
+        print(url, e)
     return []
 
 
 def search(query_type, query_data):
-    r = requests.post(
-        ELASTIC_SEARCH_URL + query_type + '/_search',
-        data=json.dumps(query_data))
-    return r.json()
+    try:
+        r = requests.post(
+            ELASTIC_SEARCH_URL + query_type + '/_search',
+            data=json.dumps(query_data),
+            timeout=5)
+        return r.json()
+    except Exception as e:
+        return {'hits': {'hits': []}}
 
 
 class QueryOntologiesAPIView(APIView):
@@ -130,18 +137,19 @@ class BackendAPIView(APIView):
     
         if ontology is not None:
             queryset = Ontology.objects.filter(acronym=ontology)
-            if queryset.exists():
-                ontology = queryset.get()
-                if ontology.is_running:
-                    url = ontology.get_api_url() + script + '?' + query_string
-                    r = requests.get(url)
-                    return Response(r.json())
+            try:
+                if queryset.exists():
+                    ontology = queryset.get()
+                    if ontology.is_running:
+                        url = ontology.get_api_url() + script + '?' + query_string
+                        r = requests.get(url, timeout=2)
+                        return Response(r.json())
+                    else:
+                        raise Exception('API server is down!')
                 else:
-                    return Response({
-                        'status': 'error', 'message': 'API server is down!'})
-            else:
-                return Response(
-                    {'status': 'error', 'message': 'Ontology does not exist!'})
+                    raise Exception('Ontology does not exist!')
+            except Exception as e:
+                return Response({'status': 'exception', 'message': str(e)})
         else:
             queryset = Ontology.objects.filter(is_running=True)
             urls = []

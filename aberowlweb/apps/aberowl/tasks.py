@@ -34,13 +34,17 @@ def sync_bioportal():
         'display': 'acronym,name'
     }
     timeout = 120
-    r = requests.get(
-        BIOPORTAL_API_URL + 'ontologies/', params=params, timeout=timeout)
-    if r.status_code != 200:
-        print('Unable to load the list of ontologies')
-        return
+    try:
+        r = requests.get(
+            BIOPORTAL_API_URL + 'ontologies/', params=params, timeout=timeout)
+        if r.status_code != 200:
+            print('Unable to load the list of ontologies')
+            return
 
-    data = r.json()
+        data = r.json()
+    except Exception as e:
+        print(e)
+        return
 
     params['display'] = (
         'hasOntologyLanguage,released,creationDate,homepage,status,' +
@@ -50,99 +54,101 @@ def sync_bioportal():
                                 + ',maxChildCount,averageChildCount')
     for onto in data:
         acronym = onto['acronym']
-        
+        try:
         r = requests.get(
-            BIOPORTAL_API_URL + 'ontologies/' + acronym + '/latest_submission',
-            params)
-        if r.status_code != 200:
-            print('Unable to load latest submission for %s' % (acronym,))
-            continue
-        sub = r.json()
-        if sub.get('submissionId', None) is None or sub.get('status', None) == 'retired':
-            continue
+                BIOPORTAL_API_URL + 'ontologies/' + acronym + '/latest_submission',
+                params)
+            if r.status_code != 200:
+                print('Unable to load latest submission for %s' % (acronym,))
+                continue
+            sub = r.json()
+            if sub.get('submissionId', None) is None or sub.get('status', None) == 'retired':
+                continue
 
-        port = Ontology.objects.aggregate(Max('port'))['port__max'] or 10000
-        port += 1
-        server_ip = ABEROWL_API_SERVERS_POOL[random.randint(
-            0, len(ABEROWL_API_SERVERS_POOL) - 1)]
-        ontology, created = Ontology.objects.get_or_create(
-            acronym=acronym,
-            defaults={
-                'name': onto['name'],
-                'created_by': user,
-                'server_ip': server_ip,
-                'port': port,
-            }
-        )
-        
-        queryset = ontology.submissions.filter(
-            submission_id=sub['submissionId'])
-        if queryset.exists(): # Already uptodate
-            submission = queryset.get()
-            if not submission.indexed and submission.classifiable:
-                index_submission(ontology, submission)
-            continue
+            port = Ontology.objects.aggregate(Max('port'))['port__max'] or 10000
+            port += 1
+            server_ip = ABEROWL_API_SERVERS_POOL[random.randint(
+                0, len(ABEROWL_API_SERVERS_POOL) - 1)]
+            ontology, created = Ontology.objects.get_or_create(
+                acronym=acronym,
+                defaults={
+                    'name': onto['name'],
+                    'created_by': user,
+                    'server_ip': server_ip,
+                    'port': port,
+                }
+            )
 
-        r = requests.get(
-            BIOPORTAL_API_URL + 'ontologies/' + acronym + '/submissions/' +
-            str(sub['submissionId']) + '/metrics',
-            metric_params
-        )
-        metrics = {}
-        if r.status_code == 200:
-            metrics = r.json()
-        print(acronym, metrics)
-        submission = Submission(
-            ontology=ontology,
-            submission_id=sub['submissionId'],
-            description=sub['description'],
-            has_ontology_language=sub['hasOntologyLanguage'],
-            date_released=sub['released'],
-            date_created=sub['creationDate'],
-            home_page=sub['homepage'],
-            publication=sub['publication'],
-            documentation=sub['documentation'],
-            version=sub['version'],
-            nb_classes=metrics.get('classes', 0),
-            nb_properties=metrics.get('properties', 0),
-            nb_individuals=metrics.get('individuals', 0),
-            max_depth=metrics.get('maxDepth', 0),
-            max_children=metrics.get('maxChildCount', 0),
-            avg_children=metrics.get('averageChildCount', 0)
-        )
-        download_url = (BIOPORTAL_API_URL + 'ontologies/' + acronym
-                    + '/download?apikey=' + BIOPORTAL_API_KEY)
-        filepath = submission.get_filepath() + '.donwload'
-        p = Popen(['curl', '-L', download_url, '-o', filepath])
-        if p.wait() == 0:
-            shutil.move(filepath, submission.get_filepath())
-            shutil.copyfile(
-                submission.get_filepath(),
-                submission.get_filepath(folder='latest'))
-            submission.save()
-        else:
-            print('Downloading ontology %s failed!' % (acronym,))
-            continue
+            queryset = ontology.submissions.filter(
+                submission_id=sub['submissionId'])
+            if queryset.exists(): # Already uptodate
+                submission = queryset.get()
+                if not submission.indexed and submission.classifiable:
+                    index_submission(ontology, submission)
+                continue
 
-        p = Popen(
-            ['groovy', 'Classify.groovy', '../' + submission.get_filepath()],
-            stdout=PIPE,
-            cwd='scripts/')
-        if p.wait() == 0:
-            output = p.stdout.readlines()
-            print(output[-1].decode('utf-8'))
-            result = json.loads(output[-1].decode('utf-8'))
-            submission.nb_inconsistent = result['incon']
-            submission.classifiable = result['classifiable']
-            ontology.status = result['status']
-            ontology.save()
-        else:
-            print('Classifying ontology %s failed!' % (acronym,))
+            r = requests.get(
+                BIOPORTAL_API_URL + 'ontologies/' + acronym + '/submissions/' +
+                str(sub['submissionId']) + '/metrics',
+                metric_params
+            )
+            metrics = {}
+            if r.status_code == 200:
+                metrics = r.json()
+            print(acronym, metrics)
+            submission = Submission(
+                ontology=ontology,
+                submission_id=sub['submissionId'],
+                description=sub['description'],
+                has_ontology_language=sub['hasOntologyLanguage'],
+                date_released=sub['released'],
+                date_created=sub['creationDate'],
+                home_page=sub['homepage'],
+                publication=sub['publication'],
+                documentation=sub['documentation'],
+                version=sub['version'],
+                nb_classes=metrics.get('classes', 0),
+                nb_properties=metrics.get('properties', 0),
+                nb_individuals=metrics.get('individuals', 0),
+                max_depth=metrics.get('maxDepth', 0),
+                max_children=metrics.get('maxChildCount', 0),
+                avg_children=metrics.get('averageChildCount', 0)
+            )
+            download_url = (BIOPORTAL_API_URL + 'ontologies/' + acronym
+                        + '/download?apikey=' + BIOPORTAL_API_KEY)
+            filepath = submission.get_filepath() + '.donwload'
+            p = Popen(['curl', '-L', download_url, '-o', filepath])
+            if p.wait() == 0:
+                shutil.move(filepath, submission.get_filepath())
+                shutil.copyfile(
+                    submission.get_filepath(),
+                    submission.get_filepath(folder='latest'))
+                submission.save()
+            else:
+                print('Downloading ontology %s failed!' % (acronym,))
+                continue
 
-        if not submission.classifiable:
-            continue
-        
-        index_submission(ontology, submission)
+            p = Popen(
+                ['groovy', 'Classify.groovy', '../' + submission.get_filepath()],
+                stdout=PIPE,
+                cwd='scripts/')
+            if p.wait() == 0:
+                output = p.stdout.readlines()
+                print(output[-1].decode('utf-8'))
+                result = json.loads(output[-1].decode('utf-8'))
+                submission.nb_inconsistent = result['incon']
+                submission.classifiable = result['classifiable']
+                ontology.status = result['status']
+                ontology.save()
+            else:
+                print('Classifying ontology %s failed!' % (acronym,))
+
+            if not submission.classifiable:
+                continue
+
+            index_submission(ontology, submission)
+        except Exception as e:
+            print(acronym, e)
 
 
 def index_submission(ontology, submission):

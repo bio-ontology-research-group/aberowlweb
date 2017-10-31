@@ -80,7 +80,7 @@ def sync_bioportal():
         if queryset.exists(): # Already uptodate
             submission = queryset.get()
             if not submission.indexed:
-                index_submission(submission)
+                index_submission(ontology, submission)
             continue
 
         r = requests.get(
@@ -142,16 +142,16 @@ def sync_bioportal():
         if not submission.classifiable:
             continue
         
-        index_submission(submission)
+        index_submission(ontology, submission)
 
 
-def index_submission(submission):
+def index_submission(ontology, submission):
     p = Popen(
         ['groovy', 'IndexElastic.groovy', '../' + submission.get_filepath()],
         stdin=PIPE,
         cwd='scripts/')
     data = {
-        'acronym': acronym,
+        'acronym': ontology.acronym,
         'name': ontology.name,
         'description': submission.description
     }

@@ -159,10 +159,10 @@ def index_submission(ontology, submission):
     p.stdin.close()
 
     if p.wait() == 0:
-        print('Indexing ontology %s finished' % (acronym))
+        print('Indexing ontology %s finished' % (ontology.acronym))
         submission.indexed = True
     else:
-        print('Indexing ontology %s failed!' % (acronym))
+        print('Indexing ontology %s failed!' % (ontology.acronym))
 
     submission.save()
     # Reloading ontology

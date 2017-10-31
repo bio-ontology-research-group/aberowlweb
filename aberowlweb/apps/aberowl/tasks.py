@@ -55,7 +55,7 @@ def sync_bioportal():
     for onto in data:
         acronym = onto['acronym']
         try:
-        r = requests.get(
+            r = requests.get(
                 BIOPORTAL_API_URL + 'ontologies/' + acronym + '/latest_submission',
                 params)
             if r.status_code != 200:

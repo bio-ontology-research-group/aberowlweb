@@ -242,7 +242,7 @@ class Main extends React.Component {
 		    }
 		    var ontos = ontos.map(function(onto) {
 			return (
-				<a href={'/ontology/' + onto[0] + '/#/' + onto[1]}> {onto[0]} </a>
+				<a href={'/ontology/' + onto[0] + '/#/Browse/' + onto[1]}> {onto[0]} </a>
 			);
 		    });
 
@@ -264,7 +264,7 @@ class Main extends React.Component {
 		var item = data[2]['result'][i];
 		const onto = (<a href={'/ontology/' + item.ontologyURI }> { item.ontologyURI } </a>);
 		const owlClass = (
-		    <a href={'/ontology/' + item.ontologyURI + '/#' + encodeURIComponent(item.owlClass)}>
+		    <a href={'/ontology/' + item.ontologyURI + '/#/Browse/' + encodeURIComponent(item.owlClass)}>
 			{item.label + '(' + item.owlClass + ')'}
 		    </a>
 		);

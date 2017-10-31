@@ -20,7 +20,7 @@ class Ontology(models.Model):
         (INCOHERENT, INCOHERENT),
         (UNKNOWN, UNKNOWN),
     )
-    acronym = models.CharField(max_length=31, unique=True)
+    acronym = models.CharField(max_length=63, unique=True)
     name = models.CharField(max_length=255)
     created_by = models.ForeignKey(
         User, on_delete=models.CASCADE,

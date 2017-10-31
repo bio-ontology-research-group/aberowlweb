@@ -79,7 +79,7 @@ def sync_bioportal():
             submission_id=sub['submissionId'])
         if queryset.exists(): # Already uptodate
             submission = queryset.get()
-            if not submission.indexed:
+            if not submission.indexed and submission.classifiable:
                 index_submission(ontology, submission)
             continue
 

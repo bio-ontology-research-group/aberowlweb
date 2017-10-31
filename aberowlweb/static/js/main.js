@@ -218,10 +218,6 @@ class Main extends React.Component {
 	    .then(function(response){
 		return response.json();
 	    }),
-	    fetch('/api/backend?script=runQuery.groovy&type=subeq&labels=true&query=' + encodeURIComponent(query))
-	    .then(function(response){
-		return response.json();
-	    })
 	]).then(function(data) {
 	    console.log(data);
 	
@@ -258,30 +254,40 @@ class Main extends React.Component {
 		ontologies.rows.push([onto, item.name, item.description])
 	    }
 
-	    var dlQuery = {
-		headers: ['Ontology', 'OWL Class', 'Definition'], rows: []};
-	    for (var i = 0; i < data[2]['result'].length; i++) {
-		var item = data[2]['result'][i];
-		const onto = (<a href={'/ontology/' + item.ontologyURI }> { item.ontologyURI } </a>);
-		const owlClass = (
-		    <a href={'/ontology/' + item.ontologyURI + '/#/Browse/' + encodeURIComponent(item.owlClass)}>
-			{item.label + '(' + item.owlClass + ')'}
-		    </a>
-		);
-		dlQuery.rows.push([onto, owlClass, item.definition])
-	    }
+	    
 	    var tab = that.state.currentTab;
 	    if (tab === undefined) {
 		tab = 'Classes';
 	    }
+	    var results = that.state.results;
+	    results['Classes'] = classes;
+	    results['Ontologies'] = ontologies;
 	    that.setState({
-		results: {
-		    'Classes': classes,
-		    'Ontologies': ontologies,
-		    'DLQuery': dlQuery},
+		results: results,
 		currentTab: tab
 	    });
 	});
+
+	fetch('/api/backend?script=runQuery.groovy&type=subeq&labels=true&query=' + encodeURIComponent(query))
+	    .then(function(response){ return response.json(); })
+	    .then(function(data) {
+		var dlQuery = {
+		    headers: ['Ontology', 'OWL Class', 'Definition'], rows: []};
+		for (var i = 0; i < data['result'].length; i++) {
+		    var item = data['result'][i];
+		    const onto = (<a href={'/ontology/' + item.ontologyURI }> { item.ontologyURI } </a>);
+		    const owlClass = (
+			<a href={'/ontology/' + item.ontologyURI + '/#/Browse/' + encodeURIComponent(item.owlClass)}>
+			    {item.label + '(' + item.owlClass + ')'}
+			</a>
+		    );
+		    dlQuery.rows.push([onto, owlClass, item.definition])
+		}
+		var results = that.state.results;
+		results['DLQuery'] = dlQuery;
+		that.setState({results: results});
+	    });
+
     }
 
     renderTab(tab) {

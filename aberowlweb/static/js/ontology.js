@@ -386,7 +386,7 @@ class Ontology extends React.Component {
     }
     
     renderTree(nodes) {
-	const content = nodes.map(
+	const content = nodes.filter((node) => !node.deprecated).map(
 	    (node) => this.renderTreeNode(node)
 	);
 	return (

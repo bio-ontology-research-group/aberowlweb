@@ -1,0 +1,25 @@
+{% extends "account/base.html" %}
+
+{% load i18n %}
+{% load widget_tweaks %}
+
+{% block head_title %}{% trans "Edit profile" %}{% endblock %}
+
+{% block content %}
+<div class="col-md-4 col-md-offset-4">
+    <h1>{% trans "Edit profile" %}</h1>
+
+    <form method="POST" action="{% url 'profile_edit' %}" class="form">
+        {% csrf_token %}
+        {% for field in form %}
+	<div class="form-group">
+	{{ field.label_tag }}
+	{{ field|add_class:"form-control"}}
+	{{ field.errors }}
+	</div>
+	{% endfor %}
+	{{ form.non_field_errors }}
+        <button type="submit" name="action" class="btn btn-primary">{% trans "Save" %}</button>
+    </form>
+</div>
+{% endblock %}

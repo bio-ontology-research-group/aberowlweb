@@ -15,4 +15,14 @@ class UserProfileForm(forms.ModelForm):
 
     class Meta:
         model = UserProfile
-        fields = ['birth_date', 'gender']
+        fields = ['first_name', 'last_name', 'birth_date', 'gender']
+
+
+    def save(self, *args, **kwargs):
+        super(UserProfileForm, self).save(*args, **kwargs)
+        first_name = self.cleaned_data.get('first_name')
+        last_name = self.cleaned_data.get('last_name')
+        self.instance.user.first_name = first_name
+        self.instance.user.last_name = last_name
+        self.instance.user.save()
+        return self.instance

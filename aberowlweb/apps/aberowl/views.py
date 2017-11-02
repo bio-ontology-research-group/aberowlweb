@@ -56,14 +56,25 @@ class OntologyDetailView(DetailView):
             raise Http404
         
         data = OntologySerializer(ontology).data
-        rq = requests.get(
-            ABEROWL_API_URL +
-            'api/backend?script=runQuery.groovy&type=subclass&direct=true&query=<http://www.w3.org/2002/07/owl%23Thing>&ontology='
-            + ontology.acronym)
-        res = rq.json()
         data['classes'] = []
-        if 'result' in res:
-            data['classes'] = res['result']
+        data['properties'] = []
+        try:
+            rq = requests.get(
+                ontology.get_api_url() + 'runQuery.groovy?type=subclass&direct=true&query=<http://www.w3.org/2002/07/owl%23Thing>',
+                timeout=5)
+            res = rq.json()
+            if 'result' in res:
+                data['classes'] = res['result']
+
+            rq = requests.get(
+                ontology.get_api_url() + 'getObjectProperties.groovy',
+                timeout=5)
+            res = rq.json()
+            if 'children' in res:
+                data['properties'] = res['children']
+        except Exception as e:
+            print(e)
+        
         downloads = []
         for sub in ontology.submissions.all().order_by('-date_released'):
             downloads.append([

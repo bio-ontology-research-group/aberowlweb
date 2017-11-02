@@ -29,11 +29,20 @@
                   <td>Email:</td>
                   <td><a href="mailto:{{ user.email }}">{{ user.email }}</a></td>
                 </tr>
+		<tr>
+                  <td>Gender:</td>
+		  <td>{{ user.userprofile.gender }}</td>
+		</tr>
+		<tr>
+                  <td>Gender:</td>
+		  <td>{{ user.userprofile.birth_date|date:"Y-m-d" }}</td>
+		</tr>
+		
               </tbody>
             </table>
             
-            <a href="#" class="btn btn-primary">Edit Profile</a>
-            <a href="{% url "account_change_password" %}" class="btn btn-primary">Change password</a>
+            <a href="{% url 'profile_edit' %}" class="btn btn-primary">Edit Profile</a>
+            <a href="{% url 'account_change_password' %}" class="btn btn-primary">Change password</a>
           </div>
         </div>
       </div>

@@ -2,8 +2,11 @@
 from __future__ import unicode_literals
 
 from django.shortcuts import render
-from django.views.generic import DetailView
+from django.urls import reverse
+from django.views.generic import DetailView, UpdateView
 from django.contrib.auth.models import User
+from accounts.forms import UserProfileForm
+from accounts.models import UserProfile
 
 
 class ProfileDetailView(DetailView):
@@ -19,3 +22,16 @@ class ProfileDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(ProfileDetailView, self).get_context_data(**kwargs)
         return context
+
+
+class ProfileUpdateView(UpdateView):
+
+    form_class = UserProfileForm
+    model = UserProfile
+    template_name = 'account/profile/edit.html'
+
+    def get_object(self, queryset=None):
+        return self.request.user.userprofile
+
+    def get_success_url(self, *args, **kwargs):
+        return reverse('profile')

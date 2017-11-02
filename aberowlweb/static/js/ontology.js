@@ -7,10 +7,23 @@ class Ontology extends React.Component {
 	for (var i = 0; i < classes.length; i++) {
 	    classesMap.set(classes[i].owlClass, classes[i]); 
 	}
+	var propsMap = new Map();
+	var properties = props.ontology.properties;
+	var q = properties.slice();
+	while(q.length > 0) {
+	    var p = q.shift();
+	    propsMap.set(p.owlClass, p);
+	    if ('children' in p) {
+		for (var i = 0; i < p.children.length; i++) {
+		    q.push(p.children[i]);
+		}
+	    }
+	}
 	var currentTab = 'Overview';
 	this.state = {
 	    ontology: props.ontology,
 	    classesMap: classesMap,
+	    propsMap: propsMap,
 	    tabs: [
 		'Overview', 'Browse', 'DLQuery',
 		// 'Visualise', 'PubMed', 'Data', 'SPARQL',
@@ -445,14 +458,71 @@ class Ontology extends React.Component {
 	this.setState({classesMap: classesMap});
 
     }
+
+
+    renderProperty(node) {
+	var activeClass = '';
+	const sProp = this.state.selectedProp;
+	if (sProp != null && sProp.owlClass == node.owlClass) {
+	    activeClass = 'active';
+	}
+
+	if ('children' in node && node.collapsed) {
+	    return (
+		<li class={activeClass}>
+		    <span><i class="glyphicon glyphicon-minus" onClick={(e) => this.handlePropertyClick(e, node.owlClass)}/></span>
+		    <a href={'#/Property/' + encodeURIComponent(node.owlClass)} onClick={(e) => this.handlePropertyClick(e, node.owlClass)}> {node.label} </a>
+		{this.renderObjectProperties(node.children)}
+		</li>
+	    );
+	}
+	var cClass = 'glyphicon-plus';
+	if (node.collapsed) {
+	    cClass = 'glyphicon-minus';
+	}
+	return (
+	    <li class={activeClass}>
+		<span><i className={'glyphicon ' + cClass} onClick={(e) => this.handlePropertyClick(e, node.owlClass)}/></span>
+		<a href={'#/Property/' + encodeURIComponent(node.owlClass)} onClick={(e) => this.handlePropertyClick(e, node.owlClass)}> {node.label} </a>
+	    </li>
+	);
+    }
+    
+    renderObjectProperties(properties) {
+	const content = properties.map(
+	    (node) => this.renderProperty(node)
+	);
+	return (
+		<ul>{content}</ul>
+	);
+    }
+
+    handlePropertyClick(e, owlClass) {
+	e.preventDefault();
+	var propsMap = this.state.propsMap;
+	var obj = propsMap.get(owlClass);
+	this.props.history.push('/Property/' + encodeURIComponent(owlClass));
+	if ('collapsed' in obj && obj.collapsed) {
+	    obj.collapsed = false;
+	} else {
+	    obj.collapsed = true;
+	}
+	this.setState({propsMap: propsMap});
+
+    }
     
     render() {
 	const ontology = this.state.ontology;
 	return (
 	<div class="row">
 		<div class="col-sm-4 col-md-3 sidebar">
+		<h4>Classes</h4>
 		<div class="tree">
 		{this.renderTree(ontology.classes)}
+	    </div>
+		<h4>Object Properties</h4>
+		<div class="tree properties">
+		{this.renderObjectProperties(ontology.properties)}
 	        </div>
 	    </div><div class="col-sm-8 col-md-9 main">
 		<h1>{ontology.acronym} - {ontology.name}</h1>

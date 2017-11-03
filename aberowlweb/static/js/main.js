@@ -223,27 +223,27 @@ class Main extends React.Component {
 	
 	    var classes = {
 		headers: ['Class', 'Definition', 'Ontology'], rows: []};
-	    for (var term in data[0]) {
-		if (data[0].hasOwnProperty(term)) {
-		    var res = data[0][term];
-		    var ontos = [];
-		    // const definition = (res[0].definition != null) ? HTMLReactParser(res[0].definition) : null;
-		    const iri = '<' + res[0].class + '>';
-		    const label = term + ' (' + iri + ')';
-		    const definition = res[0].definition
+	    for (var i in data[0]) {
+		var term = data[0][i][0];
+		var res = data[0][i][1];
+		var ontos = [];
+		// const definition = (res[0].definition != null) ? HTMLReactParser(res[0].definition) : null;
+		const iri = '<' + res[0].class + '>';
+		const label = term + ' (' + iri + ')';
+		const definition = res[0].definition
 
-		    for (var i = 0; i < res.length; i++) {
-			const iri = '<' + res[i].class + '>';
-			ontos.push([res[i].ontology, encodeURIComponent(iri)]);
-		    }
-		    var ontos = ontos.map(function(onto) {
-			return (
-				<a href={'/ontology/' + onto[0] + '/#/Browse/' + onto[1]}> {onto[0]} </a>
-			);
-		    });
-
-		    classes.rows.push([label, definition, ontos]);
+		for (var i = 0; i < res.length; i++) {
+		    const iri = '<' + res[i].class + '>';
+		    ontos.push([res[i].ontology, encodeURIComponent(iri)]);
 		}
+		var ontos = ontos.map(function(onto) {
+		    return (
+			    <a href={'/ontology/' + onto[0] + '/#/Browse/' + onto[1]}> {onto[0]} </a>
+		    );
+		});
+
+		classes.rows.push([label, definition, ontos]);
+
 	    }
 
 	    var ontologies = {

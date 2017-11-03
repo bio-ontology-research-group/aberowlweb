@@ -112,8 +112,13 @@ class QueryNamesAPIView(APIView):
         for hit in result['hits']['hits']:
             item = hit['_source']
             data[item['first_label']].append(item)
-        
-        return Response(data)
+        ret = []
+        for hit in result['hits']['hits']:
+            label = hit['_source']['first_label']
+            if label in data:
+                ret.append([label, data[label]])
+                del data[label]
+        return Response(ret)
 
 
 

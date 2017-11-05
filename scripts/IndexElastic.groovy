@@ -166,12 +166,12 @@ void indexOntology(String fileName, def data) {
 	    } else if (aProp in identifiers) {
 		if (annot.getValue() instanceof OWLLiteral) {
 		    def aVal = annot.getValue().getLiteral()
-		    info["identifier"] << escape(aVal)
+		    info["identifier"] << aVal
 		}
 	    } else if (aProp in labels) {
 		if (annot.getValue() instanceof OWLLiteral) {
 		    def aVal = annot.getValue().getLiteral()
-		    info["label"] << escape(aVal)
+		    info["label"] << aVal
 		    hasLabel = true
 		}
 	    } else if (aProp in definitions) {

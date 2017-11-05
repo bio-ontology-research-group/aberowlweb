@@ -189,8 +189,10 @@ class Main extends React.Component {
     }
 
     componentWillReceiveProps(newProps) {
+	console.log(newProps);
 	var query = newProps.match.params.query;
-	if (query !== undefined && query != this.state.query) {
+	if (query !== undefined) {
+	    console.log('Executing query');
 	    query = decodeURIComponent(query);
 	    this.setState({query: query});
 	    this.executeQuery(query);
@@ -204,6 +206,11 @@ class Main extends React.Component {
 	    this.setState({currentTab: tab});
 	}
 	
+    }
+
+    innerHTML(htmlString) {
+	const html = {__html: htmlString};
+	return (<span dangerouslySetInnerHTML={html}></span>);
     }
 
     executeQuery(query) {
@@ -227,11 +234,10 @@ class Main extends React.Component {
 		var term = data[0][i][0];
 		var res = data[0][i][1];
 		var ontos = [];
-		// const definition = (res[0].definition != null) ? HTMLReactParser(res[0].definition) : null;
+		const definition = that.innerHTML(res[0].definition);
 		const iri = '<' + res[0].class + '>';
 		const label = term + ' (' + iri + ')';
-		const definition = res[0].definition
-
+		
 		for (var i = 0; i < res.length; i++) {
 		    const iri = '<' + res[i].class + '>';
 		    ontos.push([res[i].ontology, encodeURIComponent(iri)]);

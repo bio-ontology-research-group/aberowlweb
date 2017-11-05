@@ -63,6 +63,7 @@ class OntologyDetailView(DetailView):
                 ontology.get_api_url() + 'runQuery.groovy?type=subclass&direct=true&query=<http://www.w3.org/2002/07/owl%23Thing>',
                 timeout=5)
             res = rq.json()
+            print(res)
             if 'result' in res:
                 data['classes'] = res['result']
 

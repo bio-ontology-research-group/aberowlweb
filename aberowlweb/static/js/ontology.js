@@ -30,6 +30,7 @@ class Ontology extends React.Component {
 		'Download'],
 	    currentTab: currentTab,
 	    selectedClass: null,
+	    selectedProp: null,
 	    dlQuery: null,
 	    dlResults: [],
 	};
@@ -93,6 +94,10 @@ class Ontology extends React.Component {
 		    state.dlQuery = dlQuery;
 		    that.setState(state);
 		});
+	} else if (params.tab == 'Property' && params.owlClass !== undefined){
+	    const owlClass = decodeURIComponent(params.owlClass);
+	    const selectedProp = this.state.propsMap.get(owlClass);
+	    this.setState({ selectedProp: selectedProp, currentTab: 'Property' });
 	}
 	
     }
@@ -123,7 +128,8 @@ class Ontology extends React.Component {
 
     renderTab(tab) {
 	var activeClass = '';
-	if (tab === this.state.currentTab) {
+	var currentTab = this.state.currentTab;
+	if (tab === currentTab || (tab == 'Browse' && currentTab == 'Property')) {
 	    activeClass = 'active';
 	}
 	return (
@@ -205,6 +211,32 @@ class Ontology extends React.Component {
 	);
     }
 
+    innerHTML(htmlString) {
+	const html = {__html: htmlString};
+	return (<span dangerouslySetInnerHTML={html}></span>);
+    }
+
+    renderPropertyView() {
+	const obj = this.state.selectedProp;
+	console.log(obj);
+	const content = (
+		<tbody>
+		<tr><td>label</td><td>{ obj.label }</td></tr>
+		<tr><td>class</td><td>{ obj.owlClass }</td></tr>
+		</tbody>
+	);
+	return (
+	    <div>
+		<table class="table table-hover">
+		<thead>
+		<th> Property </th> <th> Value </th>
+	        </thead>
+		{content}
+	        </table>
+	    </div>
+	);
+    }
+
     renderBrowse() {
 	const obj = this.state.selectedClass;
 	if (obj == null) {
@@ -216,12 +248,33 @@ class Ontology extends React.Component {
 	    'first_label',
 	    'remainder',
 	    'collapsed',
-	    'children'
+	    'children',
+	    'deprecated',
+	    'owlClass'
 	]);
+
+	var that = this;
+	var allFields = Object.keys(obj)
+	    .filter((item) => !ignoreFields.has(item));
+	allFields = new Set(allFields);
+	var fields = [
+	    'identifier', 'label', 'definition', 'classURI', 'ontologyURI',
+	    'Equivalent', 'SubClassOf', 'Disjoint'];
+	var fieldSet = new Set(fields);
+	fields = fields.filter((item) => allFields.has(item));
+	for (let item of allFields) {
+	    if(!fieldSet.has(item)) {
+		fields.push(item);
+	    }
+	}
+	const htmlFields = new Set(['SubClassOf', 'Equivalent', 'Disjoint']);
 	
-	const data = Object.keys(obj).filter(
-	    (item) => !ignoreFields.has(item)).map(
-		(item) => [item, obj[item].toString()]);
+	const data = fields.map(function(item) {
+		  if (htmlFields.has(item)) {
+		      return [item, that.innerHTML(obj[item].toString())];
+		  }
+		  return [item, obj[item]];
+	      });
 	const content = data.map(
 	    (item) =>
 		<tr><td>{ item[0] }</td><td>{ item[1] }</td></tr>
@@ -342,16 +395,15 @@ class Ontology extends React.Component {
     }
 
     renderCurrentTab() {
-	const renders = [
-	    this.renderOverview(),
-	    this.renderBrowse(),
-	    this.renderDLQuery(),
-	    this.renderDownload()];
-	for (var i = 0; i < renders.length; i++) {
-	    if (this.state.currentTab == this.state.tabs[i]) {
-		return renders[i];
-	    }
-	}
+	const renders = {
+	    'Overview': this.renderOverview(),
+	    'Browse': this.renderBrowse(),
+	    'DLQuery': this.renderDLQuery(),
+	    'Download': this.renderDownload(),
+	    'Property': this.renderPropertyView()
+	};
+	let currentTab = this.state.currentTab;
+	if (currentTab in renders) return renders[currentTab];
 	return (
 	    <h2> Render not implemented yet! </h2>
 	);
@@ -439,6 +491,11 @@ class Ontology extends React.Component {
 		state.dlQuery = dlQuery
 		that.setState(state);
 	    });
+	} else if (currentTab == 'Property' && params.owlClass !== undefined){
+	    const owlClass = decodeURIComponent(params.owlClass);
+	    const selectedProp = this.state.propsMap.get(owlClass);
+	    state.selectedProp = selectedProp;
+	    this.setState(state);
 	} else {
 	    this.setState(state);
 	}

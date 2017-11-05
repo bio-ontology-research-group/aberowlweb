@@ -270,7 +270,30 @@ class RequestManager {
 		info["label"] << c.getIRI().getFragment().toString()
 	    }
 	    info["first_label"] = info["label"][0]
-	    
+
+	    // set up the renderer for the axioms
+	    def sProvider = new AnnotationValueShortFormProvider(
+		Collections.singletonList(df.getRDFSLabel()),
+		Collections.<OWLAnnotationProperty, List<String>> emptyMap(),
+		this.oManager);
+	    def manSyntaxRenderer = new AberOWLSyntaxRendererImpl()
+	    manSyntaxRenderer.setShortFormProvider(sProvider)
+
+	    /* get the axioms */
+	    EntitySearcher.getSuperClasses(c, o).each {
+		cExpr -> // OWL Class Expression
+		info["SubClassOf"] << manSyntaxRenderer.render(cExpr)
+	    }
+	    EntitySearcher.getEquivalentClasses(c, o).each {
+		cExpr -> // OWL Class Expression
+		info["Equivalent"] << manSyntaxRenderer.render(cExpr)
+	    }
+	    EntitySearcher.getDisjointClasses(c, o).each {
+		cExpr -> // OWL Class Expression
+	   	info["Disjoint"] << manSyntaxRenderer.render(cExpr)
+	    }
+
+
 	    result.add(info);
 	}
 	return result

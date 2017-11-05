@@ -69,3 +69,12 @@ body {
 .aberowl-topic {
     display: inline-block;
 }
+
+
+td > span > span {
+    padding-left: 10px;
+}
+
+td > span > span:first-child {
+    padding-left: 0;
+}

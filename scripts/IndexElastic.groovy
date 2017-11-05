@@ -202,7 +202,7 @@ void indexOntology(String fileName, def data) {
 	}
 	if (oboId.length() > 0) {
 	    oboId = oboId.replaceAll("_", ":").toLowerCase()
-	    info["oboid"] = escape(oboId)
+	    info["oboid"] = oboId
 	}
 
 	if (!deprecated) {

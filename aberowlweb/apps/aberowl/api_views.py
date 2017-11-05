@@ -80,10 +80,7 @@ class QueryNamesAPIView(APIView):
             ('ontology', 1000),
             ('oboid', 10000),
             ('definition', 3),
-            ('synonym', 75),
-            ('AberOWL-catch-all', 0.01),
-            ('AberOWL-subclass', 25),
-            ('AberOWL-equivalent', 25),]
+            ('synonym', 75)]
 
         query_list = []
 
@@ -111,10 +108,10 @@ class QueryNamesAPIView(APIView):
         data = defaultdict(list)
         for hit in result['hits']['hits']:
             item = hit['_source']
-            data[item['first_label']].append(item)
+            data[item['label'][0]].append(item)
         ret = []
         for hit in result['hits']['hits']:
-            label = hit['_source']['first_label']
+            label = hit['_source']['label'][0]
             if label in data:
                 ret.append([label, data[label]])
                 del data[label]

@@ -247,5 +247,6 @@ class OntologyAPIWorker(BaseConfiguration):
         }
     }
 
-    ABEROWL_SERVER_URL = 'http://10.254.145.17/'
+    ABEROWL_SERVER_URL = 'http://10.254.145.9/'
+    ELASTIC_SEARCH_URL = 'http://10.254.145.42:9200/aberowl/'
 

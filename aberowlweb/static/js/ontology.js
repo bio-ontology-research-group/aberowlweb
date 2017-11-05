@@ -218,7 +218,9 @@ class Ontology extends React.Component {
 
     renderPropertyView() {
 	const obj = this.state.selectedProp;
-	console.log(obj);
+	if (obj == null) {
+	    return (<h2>Please select an object property!</h2>);
+	}
 	const content = (
 		<tbody>
 		<tr><td>label</td><td>{ obj.label }</td></tr>

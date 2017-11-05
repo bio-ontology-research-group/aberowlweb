@@ -58,7 +58,7 @@ class Command(BaseCommand):
             ontologies = Ontology.objects.filter(
                 status=Ontology.CLASSIFIED,
                 is_running=False,
-                server_ip=server_ip, acronym='SIO')
+                server_ip=server_ip)
             print('Ontologies', len(ontologies))
             threads = []
             for ontology in ontologies:

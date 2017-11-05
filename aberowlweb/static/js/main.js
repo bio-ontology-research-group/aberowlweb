@@ -152,7 +152,8 @@ class Main extends React.Component {
 	    query: query,
 	    resultTabs: resultTabs,
 	    currentTab: currentTab,
-	    results: {}
+	    results: {},
+	    inputQuery: '',
 	};
     }
 
@@ -169,7 +170,7 @@ class Main extends React.Component {
 		<div class="col-md-6 col-md-offset-3">
 		<form class="form" onSubmit={(e) => this.handleSubmit(e)}>
 		<div class="input-group input-group-lg">
-		<input class="form-control input-lg" type="text" value={this.state.query} onChange={(e) => this.queryChange(e)} placeholder="Search"/>
+		<input class="form-control input-lg" type="text" value={this.state.inputQuery} onChange={(e) => this.queryChange(e)} placeholder="Search"/>
 		<span class="input-group-btn"><button type="submit" class="btn btn-lg">Query</button></span>
 		</div>
 		</form>
@@ -180,18 +181,18 @@ class Main extends React.Component {
     }
 
     queryChange(e) {
-	this.setState({query: e.target.value});
+	this.setState({inputQuery: e.target.value});
     }
 
     handleSubmit(e) {
 	e.preventDefault();
-	this.props.history.push('/' + encodeURIComponent(this.state.query));
+	this.props.history.push('/' + encodeURIComponent(this.state.inputQuery));
     }
 
     componentWillReceiveProps(newProps) {
 	console.log(newProps);
 	var query = newProps.match.params.query;
-	if (query !== undefined) {
+	if (query !== undefined && query != this.state.query) {
 	    console.log('Executing query');
 	    query = decodeURIComponent(query);
 	    this.setState({query: query});

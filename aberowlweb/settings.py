@@ -230,6 +230,7 @@ class Production(BaseConfiguration):
 
     DEBUG = False
     SITE_DOMAIN = 'aber-owl.net'
+    ELASTIC_SEARCH_URL = 'http://10.254.145.42:9200/aberowl/'
 
 
 class OntologyAPIWorker(BaseConfiguration):
@@ -240,7 +241,7 @@ class OntologyAPIWorker(BaseConfiguration):
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': 'aberowlweb',
-            'HOST': '10.254.145.17',
+            'HOST': '10.254.145.9',
             'USER': 'postgres',
             'PASSWORD': '111'
         }

@@ -6,6 +6,7 @@
         @Grab(group='net.sourceforge.owlapi', module='owlapi-impl', version='4.2.3'),
         @Grab(group='net.sourceforge.owlapi', module='owlapi-parsers', version='4.2.3'),
 	@Grab(group='org.slf4j', module='slf4j-nop', version='1.7.25'),
+	@Grab(group='org.apache.lucene', module='lucene-queryparser', version='7.1.0')
     ])
 
 import groovy.json.*
@@ -32,34 +33,37 @@ import org.semanticweb.owlapi.search.*;
 import org.semanticweb.owlapi.manchestersyntax.renderer.*;
 import org.semanticweb.owlapi.reasoner.structural.*
 
+import org.apache.lucene.queryparser.classic.QueryParser;
+
 
 import java.nio.file.*
 
 import org.apache.logging.log4j.*
 
 
-def index(def type, def json) {
+def index(def type, def obj) {
     
     // delete if exists
-    if (type == "owlclass" || type == "property") {
-	def m = ["query": ["bool":["must":[]]]]
-	def ll = []
-	ll << ["term" : ["class" : json["class"]]]
-	ll << ["term" : ["ontology" : json["ontology"]]]
-	ll.each {
-	    m.query.bool.must << it
-	}
-	try {
-	    http.post(
-		contentType: ContentType.JSON,
-		path: '/aberowl/'+type+'/_delete_by_query',
-		body: new JsonBuilder(m).toString()
-	    ) {resp, reader -> }
-	} catch (Exception e) {
-	    e.printStackTrace()
-	}
+    def m = ["query": ["bool": ["must": []]]]
+    def ll = []
+    ll << ["term" : ["ontology" : obj["ontology"]]]
+    if (type == "owlClass") {
+	ll << ["term" : ["class" : obj["class"]]]
     }
-    def j = new groovy.json.JsonBuilder(json)
+    ll.each {
+	m.query.bool.must << it
+    }
+    try {
+	http.post(
+	    contentType: ContentType.JSON,
+	    path: '/aberowl/' + type + '/_delete_by_query',
+	    body: new JsonBuilder(m).toString()
+	) {resp, reader -> }
+    } catch (Exception e) {
+	e.printStackTrace()
+    }
+    
+    def j = new groovy.json.JsonBuilder(obj)
     try {
 
 	http.handler.failure = { resp, reader ->
@@ -69,7 +73,7 @@ def index(def type, def json) {
 	    [response:resp, reader:reader]
 	}
 	def response = http.post(
-	    path: '/aberowl/'+type+'/',
+	    path: '/aberowl/'+ type + '/',
 	    body: j.toPrettyString())
     } catch (Exception e) {
 	e.printStackTrace()
@@ -77,21 +81,8 @@ def index(def type, def json) {
     }
 }
 
-def delete(def m) {
-    try {
-	http.post(
-	    contentType: ContentType.JSON,
-	    path:'/aberowl/_delete_by_query',
-	    body:new JsonBuilder(m).toString()
-	)
-    } catch (Exception E) {
-	E.printStackTrace()
-	println m.toString()
-    }
-}
 
-
-void reloadOntologyIndex(String fileName, def data) {
+void indexOntology(String fileName, def data) {
 
     OWLOntologyManager manager = OWLManager.createOWLOntologyManager()
     OWLOntology ont = manager.loadOntologyFromOntologyDocument(new File(fileName))
@@ -102,6 +93,10 @@ void reloadOntologyIndex(String fileName, def data) {
     OWLReasoner reasoner = f1.createReasoner(ont, config)
     def oReasoner = reasoner
     def df = fac
+    
+    def identifiers = [
+	df.getOWLAnnotationProperty(new IRI('http://purl.org/dc/elements/1.1/identifier')),
+    ]
     
     def labels = [
 	df.getRDFSLabel(),
@@ -120,6 +115,7 @@ void reloadOntologyIndex(String fileName, def data) {
 	df.getOWLAnnotationProperty(new IRI('http://purl.obolibrary.org/obo/IAO_0000115')),
 	df.getOWLAnnotationProperty(new IRI('http://www.w3.org/2004/02/skos/core#definition')),
 	df.getOWLAnnotationProperty(new IRI('http://purl.org/dc/elements/1.1/description')),
+	df.getOWLAnnotationProperty(new IRI('http://purl.org/dc/terms/description')),
 	df.getOWLAnnotationProperty(new IRI('http://www.geneontology.org/formats/oboInOwl#hasDefinition'))
     ]
 
@@ -140,8 +136,8 @@ void reloadOntologyIndex(String fileName, def data) {
     omap.name = name
     omap.lname = name.toLowerCase()
     if (description) {
-	omap.ldescription = description.toLowerCase()
-	omap.description = description
+	omap.ldescription = StringEscapeUtils.escapeJava(description.toLowerCase())
+	omap.description = StringEscapeUtils.escapeJava(description)
     }
     index("ontology", omap)
 
@@ -151,250 +147,80 @@ void reloadOntologyIndex(String fileName, def data) {
     OWLOntologyMerger merger = new OWLOntologyMerger(mp, false)
     def iOnt = merger.createMergedOntology(manager, IRI.create("http://test.owl"))
 
-    // set up the renderer for the axioms
-    def sProvider = new AnnotationValueShortFormProvider(
-	Collections.singletonList(df.getRDFSLabel()),
-	Collections.<OWLAnnotationProperty, List<String>> emptyMap(),
-	manager);
-    def manSyntaxRenderer = new AberOWLSyntaxRendererImpl()
-    manSyntaxRenderer.setShortFormProvider(sProvider)
-
     iOnt.getClassesInSignature(true).each {
-	iClass -> // OWLClass
-	def cIRI = iClass.getIRI().toString()
-	def firstLabelRun = true
-	def lastFirstLabel = null
-	def deprecated = false
-	oDoc = [:].withDefault { [] }
-	oDoc["ontology"] = acronym
-	oDoc."AberOWL-catch-all" << acronym.toLowerCase()
-	oDoc."type" ="class"
-	oDoc."class" = cIRI
+	c -> // OWLClass
+	def cIRI = c.getIRI().toString()
+	def info = [
+	    "owlClass": c.toString(),
+	    "class": cIRI,
+	    "ontology": acronym,
+	].withDefault { key -> [] };
 
-	/* get the axioms */
-	EntitySearcher.getSuperClasses(iClass, iOnt).each {
-	    cExpr -> // OWL Class Expression
-	    oDoc."AberOWL-subclass" << manSyntaxRenderer.render(cExpr)
-	    oDoc.'AberOWL-catch-all' << manSyntaxRenderer.render(cExpr)
-	}
-	EntitySearcher.getEquivalentClasses(iClass, iOnt).each {
-	    cExpr -> // OWL Class Expression
-	    oDoc."AberOWL-equivalent" << manSyntaxRenderer.render(cExpr)
-	    oDoc.'AberOWL-catch-all' << manSyntaxRenderer.render(cExpr)
-	}
-	EntitySearcher.getDisjointClasses(iClass, iOnt).each {
-	    cExpr -> // OWL Class Expression
-	    oDoc."AberOWL-disjoint" << manSyntaxRenderer.render(cExpr)
-	    oDoc.'AberOWL-catch-all'<< manSyntaxRenderer.render(cExpr)
-	}
+	def hasLabel = false
+	def deprecated = false;
 
-	def annoMap = [:].withDefault { new TreeSet() }
-	EntitySearcher.getAnnotations(iClass, iOnt).each {
-	    anno ->
-	    if (anno.isDeprecatedIRIAnnotation()) {
+	EntitySearcher.getAnnotations(c, iOnt).each { annot ->
+	    def aProp = annot.getProperty()
+	    if (annot.isDeprecatedIRIAnnotation()) {
 		deprecated = true
-	    }
-	    def aProp = anno.getProperty()
-	    if (!(aProp in labels || aProp in definitions || aProp in synonyms)) {
-		if (anno.getValue() instanceof OWLLiteral) {
-		    def aVal = anno.getValue().getLiteral()
-		    def aLabels = []
-		    if (EntitySearcher.getAnnotations(aProp, iOnt, df.getRDFSLabel()).size() > 0) {
-			EntitySearcher.getAnnotations(aProp, iOnt, df.getRDFSLabel()).each { l ->
-			    def lab = l.getValue().getLiteral()
-			    annoMap[lab].add(aVal)
-			}
-		    } else {
-			annoMap[aProp.toString()?.replaceAll("<", "")?.replaceAll(">", "")].add(aVal)
-		    }
+	    } else if (aProp in identifiers) {
+		if (annot.getValue() instanceof OWLLiteral) {
+		    def aVal = annot.getValue().getLiteral()
+		    info["identifier"] << escape(aVal)
 		}
-	    }
+	    } else if (aProp in labels) {
+		if (annot.getValue() instanceof OWLLiteral) {
+		    def aVal = annot.getValue().getLiteral()
+		    info["label"] << escape(aVal)
+		    hasLabel = true
+		}
+	    } else if (aProp in definitions) {
+		if (annot.getValue() instanceof OWLLiteral) {
+		    def aVal = annot.getValue().getLiteral()
+		    info["definition"] << StringEscapeUtils.escapeJava(aVal)
+		}
+	    } else if (aProp in synonyms) {
+		if (annot.getValue() instanceof OWLLiteral) {
+		    def aVal = annot.getValue().getLiteral()
+		    info["synonyms"] << aVal
+		}
+	    } 
 	}
-	annoMap.each {
-	    k, v ->
-	    v.each { val ->
-		oDoc[k] << val
-		oDoc."AberOWL-catch-all" << val
-	    }
+
+	if (!hasLabel) {
+	    info["label"] << c.getIRI().getFragment().toString()
 	}
 
 	// generate OBO-style ID for the index
 	def oboId = ""
-	if (cIRI.lastIndexOf("/") > -1) {
-	    oboId = cIRI.substring(cIRI.lastIndexOf("/") + 1)
-	}
-	if (cIRI.lastIndexOf("#") > -1) {
-	    oboId = cIRI.substring(cIRI.lastIndexOf("#") + 1)
-	}
 	if (cIRI.lastIndexOf('?') > -1) {
 	    oboId = cIRI.substring(cIRI.lastIndexOf('?') + 1)
+	} else if (cIRI.lastIndexOf("#") > -1) {
+	    oboId = cIRI.substring(cIRI.lastIndexOf("#") + 1)
+	} else if (cIRI.lastIndexOf("/") > -1) {
+	    oboId = cIRI.substring(cIRI.lastIndexOf("/") + 1)
 	}
 	if (oboId.length() > 0) {
 	    oboId = oboId.replaceAll("_", ":").toLowerCase()
-	    oDoc."oboid" = oboId
+	    info["oboid"] = escape(oboId)
 	}
 
-
-	def xrefs = []
-	synonyms.each {
-	    EntitySearcher.getAnnotationAssertionAxioms(iClass, iOnt).each {
-		ax ->
-		if (ax.getProperty() == it) {
-		    //	EntitySearcher.getAnnotations(iClass, iOnt, it).each { annotation -> // OWLAnnotation
-		    if (ax.getValue() instanceof OWLLiteral) {
-			def val = (OWLLiteral) ax.getValue()
-			def label = val.getLiteral()
-			oDoc."synonym" << label
-		    }
-		}
-	    }
-	}
-	def hasLabel = false
-	labels.each {
-	    EntitySearcher.getAnnotationAssertionAxioms(iClass, iOnt).each {
-		ax ->
-		if (ax.getProperty() == it) {
-		    //	EntitySearcher.getAnnotations(iClass, iOnt, it).each { annotation -> // OWLAnnotation
-		    if (ax.getValue() instanceof OWLLiteral) {
-			def val = (OWLLiteral) ax.getValue()
-			def label = val.getLiteral()
-			if (label) {
-			    //"label" "\""+label+"\""
-			    oDoc."label" << label
-			    hasLabel = true
-			    if (firstLabelRun) {
-				lastFirstLabel = label;
-			    }
-			}
-		    }
-		}
-	    }
-	    if (lastFirstLabel) {
-		oDoc."first_label" = lastFirstLabel
-		firstLabelRun = false
-	    }
-	}
-	definitions.each {
-	    EntitySearcher.getAnnotations(iClass, iOnt, it).each {
-		annotation -> // OWLAnnotation
-		if (annotation.getValue() instanceof OWLLiteral) {
-		    def val = (OWLLiteral) annotation.getValue()
-		    def label = val.getLiteral()
-		    oDoc."definition" << label
-		}
-	    }
-	}
-	if (!hasLabel) {
-	    oDoc."label" << iClass.getIRI().getFragment().toString()
-	}
-	if (!lastFirstLabel) {
-	    oDoc."first_label" = iClass.getIRI().getFragment().toString()
-	}
 	if (!deprecated) {
-	    index("owlclass", oDoc)
+	    index("owlclass", info)
 	}
     }
-    
-    iOnt.getObjectPropertiesInSignature(true).each {
-	iClass ->
-	def cIRI = iClass.getIRI().toString()
-	def firstLabelRun = true
-	def lastFirstLabel = null
-	oDoc = [:].withDefault { [] }
-	oDoc['ontology'] = acronym
-	oDoc['class'] = cIRI
-
-	def xrefs = []
-	EntitySearcher.getAnnotationAssertionAxioms(iClass, iOnt).each {
-	    if (it.getProperty().getIRI() == new IRI('http://www.geneontology.org/formats/oboInOwl#hasDbXref')) {
-		it.getAnnotations().each {
-		    def label = it.getValue().getLiteral()
-		    if (!xrefs.contains(label)) {
-			xrefs << label
-		    }
-		}
-	    }
-	}
-
-	def annoMap = [:].withDefault { new TreeSet() }
-	EntitySearcher.getAnnotations(iClass, iOnt).each {
-	    anno ->
-	    def aProp = anno.getProperty()
-	    if (anno.getValue() instanceof OWLLiteral) {
-		def aVal = anno.getValue().getLiteral()
-		def aLabels = []
-		if (EntitySearcher.getAnnotations(aProp, iOnt, df.getRDFSLabel()).size() > 0) {
-		    EntitySearcher.getAnnotations(aProp, iOnt, df.getRDFSLabel()).each { l ->
-			def lab = l.getValue().getLiteral()
-			annoMap[lab].add(aVal)
-		    }
-		} else {
-		    annoMap[aProp.toString()].add(aVal)
-		}
-	    }
-	}
-
-	annoMap.each { k, v ->
-	    v.each { val ->
-		oDoc[k] << val
-	    }
-	}
-
-	labels.each {
-	    EntitySearcher.getAnnotations(iClass, iOnt, it).each {
-		annotation -> // OWLAnnotation
-		if (annotation.getValue() instanceof OWLLiteral) {
-		    def val = (OWLLiteral) annotation.getValue()
-		    def label = val.getLiteral()
-
-		    if (!xrefs.contains(label)) {
-			oDoc['label'] << label
-			if (firstLabelRun) {
-			    lastFirstLabel = label;
-			}
-		    }
-		}
-	    }
-
-	    if (lastFirstLabel) {
-		oDoc['first_label'] = lastFirstLabel
-		firstLabelRun = false
-	    }
-	}
-	definitions.each {
-	    EntitySearcher.getAnnotations(iClass, iOnt, it).each {
-		annotation -> // OWLAnnotation
-		if (annotation.getValue() instanceof OWLLiteral) {
-		    def val = (OWLLiteral) annotation.getValue()
-		    def label = val.getLiteral()
-
-		    oDoc['definition'] << label
-		    if (annotation != null) {
-			//	    dCount += 1
-		    }
-		}
-	    }
-	}
-
-	oDoc['label'] << iClass.getIRI().getFragment().toString()
-	if (!lastFirstLabel) {
-	    oDoc['first_label'] = iClass.getIRI().getFragment().toString()
-	}
-	index("property", oDoc)
-    }
-
 
 }
 
-def fileName = args[0]
+def url = args[0]
+def fileName = args[1]
 
 def data = System.in.newReader().getText()
 def slurper = new JsonSlurper()
 data = slurper.parseText(data)
 
-url = 'http://localhost:9200'
 http = new HTTPBuilder(url)
 
-reloadOntologyIndex(fileName, data)  
+indexOntology(fileName, data)  
 
 http.shutdown()

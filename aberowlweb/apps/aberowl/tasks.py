@@ -21,6 +21,9 @@ ABEROWL_API_URL = getattr(
 ABEROWL_API_SERVERS_POOL = getattr(
     settings, 'ABEROWL_API_SERVERS_POOL', ['127.0.0.1'])
 
+ELASTIC_SEARCH_URL = getattr(
+    settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/')
+
 
 @periodic_task(run_every=crontab(hour=12, minute=0))
 def sync_bioportal():
@@ -153,7 +156,8 @@ def sync_bioportal():
 
 def index_submission(ontology, submission):
     p = Popen(
-        ['groovy', 'IndexElastic.groovy', '../' + submission.get_filepath()],
+        ['groovy', 'IndexElastic.groovy',
+         ELASTIC_SEARCH_URL, '../' + submission.get_filepath()],
         stdin=PIPE,
         cwd='scripts/')
     data = {

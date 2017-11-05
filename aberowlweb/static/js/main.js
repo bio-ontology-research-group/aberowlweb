@@ -202,9 +202,13 @@ class Main extends React.Component {
 	var page = newProps.match.params.page;
 	if (page !== undefined) {
 	    this.setState({page: page});
+	} else {
+	    this.setState({page: 1});
 	}
 	if (tab !== undefined) {
 	    this.setState({currentTab: tab});
+	} else {
+	    this.setState({currentTab: 'Classes'});
 	}
 	
     }

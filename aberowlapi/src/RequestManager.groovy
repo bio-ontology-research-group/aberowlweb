@@ -34,19 +34,52 @@ public class RequestManager {
 
     private static final MAX_REASONER_RESULTS = 100000
 
-    OWLOntologyManager oManager
-    List<OWLAnnotationProperty> aProperties = new ArrayList<>();
+    OWLOntologyManager oManager;
     OWLDataFactory df = OWLManager.getOWLDataFactory();
 
+    def ontology = null;
+    def ont = null;
+    def ontIRI = null;
+    def queryEngine = null;
 
-    def ontology = null
-    def ont = null
-    def ontIRI = null
-    def queryEngine = null
+    def aProperties = [
+    	df.getRDFSLabel(),
+	df.getOWLAnnotationProperty(IRI.create("http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym")),
+	df.getOWLAnnotationProperty(IRI.create("http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym")),
+	df.getOWLAnnotationProperty(IRI.create("http://www.geneontology.org/formats/oboInOwl#hasExactSynonym"))
+    ];
+    
+    def identifiers = [
+	df.getOWLAnnotationProperty(IRI.create('http://purl.org/dc/elements/1.1/identifier')),
+    ];
+
+    def labels = [
+	df.getRDFSLabel(),
+	df.getOWLAnnotationProperty(IRI.create('http://www.w3.org/2004/02/skos/core#prefLabel')),
+	df.getOWLAnnotationProperty(IRI.create('http://purl.obolibrary.org/obo/IAO_0000111'))
+    ];
+    def synonyms = [
+	df.getOWLAnnotationProperty(IRI.create('http://www.w3.org/2004/02/skos/core#altLabel')),
+	df.getOWLAnnotationProperty(IRI.create('http://purl.obolibrary.org/obo/IAO_0000118')),
+	df.getOWLAnnotationProperty(IRI.create('http://www.geneontology.org/formats/oboInOwl#hasExactSynonym')),
+	df.getOWLAnnotationProperty(IRI.create('http://www.geneontology.org/formats/oboInOwl#hasSynonym')),
+	df.getOWLAnnotationProperty(IRI.create('http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym')),
+	df.getOWLAnnotationProperty(IRI.create('http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym'))
+    ];
+    def definitions = [
+	df.getOWLAnnotationProperty(IRI.create('http://purl.obolibrary.org/obo/IAO_0000115')),
+	df.getOWLAnnotationProperty(IRI.create('http://www.w3.org/2004/02/skos/core#definition')),
+	df.getOWLAnnotationProperty(IRI.create('http://purl.org/dc/elements/1.1/description')),
+	df.getOWLAnnotationProperty(IRI.create('http://purl.org/dc/terms/description')),
+	df.getOWLAnnotationProperty(IRI.create('http://www.geneontology.org/formats/oboInOwl#hasDefinition'))
+    ];
+
+    ShortFormProvider shortFormProvider;
 
     public RequestManager(String ont, String ontIRI) {
 	this.ont = ont;
 	this.ontIRI = ontIRI;
+	this.shortFormProvider = new SimpleShortFormProvider();
     } 
     
     public static RequestManager create(String ont, String ontIRI) {
@@ -54,7 +87,6 @@ public class RequestManager {
 	try {
 	    println("Starting manager for $ont")
 	    mgr.loadOntology()
-	    mgr.loadAnnotations()
 	    mgr.createReasoner()
 	    println("Finished loading $ont")
 	    return mgr;
@@ -72,31 +104,9 @@ public class RequestManager {
      */
     void reloadOntology() {
 	try {
-	    OWLOntologyManager lManager = OWLManager.createOWLOntologyManager()
-	    OWLOntologyLoaderConfiguration config = new OWLOntologyLoaderConfiguration()
-	    config.setFollowRedirects(true)
-	    config = config.setMissingImportHandlingStrategy(
-		MissingImportHandlingStrategy.SILENT)
-	    def ontology = lManager.loadOntologyFromOntologyDocument(IRI.create(this.ontIRI))
-	    println "Updated ontology: " + this.ont
-	    
-	    this.ontology = ontology
-	    this.ontologyManager = lManager
-
-	    reloadOntologyAnnotations(this.ont)
-
-	    List<String> langs = new ArrayList<>();
-	    Map<OWLAnnotationProperty, List<String>> preferredLanguageMap = new HashMap<>();
-	    for (OWLAnnotationProperty annotationProperty : this.aProperties) {
-		preferredLanguageMap.put(annotationProperty, langs);
-	    }
-	    // May be replaced with any reasoner using the standard interface
-	    OWLReasonerFactory reasonerFactory = new ElkReasonerFactory()
-	    createOntologyReasoner(reasonerFactory, preferredLanguageMap)
-	} catch (OWLOntologyInputSourceException e) {
-	    e.printStackTrace()
-	} catch (IOException e) {
-	    e.printStackTrace()
+	    println("Reloading the ontology $ont");
+	    this.loadOntology();
+	    this.createReasoner();
 	} catch (Exception e) {
 	    e.printStackTrace()
 	}
@@ -111,15 +121,27 @@ public class RequestManager {
      */
     void loadOntology() throws OWLOntologyCreationException, IOException {
 	OWLOntologyManager lManager = OWLManager.createOWLOntologyManager()
-	OWLOntologyLoaderConfiguration config = new OWLOntologyLoaderConfiguration()
-	config.setFollowRedirects(true)
-	config = config.setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT)
 	def ontology = lManager.loadOntologyFromOntologyDocument(IRI.create(this.ontIRI));
+	OWLOntologyImportsClosureSetProvider provider = new OWLOntologyImportsClosureSetProvider(lManager, ontology);
+	OWLOntologyMerger merger = new OWLOntologyMerger(provider, false);
+	ontology = merger.createMergedOntology(lManager, IRI.create("http://merged.owl"));
+
 	this.ontology = ontology
 	this.oManager = lManager
     }
 
-    void createOntologyReasoner(OWLReasonerFactory reasonerFactory, Map preferredLanguageMap) throws Exception {
+    /**
+     * Create and run the reasoning on the loaded OWL ontologies, creating a QueryEngine for each.
+     */
+    void createReasoner() {
+	println "Classifying $ont"
+	List<String> langs = new ArrayList<>();
+	Map<OWLAnnotationProperty, List<String>> preferredLanguageMap = new HashMap<>();
+	for (OWLAnnotationProperty annotationProperty : this.aProperties) {
+	    preferredLanguageMap.put(annotationProperty, langs);
+	}
+
+	OWLReasonerFactory reasonerFactory = new ElkReasonerFactory();
 	OWLOntology ontology = this.ontology
 	OWLOntologyManager manager = this.oManager
 	/* Configure Elk */
@@ -128,11 +150,14 @@ public class RequestManager {
 	eConf.setParameter(ReasonerConfiguration.INCREMENTAL_MODE_ALLOWED, "true")
 
 	/* OWLAPI Reasoner config, no progress monitor */
-	OWLReasonerConfiguration rConf = new ElkReasonerConfiguration(ElkReasonerConfiguration.getDefaultOwlReasonerConfiguration(new NullReasonerProgressMonitor()), eConf)
+	OWLReasonerConfiguration rConf = new ElkReasonerConfiguration(
+	    ElkReasonerConfiguration.getDefaultOwlReasonerConfiguration(
+		new NullReasonerProgressMonitor()), eConf)
 	OWLReasoner oReasoner = reasonerFactory.createReasoner(ontology, rConf);
 	oReasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 
-	def sForm = new NewShortFormProvider(aProperties, preferredLanguageMap, manager);
+	def sForm = new NewShortFormProvider(
+	    this.aProperties, preferredLanguageMap, manager);
 
 	// dispose of old reasoners, close the threadpool
 	queryEngine?.getoReasoner()?.dispose()
@@ -148,155 +173,102 @@ public class RequestManager {
 	    this.queryEngine = new QueryEngine(oReasoner, sForm)
 	    println "Successfully classified $ont"
 	}
-    }
 
-    /**
-     * Create and run the reasoning on the loaded OWL ontologies, creating a QueryEngine for each.
-     */
-    void createReasoner() {
-	println "Classifying $ont"
-	List<String> langs = new ArrayList<>();
-	Map<OWLAnnotationProperty, List<String>> preferredLanguageMap = new HashMap<>();
-	for (OWLAnnotationProperty annotationProperty : this.aProperties) {
-	    preferredLanguageMap.put(annotationProperty, langs);
-	}
-
-	OWLReasonerFactory reasonerFactory = new ElkReasonerFactory();
-	createOntologyReasoner(reasonerFactory, preferredLanguageMap)
 	println "Classified $ont"
     }
 
-    /**
-     * Create list of RDFS_LABEL annotations to be used by the ShortFormProvider for a given ontology.
-     */
-    void reloadOntologyAnnotations() {
-	OWLDataFactory factory = df
-	OWLAnnotationProperty rdfsLabel = factory.getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
-	aProperties.add(rdfsLabel)
-	aProperties.add(factory.getOWLAnnotationProperty(IRI.create("http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym")))
-	aProperties.add(factory.getOWLAnnotationProperty(IRI.create("http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym")))
-	aProperties.add(factory.getOWLAnnotationProperty(IRI.create("http://www.geneontology.org/formats/oboInOwl#hasExactSynonym")))
-    }
+    def toInfo(OWLEntity c, boolean axioms) {
+	def o = this.ontology;
+	def info = [
+	    "owlClass": c.toString(),
+	    "class": c.getIRI().toString(),
+	    "ontology": this.ont,
+	    "deprecated": false
+	].withDefault {key -> []};
 
-    /**
-     * Create list of RDFS_LABEL annotations to be used by the ShortFormProvider for all ontologies.
-     */
-    void loadAnnotations() {
-	reloadOntologyAnnotations()
-    }
+	def hasLabel = false
 
+	EntitySearcher.getAnnotationAssertionAxioms(c, o).each { axiom ->
+	    def annot = axiom.getAnnotation();
+	    def aProp = axiom.getProperty();
+	    if (annot.isDeprecatedIRIAnnotation()) {
+		info["deprecated"] = true
+	    } else if (aProp in this.identifiers) {
+		if (annot.getValue() instanceof OWLLiteral) {
+		    def aVal = annot.getValue().getLiteral()
+		    info['identifier'] << aVal
+		}
+	    } else if (aProp in this.labels) {
+		if (annot.getValue() instanceof OWLLiteral) {
+		    def aVal = annot.getValue().getLiteral()
+		    info['label'] = aVal
+		    hasLabel = true
+		}
+	    } else if (aProp in this.definitions) {
+		if (annot.getValue() instanceof OWLLiteral) {
+		    def aVal = annot.getValue().getLiteral()
+		    info["definition"] << aVal
+		}
+	    } else if (aProp in this.synonyms) {
+		if (annot.getValue() instanceof OWLLiteral) {
+		    def aVal = annot.getValue().getLiteral()
+		    info["synonyms"] << aVal
+		}
+	    } else {
+		if (annot.getValue() instanceof OWLLiteral) {
+		    def aVal = annot.getValue().getLiteral()
+		    def aLabels = EntitySearcher.getAnnotations(
+			aProp, o)
+		    if (aLabels.size() > 0) {
+			aLabels.each { l ->
+			    if (l.getValue() instanceof OWLLiteral) {
+				def lab = l.getValue().getLiteral()
+				info[lab].add(aVal)
+			    }
+			}
+		    } else {
+			def prop = this.shortFormProvider.getShortForm(aProp)
+			info[prop].add(aVal)
+		    }
+		}
+	    }
+	}
+
+	if (!hasLabel) {
+	    info["label"] = this.shortFormProvider.getShortForm(c);
+	}
+
+	if (axioms) {
+	    // set up the renderer for the axioms
+	    def sProvider = new AnnotationValueShortFormProvider(
+		Collections.singletonList(df.getRDFSLabel()),
+		Collections.<OWLAnnotationProperty, List<String>> emptyMap(),
+		this.oManager);
+	    def manSyntaxRenderer = new AberOWLSyntaxRendererImpl()
+	    manSyntaxRenderer.setShortFormProvider(sProvider)
+
+	    /* get the axioms */
+	    EntitySearcher.getSuperClasses(c, o).each {
+		cExpr -> // OWL Class Expression
+		info["SubClassOf"] << manSyntaxRenderer.render(cExpr)
+	    }
+	    EntitySearcher.getEquivalentClasses(c, o).each {
+		cExpr -> // OWL Class Expression
+		info["Equivalent"] << manSyntaxRenderer.render(cExpr)
+	    }
+	    EntitySearcher.getDisjointClasses(c, o).each {
+		cExpr -> // OWL Class Expression
+		info["Disjoint"] << manSyntaxRenderer.render(cExpr)
+	    }
+	}
+	return info;
+    }
 
     Set classes2info(Set<OWLClass> classes, boolean axioms) {
 	ArrayList result = new ArrayList<HashMap>();
 	def o = this.ontology
 	classes.each { c ->
-	    def info = [
-		"owlClass"  : c.toString(),
-		"classURI"  : c.getIRI().toString(),
-		"ontologyURI": this.ont,
-		"remainder" : c.getIRI().getFragment(),
-		"deprecated": false
-	    ].withDefault {key -> []};
-
-	    def identifiers = [
-		df.getOWLAnnotationProperty(new IRI('http://purl.org/dc/elements/1.1/identifier')),
-	    ]
-	    
-	    def labels = [
-		df.getRDFSLabel(),
-		df.getOWLAnnotationProperty(new IRI('http://www.w3.org/2004/02/skos/core#prefLabel')),
-		df.getOWLAnnotationProperty(new IRI('http://purl.obolibrary.org/obo/IAO_0000111'))
-	    ]
-	    def synonyms = [
-		df.getOWLAnnotationProperty(new IRI('http://www.w3.org/2004/02/skos/core#altLabel')),
-		df.getOWLAnnotationProperty(new IRI('http://purl.obolibrary.org/obo/IAO_0000118')),
-		df.getOWLAnnotationProperty(new IRI('http://www.geneontology.org/formats/oboInOwl#hasExactSynonym')),
-		df.getOWLAnnotationProperty(new IRI('http://www.geneontology.org/formats/oboInOwl#hasSynonym')),
-		df.getOWLAnnotationProperty(new IRI('http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym')),
-		df.getOWLAnnotationProperty(new IRI('http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym'))
-	    ]
-	    def definitions = [
-		df.getOWLAnnotationProperty(new IRI('http://purl.obolibrary.org/obo/IAO_0000115')),
-		df.getOWLAnnotationProperty(new IRI('http://www.w3.org/2004/02/skos/core#definition')),
-		df.getOWLAnnotationProperty(new IRI('http://purl.org/dc/elements/1.1/description')),
-		df.getOWLAnnotationProperty(new IRI('http://purl.org/dc/terms/description')),
-		df.getOWLAnnotationProperty(new IRI('http://www.geneontology.org/formats/oboInOwl#hasDefinition'))
-	    ]
-
-	    def hasLabel = false
-
-	    EntitySearcher.getAnnotations(c, o).each { annot ->
-		def aProp = annot.getProperty()
-		if (annot.isDeprecatedIRIAnnotation()) {
-		    info["deprecated"] = true
-		} else if (aProp in identifiers) {
-		    if (annot.getValue() instanceof OWLLiteral) {
-			def aVal = annot.getValue().getLiteral()
-			info['identifier'] << aVal
-		    }
-		} else if (aProp in labels) {
-		    if (annot.getValue() instanceof OWLLiteral) {
-			def aVal = annot.getValue().getLiteral()
-			info['label'] << aVal
-			hasLabel = true
-		    }
-		} else if (aProp in definitions) {
-		    if (annot.getValue() instanceof OWLLiteral) {
-			def aVal = annot.getValue().getLiteral()
-			info["definition"] << aVal
-		    }
-		} else if (aProp in synonyms) {
-		    if (annot.getValue() instanceof OWLLiteral) {
-			def aVal = annot.getValue().getLiteral()
-			info["synonyms"] << aVal
-		    }
-		} else {
-		    if (annot.getValue() instanceof OWLLiteral) {
-			def aVal = annot.getValue().getLiteral()
-			def aLabels = EntitySearcher.getAnnotations(
-			    aProp, o)
-			if (aLabels.size() > 0) {
-			    aLabels.each { l ->
-				if (l.getValue() instanceof OWLLiteral) {
-				    def lab = l.getValue().getLiteral()
-				    info[lab].add(aVal)
-				}
-			    }
-			} else {
-			    def prop = aProp.toString()?.replaceAll("<", "")?.replaceAll(">", "")
-			    info[prop].add(aVal)
-			}
-		    }
-		}
-	    }
-
-	    if (!hasLabel) {
-		info["label"] << c.getIRI().getFragment().toString()
-	    }
-	    
-	    if (axioms) {
-		// set up the renderer for the axioms
-		def sProvider = new AnnotationValueShortFormProvider(
-		    Collections.singletonList(df.getRDFSLabel()),
-		    Collections.<OWLAnnotationProperty, List<String>> emptyMap(),
-		    this.oManager);
-		def manSyntaxRenderer = new AberOWLSyntaxRendererImpl()
-		manSyntaxRenderer.setShortFormProvider(sProvider)
-
-		/* get the axioms */
-		EntitySearcher.getSuperClasses(c, o).each {
-		    cExpr -> // OWL Class Expression
-		    info["SubClassOf"] << manSyntaxRenderer.render(cExpr)
-		}
-		EntitySearcher.getEquivalentClasses(c, o).each {
-		    cExpr -> // OWL Class Expression
-		    info["Equivalent"] << manSyntaxRenderer.render(cExpr)
-		}
-		EntitySearcher.getDisjointClasses(c, o).each {
-		    cExpr -> // OWL Class Expression
-		    info["Disjoint"] << manSyntaxRenderer.render(cExpr)
-		}
-	    }
+	    def info = toInfo(c, axioms);
 	    if (!info["deprecated"]) {
 		result.add(info);
 	    }
@@ -409,22 +381,12 @@ public class RequestManager {
     }
     
     Map getObjectProperties(OWLReasoner reasoner, OWLObjectProperty prop, Set<OWLObjectProperty> used) {
-	def propMap = [:].withDefault {[]}
-	def iter = EntitySearcher.getAnnotationAssertionAxioms(
-	    prop, this.ontology).iterator()
-	while (iter.hasNext()) {
-	    def axiom = iter.next()
-	    if (axiom.getProperty().isLabel()) {
-		OWLLiteral value = (OWLLiteral) axiom.getValue()
-		propMap["owlClass"] = "<" + axiom.getSubject().toString() + ">"
-		propMap["label"] = value.getLiteral().toString()
-		break
-	    }
-	}
-
+	def propMap = toInfo(prop, false);
+	
 	def subProps = reasoner.getSubObjectProperties(
 	    prop, true).getFlattened()
 	subProps.remove(df.getOWLBottomObjectProperty())
+	subProps.remove(df.getOWLTopObjectProperty())
 	if (subProps.size() > 0) {
 	    for (def expression: subProps) {
 		def objProp = expression.getNamedProperty()

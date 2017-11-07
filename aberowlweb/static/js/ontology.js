@@ -221,11 +221,37 @@ class Ontology extends React.Component {
 	if (obj == null) {
 	    return (<h2>Please select an object property!</h2>);
 	}
-	const content = (
-		<tbody>
-		<tr><td>label</td><td>{ obj.label }</td></tr>
-		<tr><td>class</td><td>{ obj.owlClass }</td></tr>
-		</tbody>
+	const ignoreFields = new Set([
+	    'collapsed',
+	    'children',
+	    'deprecated',
+	    'owlClass'
+	]);
+
+	var that = this;
+	var allFields = Object.keys(obj)
+	    .filter((item) => !ignoreFields.has(item));
+	allFields = new Set(allFields);
+	var fields = [
+	    'identifier', 'label', 'definition', 'class', 'ontology'];
+	var fieldSet = new Set(fields);
+	fields = fields.filter((item) => allFields.has(item));
+	for (let item of allFields) {
+	    if(!fieldSet.has(item)) {
+		fields.push(item);
+	    }
+	}
+	const htmlFields = new Set(['SubClassOf', 'Equivalent', 'Disjoint']);
+	
+	const data = fields.map(function(item) {
+		  if (htmlFields.has(item)) {
+		      return [item, that.innerHTML(obj[item].toString())];
+		  }
+		  return [item, obj[item]];
+	      });
+	const content = data.map(
+	    (item) =>
+		<tr><td>{ item[0] }</td><td>{ item[1] }</td></tr>
 	);
 	return (
 	    <div>
@@ -233,7 +259,9 @@ class Ontology extends React.Component {
 		<thead>
 		<th> Property </th> <th> Value </th>
 	        </thead>
+		<tbody>
 		{content}
+	        </tbody>
 	        </table>
 	    </div>
 	);
@@ -247,8 +275,6 @@ class Ontology extends React.Component {
 	    );
 	}
 	const ignoreFields = new Set([
-	    'first_label',
-	    'remainder',
 	    'collapsed',
 	    'children',
 	    'deprecated',
@@ -260,7 +286,7 @@ class Ontology extends React.Component {
 	    .filter((item) => !ignoreFields.has(item));
 	allFields = new Set(allFields);
 	var fields = [
-	    'identifier', 'label', 'definition', 'classURI', 'ontologyURI',
+	    'identifier', 'label', 'definition', 'class', 'ontology',
 	    'Equivalent', 'SubClassOf', 'Disjoint'];
 	var fieldSet = new Set(fields);
 	fields = fields.filter((item) => allFields.has(item));
@@ -463,7 +489,7 @@ class Ontology extends React.Component {
 	    if (!('children' in obj)) {
 		fetch(
 		    '/api/backend?script=runQuery.groovy&type=subclass&direct=true&query='
-			+ encodeURIComponent(obj.owlClass) + '&ontology=' + obj.ontologyURI)
+			+ encodeURIComponent(obj.owlClass) + '&ontology=' + obj.ontology)
 		    .then(function(response){
 			return response.json();
 		    })

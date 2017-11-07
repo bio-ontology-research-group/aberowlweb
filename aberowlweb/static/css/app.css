@@ -78,3 +78,29 @@ td > span > span {
 td > span > span:first-child {
     padding-left: 0;
 }
+
+#man-property {
+    display:inline;
+    color: green;
+}
+
+#man-keyword {
+    display:inline;
+    color: red;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+#man-and {
+    display:inline;
+    color: red;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+#man-owlclass {
+    display:inline;
+    color: blue;
+}
+#man-owlclass a {
+    display:inline;
+    color: blue;
+}

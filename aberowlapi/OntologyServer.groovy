@@ -74,7 +74,10 @@ def startServer(def ontologies, def port) {
     context.setAttribute("managers", managers)
     GParsPool.withPool {
 	ontologies.eachParallel { ont ->
-	    managers[ont.ontId] = RequestManager.create(ont.ontId, ont.ontIRI)
+	    def mgr = RequestManager.create(ont.ontId, ont.ontIRI)
+	    if (mgr != null) {
+		managers[ont.ontId] = mgr
+	    }
 	}
     }
     

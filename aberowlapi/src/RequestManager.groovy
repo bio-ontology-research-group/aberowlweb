@@ -370,41 +370,34 @@ public class RequestManager {
     /**
      * Retrieve all objects properties
      */
-    Map getObjectProperties() {
+    def getObjectProperties() {
+	return this.getObjectProperties(df.getOWLTopObjectProperty())
+    }
+    
+    def getObjectProperties(String prop) {
+	def objProp = df.getOWLObjectProperty(IRI.create(prop));
+	return this.getObjectProperties(objProp);
+    }
+    
+    def getObjectProperties(OWLObjectProperty prop) {
 	def reasoner = new StructuralReasoner(
 	    this.ontology, new SimpleConfiguration(),
 	    BufferingMode.NON_BUFFERING)
-	def used = new HashSet<OWLObjectProperty>()
-	
-	return this.getObjectProperties(
-	    reasoner, df.getOWLTopObjectProperty(), used)
-    }
-    
-    Map getObjectProperties(OWLReasoner reasoner, OWLObjectProperty prop, Set<OWLObjectProperty> used) {
-	def propMap = toInfo(prop, false);
-	
+
 	def subProps = reasoner.getSubObjectProperties(
 	    prop, true).getFlattened()
 	subProps.remove(df.getOWLBottomObjectProperty())
 	subProps.remove(df.getOWLTopObjectProperty())
-	if (subProps.size() > 0) {
-	    for (def expression: subProps) {
-		def objProp = expression.getNamedProperty()
-		if (used.contains(objProp)) {
-		    continue
-		} else {
-		    used.add(objProp)
-		}
-		def children = getObjectProperties(
-		    reasoner, objProp, used)
-		if(!children.isEmpty()) {
-		    propMap["children"].add(children)
-		}
-
+	def used = new HashSet<OWLObjectProperty>();
+	def result = [];
+	for (def expression: subProps) {
+	    def objProp = expression.getNamedProperty()
+	    if (!used.contains(objProp)) {
+		result.add(toInfo(objProp, false));
+		used.add(objProp);
 	    }
 	}
-	
-	return propMap
+	return ["result": result];
     }
 
     

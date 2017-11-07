@@ -9,15 +9,8 @@ class Ontology extends React.Component {
 	}
 	var propsMap = new Map();
 	var properties = props.ontology.properties;
-	var q = properties.slice();
-	while(q.length > 0) {
-	    var p = q.shift();
-	    propsMap.set(p.owlClass, p);
-	    if ('children' in p) {
-		for (var i = 0; i < p.children.length; i++) {
-		    q.push(p.children[i]);
-		}
-	    }
+	for (var i = 0; i < properties.length; i++) {
+	    propsMap.set(properties[i].owlClass, properties[i]); 
 	}
 	var currentTab = 'Overview';
 	this.state = {
@@ -521,9 +514,28 @@ class Ontology extends React.Component {
 	    });
 	} else if (currentTab == 'Property' && params.owlClass !== undefined){
 	    const owlClass = decodeURIComponent(params.owlClass);
-	    const selectedProp = this.state.propsMap.get(owlClass);
-	    state.selectedProp = selectedProp;
-	    this.setState(state);
+	    var propsMap = this.state.propsMap;
+	    const obj = propsMap.get(owlClass);
+	    state.selectedProp = obj;
+	    if (!('children' in obj)) {
+		fetch(
+		    '/api/backend?script=getObjectProperties.groovy&property='
+			+ encodeURIComponent(obj.class) + '&ontology=' + obj.ontology)
+		    .then(function(response){
+			return response.json();
+		    })
+		    .then(function(data) {
+			console.log(data);
+			obj.children = data.result;
+			for (var i = 0; i < obj.children.length; i++) {
+			    propsMap.set(obj.children[i].owlClass, obj.children[i]);
+			}
+			state.propsMap = propsMap;
+			that.setState(state);
+		    });
+	    } else {
+		this.setState(state);
+	    }
 	} else {
 	    this.setState(state);
 	}

@@ -73,8 +73,8 @@ class OntologyDetailView(DetailView):
                 ontology.get_api_url() + 'getObjectProperties.groovy?ontology=' + ontology.acronym,
                 timeout=5)
             res = rq.json()
-            if 'children' in res:
-                data['properties'] = res['children']
+            if 'result' in res:
+                data['properties'] = res['result']
             else:
                 print(res)
         except Exception as e:

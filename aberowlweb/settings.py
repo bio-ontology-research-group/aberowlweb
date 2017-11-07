@@ -213,7 +213,7 @@ class BaseConfiguration(Configuration):
     CELERY_TASK_RESULT_EXPIRES = 600
 
     # AberOWL setttings
-    ABEROWL_API_URL = 'http://localhost/'
+    ABEROWL_API_URL = 'http://localhost:8080/api/'
     ABEROWL_SERVER_URL = 'http://localhost/'
 
     # List of ip addresses of servers for running ontology api

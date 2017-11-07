@@ -83,7 +83,7 @@ class ResultsTable extends React.Component {
     renderFilter() {
 	return (
 	    <form class="form">
-		<input class="form-control" type="text" value={this.props.filterValue} onChange={(e) => this.filterChange(e)} placeholder="Search by topic"/>
+		<input class="form-control" type="text" value={this.props.filterValue} onChange={(e) => this.filterChange(e)} placeholder="Search"/>
 	    </form>
 	);
     }
@@ -94,10 +94,11 @@ class ResultsTable extends React.Component {
 	if (this.props.data !== undefined) {
 	    const filteredRows = this.props.data.rows.filter(
 		function(items) {
-		    for(var i = 0; i < items.length; i++) {
-			if (items[i] != null && (typeof items[i] === 'string' || items[i] instanceof String) && items[i].indexOf(v) != -1) return true;
+		    var keys = v.split(" ");
+		    for (var key of keys) {
+			var i = items.length - 1;
+			if (items[i].indexOf(key) != -1) return true;
 		    }
-		    return false;
 		}
 	    );
 	    this.setState({rows: filteredRows});
@@ -118,7 +119,7 @@ class ResultsTable extends React.Component {
 	const header = this.state.headers.map(
 	    (item) => <th> {item} </th>);
 	const content = rows.map(
-	    (items) => this.renderRow(items)
+	    (items) => this.renderRow(items.slice(0, items.length - 1))
 	);
 	return (
 	    <div class="row">
@@ -242,18 +243,20 @@ class Main extends React.Component {
 		const definition = that.innerHTML(res[0].definition);
 		const iri = '<' + res[0].class + '>';
 		const label = term + ' (' + iri + ')';
+		var filterBy = term + res[0].definition;
 		
 		for (var i = 0; i < res.length; i++) {
 		    const iri = '<' + res[i].class + '>';
 		    ontos.push([res[i].ontology, encodeURIComponent(iri)]);
+		    filterBy += res[i].ontology;
 		}
 		var ontos = ontos.map(function(onto) {
 		    return (
 			    <a href={'/ontology/' + onto[0] + '/#/Browse/' + onto[1]}> {onto[0]} </a>
 		    );
 		});
-
-		classes.rows.push([label, definition, ontos]);
+		    
+		classes.rows.push([label, definition, ontos, filterBy]);
 
 	    }
 
@@ -261,8 +264,9 @@ class Main extends React.Component {
 		headers: ['ID', 'Name', 'Description'], rows: [] };
 	    for (var i = 0; i < data[1].length; i++) {
 		var item = data[1][i];
+		var filterBy = item.ontology + item.name + item.description;
 		const onto = (<a href={'/ontology/' + item.ontology }> { item.ontology } </a>);
-		ontologies.rows.push([onto, item.name, item.description])
+		ontologies.rows.push([onto, item.name, item.description, filterBy])
 	    }
 
 	    
@@ -282,6 +286,7 @@ class Main extends React.Component {
 	fetch('/api/backend?script=runQuery.groovy&type=subeq&labels=true&query=' + encodeURIComponent(query))
 	    .then(function(response){ return response.json(); })
 	    .then(function(data) {
+		console.log('DLQuery', data);
 		var dlQuery = {
 		    headers: ['Ontology', 'OWL Class', 'Definition'], rows: []};
 		for (var i = 0; i < data['result'].length; i++) {
@@ -292,7 +297,8 @@ class Main extends React.Component {
 			    {item.label + '(' + item.owlClass + ')'}
 			</a>
 		    );
-		    dlQuery.rows.push([onto, owlClass, item.definition])
+		    var filterBy = item.ontologyURI + item.label + item.definition;
+		    dlQuery.rows.push([onto, owlClass, item.definition, filterBy]);
 		}
 		var results = that.state.results;
 		results['DLQuery'] = dlQuery;

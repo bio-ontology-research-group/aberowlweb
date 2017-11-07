@@ -35,7 +35,7 @@ class OntologyListView(ListView):
     def get_context_data(self, *args, **kwargs):
         context = super(ListView, self).get_context_data(*args, **kwargs)
         ontologies = self.get_queryset().filter(
-            status=Ontology.CLASSIFIED, is_running=True)
+            status=Ontology.CLASSIFIED, nb_servers__gt=0)
         data = OntologySerializer(ontologies, many=True).data
         context['ontologies'] = JSONRenderer().render(data)
         return context
@@ -60,7 +60,9 @@ class OntologyDetailView(DetailView):
         data['properties'] = []
         try:
             rq = requests.get(
-                ontology.get_api_url() + 'runQuery.groovy?type=subclass&direct=true&query=<http://www.w3.org/2002/07/owl%23Thing>',
+                ontology.get_api_url()
+                + 'runQuery.groovy?type=subclass&direct=true&query=<http://www.w3.org/2002/07/owl%23Thing>&ontology='
+                + ontology.acronym,
                 timeout=5)
             res = rq.json()
             if 'result' in res:
@@ -68,7 +70,7 @@ class OntologyDetailView(DetailView):
             else:
                 print(res)
             rq = requests.get(
-                ontology.get_api_url() + 'getObjectProperties.groovy',
+                ontology.get_api_url() + 'getObjectProperties.groovy?ontology=' + ontology.acronym,
                 timeout=5)
             res = rq.json()
             if 'children' in res:

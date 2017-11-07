@@ -1,11 +1,14 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
+from django.db.models import F
 from aberowl.models import Ontology
+
 from gevent.subprocess import Popen, PIPE
 import time
 import signal
 import logging
 import gevent
+import json
 
 ABEROWL_SERVER_URL = getattr(settings, 'ABEROWL_SERVER_URL', 'http://localhost/')
 
@@ -41,47 +44,34 @@ class Command(BaseCommand):
         signal.signal(signal.SIGQUIT, self.stop_subprocesses)
 
     def add_arguments(self, parser):
-        parser.add_argument('server_ip', type=str)
-
+        pass
+    
     def stop_subprocesses(self, signum, frame):
-        for oid, p in self.processes.items():
-            if p.poll() is None:
-                logging.info('Stopping API for %s' % (oid, ))
-                p.kill()
-                Ontology.objects.filter(acronym=oid).update(is_running=False)
+        if self.proc.poll() is None:
+            self.proc.kill()
+        Ontology.objects.filter(nb_servers__gt=0).update(nb_servers=F('nb_servers') - 1)
         exit(0)
                 
     def handle(self, *args, **options):
-        server_ip = options['server_ip']
-        
-        while True:
-            ontologies = Ontology.objects.filter(
-                status=Ontology.CLASSIFIED,
-                is_running=False,
-                server_ip=server_ip)
-            print('Ontologies', len(ontologies))
-            threads = []
-            for ontology in ontologies:
-                oid = ontology.acronym
-                if oid not in self.processes:
-                    logging.info(
-                        'Starting API for %s on server %s port %d' % (
-                        oid, server_ip, ontology.port))
-                    ontIRI = ABEROWL_SERVER_URL + ontology.get_latest_submission().get_filepath()
-                    proc = Popen(
-                        ['groovy', 'OntologyServer.groovy', oid, ontIRI,
-                         str(ontology.port)],
-                        cwd='aberowlapi/', stdout=PIPE, universal_newlines=True)
-                    self.processes[oid] = proc
-                    g = processInThread(proc, oid)
-                    g.start()
-                else:
-                    proc = self.processes[oid]
-                    if proc.poll() is not None:
-                        del self.processes[oid]
+        ontologies = Ontology.objects.filter(
+            status=Ontology.CLASSIFIED)
+        data = []
+        for ont in ontologies:
+            ontIRI = ABEROWL_SERVER_URL + ont.get_latest_submission().get_filepath()
+            data.append({'ontId': ont.acronym, 'ontIRI': ontIRI})
+        data = json.dumps(data)
+        self.proc = Popen(
+            ['groovy', 'OntologyServer.groovy'],
+            cwd='aberowlapi/', stdin=PIPE, stdout=PIPE, universal_newlines=True)
+        self.proc.stdin.write(data)
+        self.proc.stdin.close()
 
-            else:
-                if len(self.processes) == 0:
-                    logging.info('No ontologies assigned to this server')
-            gevent.sleep(60)
-
+        for line in self.proc.stdout:
+            line = line.strip()
+            logging.info(line)
+            if line.startswith('Finished loading'):
+                oid = line.split()[2]
+                Ontology.objects.filter(
+                    acronym=oid).update(nb_servers=F('nb_servers') + 1)
+        self.proc.stdout.close()
+        self.proc.wait()

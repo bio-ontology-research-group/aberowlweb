@@ -4,6 +4,7 @@ import groovy.json.*
 import org.apache.log4j.*
 import groovy.util.logging.*
 import src.util.Util
+import groovyx.gpars.GParsPool
 
 if(!application) {
     application = request.getApplication(true)
@@ -23,14 +24,11 @@ def query = params.query
 def type = params.type
 def direct = params.direct
 def labels = params.labels
-def sVersion = null
-def rManager = application.rManager
+def ontology = params.ontology
+def managers = application.managers
 
 if(type == null) {
     type = 'all'
-}
-if(sVersion == null || sVersion == '0') {
-    sVersion = '-1';
 }
 if(direct == null) {
     direct = "false"
@@ -55,22 +53,25 @@ response.contentType = 'application/json'
 try {
     def results = new HashMap()
     def start = System.currentTimeMillis()
-    def iVersion = Integer.parseInt(sVersion);
 
-    def out = rManager.runQuery(query, type, direct, labels)
-    def end = System.currentTimeMillis()
-    results.put('time', (end - start))
-    results.put('result', out)
-
-    def logstring = ""
-    logstring += query?:""
-    logstring += "\t"+(type?:"")
-    logstring += "\t"+(direct?:"")
-    logstring += "\t"+(labels?:"")
-    logstring += "\t"+(out.size()?:"")
-    logstring += "\t"+((end - start)?:"")
-    log.info logstring
-
+    if (ontology != null) {
+	def out = managers[ontology].runQuery(query, type, direct, labels, true)
+	def end = System.currentTimeMillis()
+	results.put('time', (end - start))
+	results.put('result', out)
+    } else {
+	def res = []
+	GParsPool.withPool {
+	    managers.values().eachParallel { manager ->
+		def out = manager.runQuery(query, type, direct, labels, false)
+		res.addAll(out)
+	    }
+	}
+	def end = System.currentTimeMillis()
+	results.put('time', (end - start))
+	results.put('result', res)
+	
+    }
     print new JsonBuilder(results).toString()
 } catch(java.lang.IllegalArgumentException e) {
     response.setStatus(400)

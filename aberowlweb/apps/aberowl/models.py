@@ -8,6 +8,8 @@ from django.utils import timezone
 from django.conf import settings
 import os
 
+ABEROWL_API_URL = getattr(
+    settings, 'ABEROWL_API_URL', 'http://localhost:8080/api/')
 
 class Ontology(models.Model):
     CLASSIFIED = 'Classified'
@@ -42,6 +44,7 @@ class Ontology(models.Model):
         protocol='IPv4', default="127.0.0.1")
     port = models.PositiveIntegerField(unique=True)
     is_running = models.BooleanField(default=False)
+    nb_servers = models.PositiveIntegerField(default=0)
 
     class Meta:
         verbose_name_plural = 'Ontologies'
@@ -54,7 +57,7 @@ class Ontology(models.Model):
         return submission
 
     def get_api_url(self):
-        return 'http://' + self.server_ip + ':' + str(self.port) + '/api/'
+        return ABEROWL_API_URL
 
     
 class Submission(models.Model):

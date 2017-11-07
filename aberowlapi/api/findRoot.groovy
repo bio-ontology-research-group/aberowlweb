@@ -11,11 +11,13 @@ if(!application) {
 def params = Util.extractParams(request)
 
 def query = params.query
-def rManager = application.rManager
+def ontology = params.ontology
+def managers = application.managers
 
 def owlThing = '<http://www.w3.org/2002/07/owl#Thing>'
 
-if(query) {
+if(query && ontology && managers.containsKey(ontology)) {
+    def manager = managers[ontology]
     query = java.net.URLDecoder.decode(query, "UTF-8")
 
     // find superclasses
@@ -23,7 +25,7 @@ if(query) {
     int it = 0
     while(true) {
 	q = supers[it]
-	parents = rManager.runQuery(q, 'superclass', true, false).toArray()
+	parents = manager.runQuery(q, 'superclass', true, false, true).toArray()
 	if (parents.size() == 0 || parents[0].owlClass == owlThing) {
 	    break
 	}
@@ -34,14 +36,14 @@ if(query) {
     supers = supers.reverse()
 
     // expand children
-    def result = rManager.runQuery(owlThing, 'subclass', true, false).toArray()
+    def result = manager.runQuery(owlThing, 'subclass', true, false, true).toArray()
     def classes = result
     it = 0
     for (int i = 0; i < supers.size(); i++) {
 	for (int j = 0; j < classes.size(); j++) {
 	    if (classes[j].owlClass == supers[i]) {
-		def children = rManager.runQuery(
-		    classes[j].owlClass, 'subclass', true, false).toArray()
+		def children = manager.runQuery(
+		    classes[j].owlClass, 'subclass', true, false, true).toArray()
 		classes[j]["children"] = children
 		classes = children
 		break
@@ -54,5 +56,3 @@ if(query) {
 } else {
   print('{result: []}')
 }
-
-

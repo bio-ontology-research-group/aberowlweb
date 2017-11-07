@@ -31,13 +31,17 @@ def incon = 0
 def status = "Unknown"
 def classifiable = true
 try {
-    OWLOntologyManager manager = OWLManager.createOWLOntologyManager()
-    OWLOntology ont = manager.loadOntologyFromOntologyDocument(new File(fileName))
-    OWLDataFactory fac = manager.getOWLDataFactory()
-    ConsoleProgressMonitor progressMonitor = new ConsoleProgressMonitor()
-    OWLReasonerConfiguration config = new SimpleConfiguration(progressMonitor)
-    ElkReasonerFactory f1 = new ElkReasonerFactory()
-    OWLReasoner reasoner = f1.createReasoner(ont, config)
+    OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+    OWLOntologyLoaderConfiguration loadConfig = new OWLOntologyLoaderConfiguration();
+    loadConfig.setFollowRedirects(true);
+    loadConfig = loadConfig.setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT);
+    def source = new FileDocumentSource(new File(fileName));
+    OWLOntology ont = manager.loadOntologyFromOntologyDocument(source, loadConfig);
+    OWLDataFactory fac = manager.getOWLDataFactory();
+    ConsoleProgressMonitor progressMonitor = new ConsoleProgressMonitor();
+    OWLReasonerConfiguration config = new SimpleConfiguration(progressMonitor);
+    ElkReasonerFactory f1 = new ElkReasonerFactory();
+    OWLReasoner reasoner = f1.createReasoner(ont, config);
     incon = reasoner.getEquivalentClasses(fac.getOWLNothing()).getSize() - 1
     if (incon >= MAX_UNSATISFIABLE_CLASSES) {
 	status = "Incoherent"

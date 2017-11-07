@@ -19,9 +19,9 @@
 	@Grab(group='aopalliance', module='aopalliance', version='1.0'),
 	@Grab(group='javax.el', module='javax.el-api', version='3.0.0'),
 	@GrabConfig(systemClassLoader=true)
-])
+    ])
 
- 
+
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
 import org.eclipse.jetty.servlet.*
@@ -38,44 +38,49 @@ import org.eclipse.jetty.util.log.StdErrLog
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
 import groovyx.net.http.ContentType
+import groovy.json.*
+import groovyx.gpars.GParsPool
+
 
 Log.setLog(new StdErrLog())
 
-def startServer(def ontId, def ontIRI, def port) {
+def startServer(def ontologies, def port) {
 
-  Server server = new Server(port)
-  if (!server) {
-    System.err.println("Failed to create server, cannot open port.")
-    System.exit(-1)
-  }
-  
-  def context = new ServletContextHandler(server, '/', ServletContextHandler.SESSIONS)
-  context.resourceBase = '.'
+    Server server = new Server(port)
+    if (!server) {
+	System.err.println("Failed to create server, cannot open port.")
+	System.exit(-1)
+    }
+    
+    def context = new ServletContextHandler(server, '/', ServletContextHandler.SESSIONS)
+    context.resourceBase = '.'
 
-  println "Starting $ontId"
-  def localErrorHandler = new ErrorHandler()
-  localErrorHandler.setShowStacks(true)
-  context.setErrorHandler(localErrorHandler)
-  context.resourceBase = '.'
-  context.addServlet(GroovyServlet, '/api/runQuery.groovy')
-  context.addServlet(GroovyServlet, '/api/getClass.groovy')
-  context.addServlet(GroovyServlet, '/api/getStats.groovy')
-  context.addServlet(GroovyServlet, '/api/reloadOntology.groovy')
-  context.addServlet(GroovyServlet, '/api/findRoot.groovy')
-  context.addServlet(GroovyServlet, '/api/getObjectProperties.groovy')
-  context.addServlet(GroovyServlet, '/api/retrieveRSuccessors.groovy')
-  context.addServlet(GroovyServlet, '/api/retrieveAllLabels.groovy')
-  context.setAttribute("ontology", ontId)
-  context.setAttribute('port', port)
-  context.setAttribute('version', '0.2')
-  server.start()
-  println "Server started on " + server.getURI()
-  println "Classifying..."
-
-  context.setAttribute("rManager", new RequestManager(ontId, ontIRI))
+    def localErrorHandler = new ErrorHandler()
+    localErrorHandler.setShowStacks(true)
+    context.setErrorHandler(localErrorHandler)
+    context.resourceBase = '.'
+    context.addServlet(GroovyServlet, '/api/runQuery.groovy')
+    context.addServlet(GroovyServlet, '/api/reloadOntology.groovy')
+    context.addServlet(GroovyServlet, '/api/findRoot.groovy')
+    context.addServlet(GroovyServlet, '/api/getObjectProperties.groovy')
+    context.addServlet(GroovyServlet, '/api/retrieveRSuccessors.groovy')
+    context.addServlet(GroovyServlet, '/api/retrieveAllLabels.groovy')
+    context.setAttribute('port', port)
+    context.setAttribute('version', '0.2')
+    server.start()
+    println "Server started on " + server.getURI()
+    def managers = [:]
+    context.setAttribute("managers", managers)
+    GParsPool.withPool {
+	ontologies.eachParallel { ont ->
+	    managers[ont.ontId] = RequestManager.create(ont.ontId, ont.ontIRI)
+	}
+    }
+    
 }
 
-def ontId = args[0]
-def ontIRI = args[1]
-def port = args[2] as Integer
-startServer(ontId, ontIRI, port)
+def data = System.in.newReader().getText()
+def slurper = new JsonSlurper()
+def ontologies = slurper.parseText(data)
+
+startServer(ontologies, 8080)

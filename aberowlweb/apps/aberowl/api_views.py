@@ -12,8 +12,8 @@ from aberowl.models import Ontology
 
 ELASTIC_SEARCH_URL = getattr(
     settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/aberowl/')
-
-event_pool = Pool(1000)
+ABEROWL_API_URL = getattr(
+    settings, 'ABEROWL_API_URL', 'http://localhost:8080/api/')
 
 
 def make_request(url):
@@ -136,13 +136,12 @@ class BackendAPIView(APIView):
             return Response(
                 {'status': 'error',
                  'message': 'Please provide script parameter!'})
-    
-        if ontology is not None:
-            queryset = Ontology.objects.filter(acronym=ontology)
-            try:
+        try: 
+            if ontology is not None:
+                queryset = Ontology.objects.filter(acronym=ontology)
                 if queryset.exists():
                     ontology = queryset.get()
-                    if ontology.is_running:
+                    if ontology.nb_servers:
                         url = ontology.get_api_url() + script + '?' + query_string
                         r = requests.get(url, timeout=2)
                         return Response(r.json())
@@ -150,18 +149,16 @@ class BackendAPIView(APIView):
                         raise Exception('API server is down!')
                 else:
                     raise Exception('Ontology does not exist!')
-            except Exception as e:
-                return Response({'status': 'exception', 'message': str(e)})
-        else:
-            queryset = Ontology.objects.filter(is_running=True)
-            urls = []
-            
-            for ontology in queryset:
-                url = ontology.get_api_url() + script + '?' + query_string
-                urls.append(url)
-            start_time = time.time()
-            results = event_pool.map(make_request, urls)
-            result = list(itertools.chain.from_iterable(results))
-            print('Finished in', time.time() - start_time)
-            return Response({'result': result})
+            else:
+                queryset = Ontology.objects.filter(nb_servers__gt=0)
+                if queryset.exists():
+                    url = ABEROWL_API_URL + script + '?' + query_string
+                    r = requests.get(url, timeout=2)
+                    return Response(r.json())
+                else:
+                    raise Exception('API server is down!')
+        except Exception as e:
+            return Response({'status': 'exception', 'message': str(e)})
+        
+                
 

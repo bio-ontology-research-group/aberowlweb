@@ -28,8 +28,8 @@ import com.google.common.collect.*
 
 
 
-class RequestManager {
-    private static final ELK_THREADS = "64"
+public class RequestManager {
+    private static final ELK_THREADS = "4"
     private static final MAX_UNSATISFIABLE_CLASSES = 500
 
     private static final MAX_REASONER_RESULTS = 100000
@@ -43,20 +43,25 @@ class RequestManager {
     def ont = null
     def ontIRI = null
     def queryEngine = null
-    def used = null
+
+    public RequestManager(String ont, String ontIRI) {
+	this.ont = ont;
+	this.ontIRI = ontIRI;
+    } 
     
-    RequestManager(String ont, String ontIRI) {
-	this.ont = ont
-	this.ontIRI = ontIRI
+    public static RequestManager create(String ont, String ontIRI) {
+	RequestManager mgr = new RequestManager(ont, ontIRI);
 	try {
-	    loadOntology()
-	    loadAnnotations()
-	    createReasoner()
+	    println("Starting manager for $ont")
+	    mgr.loadOntology()
+	    mgr.loadAnnotations()
+	    mgr.createReasoner()
 	    println("Finished loading $ont")
+	    return mgr;
 	} catch (Exception e) {
 	    println("Failed loading $ont")
 	    e.printStackTrace();
-	    System.exit(-1);
+	    return null;
 	}
     }
 
@@ -119,7 +124,7 @@ class RequestManager {
 	OWLOntologyManager manager = this.oManager
 	/* Configure Elk */
 	ReasonerConfiguration eConf = ReasonerConfiguration.getConfiguration()
-	eConf.setParameter(ReasonerConfiguration.NUM_OF_WORKING_THREADS, this.ELK_THREADS)
+	eConf.setParameter(ReasonerConfiguration.NUM_OF_WORKING_THREADS, ELK_THREADS)
 	eConf.setParameter(ReasonerConfiguration.INCREMENTAL_MODE_ALLOWED, "true")
 
 	/* OWLAPI Reasoner config, no progress monitor */
@@ -181,14 +186,14 @@ class RequestManager {
     }
 
 
-    Set classes2info(Set<OWLClass> classes, String uri) {
+    Set classes2info(Set<OWLClass> classes, boolean axioms) {
 	ArrayList result = new ArrayList<HashMap>();
 	def o = this.ontology
 	classes.each { c ->
 	    def info = [
 		"owlClass"  : c.toString(),
 		"classURI"  : c.getIRI().toString(),
-		"ontologyURI": uri.toString(),
+		"ontologyURI": this.ont,
 		"remainder" : c.getIRI().getFragment(),
 		"deprecated": false
 	    ].withDefault {key -> []};
@@ -221,11 +226,10 @@ class RequestManager {
 	    def hasLabel = false
 
 	    EntitySearcher.getAnnotations(c, o).each { annot ->
+		def aProp = annot.getProperty()
 		if (annot.isDeprecatedIRIAnnotation()) {
 		    info["deprecated"] = true
-		}
-		def aProp = annot.getProperty()
-		if (aProp in identifiers) {
+		} else if (aProp in identifiers) {
 		    if (annot.getValue() instanceof OWLLiteral) {
 			def aVal = annot.getValue().getLiteral()
 			info['identifier'] << aVal
@@ -269,32 +273,33 @@ class RequestManager {
 	    if (!hasLabel) {
 		info["label"] << c.getIRI().getFragment().toString()
 	    }
-	    info["first_label"] = info["label"][0]
+	    
+	    if (axioms) {
+		// set up the renderer for the axioms
+		def sProvider = new AnnotationValueShortFormProvider(
+		    Collections.singletonList(df.getRDFSLabel()),
+		    Collections.<OWLAnnotationProperty, List<String>> emptyMap(),
+		    this.oManager);
+		def manSyntaxRenderer = new AberOWLSyntaxRendererImpl()
+		manSyntaxRenderer.setShortFormProvider(sProvider)
 
-	    // set up the renderer for the axioms
-	    def sProvider = new AnnotationValueShortFormProvider(
-		Collections.singletonList(df.getRDFSLabel()),
-		Collections.<OWLAnnotationProperty, List<String>> emptyMap(),
-		this.oManager);
-	    def manSyntaxRenderer = new AberOWLSyntaxRendererImpl()
-	    manSyntaxRenderer.setShortFormProvider(sProvider)
-
-	    /* get the axioms */
-	    EntitySearcher.getSuperClasses(c, o).each {
-		cExpr -> // OWL Class Expression
-		info["SubClassOf"] << manSyntaxRenderer.render(cExpr)
+		/* get the axioms */
+		EntitySearcher.getSuperClasses(c, o).each {
+		    cExpr -> // OWL Class Expression
+		    info["SubClassOf"] << manSyntaxRenderer.render(cExpr)
+		}
+		EntitySearcher.getEquivalentClasses(c, o).each {
+		    cExpr -> // OWL Class Expression
+		    info["Equivalent"] << manSyntaxRenderer.render(cExpr)
+		}
+		EntitySearcher.getDisjointClasses(c, o).each {
+		    cExpr -> // OWL Class Expression
+		    info["Disjoint"] << manSyntaxRenderer.render(cExpr)
+		}
 	    }
-	    EntitySearcher.getEquivalentClasses(c, o).each {
-		cExpr -> // OWL Class Expression
-		info["Equivalent"] << manSyntaxRenderer.render(cExpr)
+	    if (!info["deprecated"]) {
+		result.add(info);
 	    }
-	    EntitySearcher.getDisjointClasses(c, o).each {
-		cExpr -> // OWL Class Expression
-	   	info["Disjoint"] << manSyntaxRenderer.render(cExpr)
-	    }
-
-
-	    result.add(info);
 	}
 	return result
     }
@@ -306,9 +311,7 @@ class RequestManager {
      * @param requestType Type of class match to be performed. Valid values are: subclass, superclass, equivalent or all.
      * @return Set of OWL Classes.
      */
-    Set runQuery(String mOwlQuery, String type, boolean direct, boolean labels) {
-	def start = System.currentTimeMillis()
-
+    Set runQuery(String mOwlQuery, String type, boolean direct, boolean labels, boolean axioms) {
 	type = type.toLowerCase()
 	def requestType
 	switch (type) {
@@ -325,10 +328,7 @@ class RequestManager {
 	Set resultSet = Sets.newHashSet(Iterables.limit(queryEngine.getClasses(mOwlQuery, requestType, direct, labels), MAX_REASONER_RESULTS))
 	resultSet.remove(df.getOWLNothing())
 	resultSet.remove(df.getOWLThing())
-	classes.addAll(classes2info(resultSet, ont))
-
-	def end = System.currentTimeMillis()
-
+	classes.addAll(classes2info(resultSet, axioms))
 	return classes;
     }
 
@@ -381,36 +381,20 @@ class RequestManager {
     /**
      * Get the axiom count of all the ontologies
      */
-    Map getStats(String oString) {
-	def stats = []
-	OWLOntology ont = ontology
-	stats = [
-	    'axiomCount': 0,
-	    'classCount': ont.getClassesInSignature(true).size()
-	]
-	AxiomType.TBoxAxiomTypes.each { ont.getAxioms(it, true).each { stats.axiomCount += 1 } }
-	AxiomType.RBoxAxiomTypes.each { ont.getAxioms(it, true).each { stats.axiomCount += 1 } }
+    // Map getStats(String oString) {
+    // 	def stats = []
+    // 	OWLOntology ont = ontology
+    // 	stats = [
+    // 	    'axiomCount': 0,
+    // 	    'classCount': ont.getClassesInSignature(true).size()
+    // 	]
+    // 	AxiomType.TBoxAxiomTypes.each { ont.getAxioms(it, true).each { stats.axiomCount += 1 } }
+    // 	AxiomType.RBoxAxiomTypes.each { ont.getAxioms(it, true).each { stats.axiomCount += 1 } }
 
-	return stats
-    }
+    // 	return stats
+    // }
     
-    HashMap getInfoObjectProperty(String uriObjectProperty) {
-	HashMap objectProperties = new HashMap<String, String>()
-	OWLObjectProperty objectProperty = df.getOWLObjectProperty(IRI.create(uriObjectProperty));
-	Iterator<OWLAnnotationAssertionAxiom> jt = EntitySearcher.getAnnotationAssertionAxioms(objectProperty, ontology).iterator();
-	OWLAnnotationAssertionAxiom axiom;
-	while (jt.hasNext()) {
-	    axiom = jt.next();
-	    if (axiom.getProperty().isLabel()) {
-		OWLLiteral value = (OWLLiteral) axiom.getValue();
-		objectProperties.put('classURI', axiom.getSubject().toString());
-		objectProperties.put('label', value.getLiteral().toString());
-	    }
-	}
-	return objectProperties;
-    }
-
-
+    
     /**
      * Retrieve all objects properties
      */
@@ -418,13 +402,14 @@ class RequestManager {
 	def reasoner = new StructuralReasoner(
 	    this.ontology, new SimpleConfiguration(),
 	    BufferingMode.NON_BUFFERING)
-	this.used = new HashSet<OWLObjectProperty>()
+	def used = new HashSet<OWLObjectProperty>()
 	
-	return this.getObjectProperties(reasoner, df.getOWLTopObjectProperty())
+	return this.getObjectProperties(
+	    reasoner, df.getOWLTopObjectProperty(), used)
     }
     
-    Map getObjectProperties(OWLReasoner reasoner, OWLObjectProperty prop) {
-	def propMap = [:]
+    Map getObjectProperties(OWLReasoner reasoner, OWLObjectProperty prop, Set<OWLObjectProperty> used) {
+	def propMap = [:].withDefault {[]}
 	def iter = EntitySearcher.getAnnotationAssertionAxioms(
 	    prop, this.ontology).iterator()
 	while (iter.hasNext()) {
@@ -439,22 +424,21 @@ class RequestManager {
 
 	def subProps = reasoner.getSubObjectProperties(
 	    prop, true).getFlattened()
-	if (subProps.size() > 1) {
-	    propMap["children"] = []
+	subProps.remove(df.getOWLBottomObjectProperty())
+	if (subProps.size() > 0) {
 	    for (def expression: subProps) {
 		def objProp = expression.getNamedProperty()
-		if (this.used.contains(objProp)) {
+		if (used.contains(objProp)) {
 		    continue
 		} else {
-		    this.used.add(objProp)
+		    used.add(objProp)
 		}
-		if (objProp != df.getOWLBottomObjectProperty()) {
-		    def children = getObjectProperties(
-			reasoner, objProp)
-		    if(!children.isEmpty()) {
-			propMap["children"].add(children)
-		    }
+		def children = getObjectProperties(
+		    reasoner, objProp, used)
+		if(!children.isEmpty()) {
+		    propMap["children"].add(children)
 		}
+
 	    }
 	}
 	

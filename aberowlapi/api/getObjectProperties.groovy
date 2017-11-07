@@ -7,16 +7,15 @@ if(!application) {
 }
 
 def params = Util.extractParams(request)
-def ontology = application.ontology
-def objectProperty = params.rootObjectProperty
-def rManager = application.rManager
+def ontology = params.ontology
+def managers = application.managers
 
-if(objectProperty) {
-  def objectProperties = rManager.getObjectProperties(objectProperty).sort {it.label}
+response.contentType = 'application/json'
+
+if(ontology && managers.containsKey(ontology)) {
+    def objectProperties = managers[ontology].getObjectProperties()
     response.contentType = 'application/json'
-    print new JsonBuilder(objectProperties)
+    print(new JsonBuilder(objectProperties))
 } else {
-    def objectProperties = rManager.getObjectProperties()
-    response.contentType = 'application/json'
-    print new JsonBuilder(objectProperties)
+    print('{status: "error", message: "Please provide an ontology!"}')
 }

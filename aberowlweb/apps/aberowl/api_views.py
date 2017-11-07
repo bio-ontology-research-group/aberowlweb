@@ -143,7 +143,7 @@ class BackendAPIView(APIView):
                     ontology = queryset.get()
                     if ontology.nb_servers:
                         url = ontology.get_api_url() + script + '?' + query_string
-                        r = requests.get(url, timeout=2)
+                        r = requests.get(url)
                         return Response(r.json())
                     else:
                         raise Exception('API server is down!')
@@ -153,7 +153,7 @@ class BackendAPIView(APIView):
                 queryset = Ontology.objects.filter(nb_servers__gt=0)
                 if queryset.exists():
                     url = ABEROWL_API_URL + script + '?' + query_string
-                    r = requests.get(url, timeout=2)
+                    r = requests.get(url)
                     return Response(r.json())
                 else:
                     raise Exception('API server is down!')

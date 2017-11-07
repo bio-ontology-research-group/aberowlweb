@@ -59,6 +59,7 @@ def startServer(def ontologies, def port) {
     localErrorHandler.setShowStacks(true)
     context.setErrorHandler(localErrorHandler)
     context.resourceBase = '.'
+    context.addServlet(GroovyServlet, '/health.groovy')
     context.addServlet(GroovyServlet, '/api/runQuery.groovy')
     context.addServlet(GroovyServlet, '/api/reloadOntology.groovy')
     context.addServlet(GroovyServlet, '/api/findRoot.groovy')

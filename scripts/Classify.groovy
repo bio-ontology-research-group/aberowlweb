@@ -32,11 +32,11 @@ def status = "Unknown"
 def classifiable = true
 try {
     OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-    OWLOntologyLoaderConfiguration loadConfig = new OWLOntologyLoaderConfiguration();
-    loadConfig.setFollowRedirects(true);
-    loadConfig = loadConfig.setMissingImportHandlingStrategy(MissingImportHandlingStrategy.SILENT);
-    def source = new FileDocumentSource(new File(fileName));
-    OWLOntology ont = manager.loadOntologyFromOntologyDocument(source, loadConfig);
+    OWLOntology ont = manager.loadOntologyFromOntologyDocument(new File(fileName));
+    OWLOntologyImportsClosureSetProvider provider = new OWLOntologyImportsClosureSetProvider(manager, ont);
+    OWLOntologyMerger merger = new OWLOntologyMerger(provider, false);
+    ont = merger.createMergedOntology(manager, IRI.create("http://merged.owl"));
+
     OWLDataFactory fac = manager.getOWLDataFactory();
     ConsoleProgressMonitor progressMonitor = new ConsoleProgressMonitor();
     OWLReasonerConfiguration config = new SimpleConfiguration(progressMonitor);

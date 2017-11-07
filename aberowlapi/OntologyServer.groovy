@@ -11,7 +11,7 @@
         @Grab(group='net.sourceforge.owlapi', module='owlapi-apibinding', version='4.3.2'),
         @Grab(group='net.sourceforge.owlapi', module='owlapi-impl', version='4.3.2'),
         @Grab(group='net.sourceforge.owlapi', module='owlapi-parsers', version='4.3.2'),
-	
+	@Grab(group='org.codehaus.gpars', module='gpars', version='1.1.0'),
 	@Grab(group='com.google.guava', module='guava', version='19.0'),
 	
 	@Grab(group='org.codehaus.groovy.modules.http-builder', module='http-builder', version='0.7.1' ),

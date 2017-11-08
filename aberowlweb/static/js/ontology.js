@@ -237,11 +237,15 @@ class Ontology extends React.Component {
 	const htmlFields = new Set(['SubClassOf', 'Equivalent', 'Disjoint']);
 	
 	const data = fields.map(function(item) {
-		  if (htmlFields.has(item)) {
-		      return [item, that.innerHTML(obj[item].toString())];
-		  }
-		  return [item, obj[item]];
-	      });
+	    if (htmlFields.has(item)) {
+		return [item, that.innerHTML(obj[item].toString())];
+	    }
+	    var value = obj[item];
+	    if(value && value.constructor === Array) {
+		value = value.join(', ');
+	    }
+	    return [item, value];
+	});
 	const content = data.map(
 	    (item) =>
 		<tr><td>{ item[0] }</td><td>{ item[1] }</td></tr>
@@ -291,11 +295,16 @@ class Ontology extends React.Component {
 	const htmlFields = new Set(['SubClassOf', 'Equivalent', 'Disjoint']);
 	
 	const data = fields.map(function(item) {
-		  if (htmlFields.has(item)) {
-		      return [item, that.innerHTML(obj[item].toString())];
-		  }
-		  return [item, obj[item]];
-	      });
+	    if (htmlFields.has(item)) {
+		return [item, that.innerHTML(obj[item].toString())];
+	    }
+	    var value = obj[item];
+	    if(value && value.constructor === Array) {
+		value = value.join(', ');
+	    }
+	    return [item, obj[item]];
+	});
+	
 	const content = data.map(
 	    (item) =>
 		<tr><td>{ item[0] }</td><td>{ item[1] }</td></tr>

@@ -186,9 +186,11 @@ public class RequestManager {
 	    "deprecated": false
 	].withDefault {key -> []};
 
-	def hasLabel = false
+	def hasLabel = false;
+	def hasAnnot = false;
 
 	EntitySearcher.getAnnotationAssertionAxioms(c, o).each { axiom ->
+	    hasAnnot = true;
 	    def annot = axiom.getAnnotation();
 	    def aProp = axiom.getProperty();
 	    if (annot.isDeprecatedIRIAnnotation()) {
@@ -238,6 +240,10 @@ public class RequestManager {
 	    info["label"] = this.shortFormProvider.getShortForm(c);
 	}
 
+	if (!hasAnnot) {
+	    info["deprecated"] = true;
+	}
+
 	if (axioms) {
 	    // set up the renderer for the axioms
 	    def sProvider = new AnnotationValueShortFormProvider(
@@ -264,8 +270,8 @@ public class RequestManager {
 	return info;
     }
 
-    Set classes2info(Set<OWLClass> classes, boolean axioms) {
-	ArrayList result = new ArrayList<HashMap>();
+    ArrayList<HashMap> classes2info(Set<OWLClass> classes, boolean axioms) {
+	ArrayList<HashMap> result = new ArrayList<HashMap>();
 	def o = this.ontology
 	classes.each { c ->
 	    def info = toInfo(c, axioms);
@@ -296,11 +302,11 @@ public class RequestManager {
 	    default: requestType = RequestType.SUBEQ; break;
 	}
 
-	Set classes = new HashSet<>();
 	Set resultSet = Sets.newHashSet(Iterables.limit(queryEngine.getClasses(mOwlQuery, requestType, direct, labels), MAX_REASONER_RESULTS))
 	resultSet.remove(df.getOWLNothing())
 	resultSet.remove(df.getOWLThing())
-	classes.addAll(classes2info(resultSet, axioms))
+	def classes = classes2info(resultSet, axioms);
+	classes.sort {x, y -> x["label"] <=> y["label"]};
 	return classes;
     }
 

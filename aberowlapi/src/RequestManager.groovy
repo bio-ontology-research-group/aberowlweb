@@ -306,8 +306,7 @@ public class RequestManager {
 	resultSet.remove(df.getOWLNothing())
 	resultSet.remove(df.getOWLThing())
 	def classes = classes2info(resultSet, axioms);
-	classes.sort {x, y -> x["label"].compareTo(y["label"])};
-	return classes;
+	return classes.sort {x, y -> x["label"].compareTo(y["label"])};
     }
 
 

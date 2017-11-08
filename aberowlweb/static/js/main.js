@@ -291,13 +291,13 @@ class Main extends React.Component {
 		    headers: ['Ontology', 'OWL Class', 'Definition'], rows: []};
 		for (var i = 0; i < data['result'].length; i++) {
 		    var item = data['result'][i];
-		    const onto = (<a href={'/ontology/' + item.ontologyURI }> { item.ontologyURI } </a>);
+		    const onto = (<a href={'/ontology/' + item.ontology }> { item.ontology } </a>);
 		    const owlClass = (
-			<a href={'/ontology/' + item.ontologyURI + '/#/Browse/' + encodeURIComponent(item.owlClass)}>
+			<a href={'/ontology/' + item.ontology + '/#/Browse/' + encodeURIComponent(item.owlClass)}>
 			    {item.label + '(' + item.owlClass + ')'}
 			</a>
 		    );
-		    var filterBy = item.ontologyURI + item.label + item.definition;
+		    var filterBy = item.ontology + item.label + item.definition;
 		    dlQuery.rows.push([onto, owlClass, item.definition, filterBy]);
 		}
 		var results = that.state.results;

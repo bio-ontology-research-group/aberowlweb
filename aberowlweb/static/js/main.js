@@ -241,8 +241,8 @@ class Main extends React.Component {
 		var res = data[0][i][1];
 		var ontos = [];
 		const definition = that.innerHTML(res[0].definition);
-		const iri = '<' + res[0].class + '>';
-		const label = term + ' (' + iri + ')';
+		const iri = res[0].owlClass;
+		const label = res[0].label + ' (' + iri + ')';
 		var filterBy = term + res[0].definition;
 		
 		for (var i = 0; i < res.length; i++) {

@@ -302,7 +302,7 @@ class Ontology extends React.Component {
 	    if(value && value.constructor === Array) {
 		value = value.join(', ');
 	    }
-	    return [item, obj[item]];
+	    return [item, value];
 	});
 	
 	const content = data.map(

@@ -76,11 +76,12 @@ class QueryNamesAPIView(APIView):
                  'message': 'Please provide query parameter!'})
     
         fields = [
-            ('label', 100),
-            ('ontology', 1000),
             ('oboid', 10000),
+            ('label', 1000),
+            ('synonym', 100),
+            ('ontology', 75),
             ('definition', 3),
-            ('synonym', 75)]
+        ]
 
         query_list = []
 
@@ -108,13 +109,13 @@ class QueryNamesAPIView(APIView):
         data = defaultdict(list)
         for hit in result['hits']['hits']:
             item = hit['_source']
-            data[item['label'][0]].append(item)
+            data[item['owlClass']].append(item)
         ret = []
         for hit in result['hits']['hits']:
-            label = hit['_source']['label'][0]
-            if label in data:
-                ret.append([label, data[label]])
-                del data[label]
+            owl_class = hit['_source']['owlClass']
+            if owl_class in data:
+                ret.append([owl_class, data[owl_class]])
+                del data[owl_class]
         return Response(ret)
 
 

@@ -172,6 +172,7 @@ def index_submission(ontology_pk, submission_pk):
 @task
 def reload_ontology(ont, ontIRI):
     for api_worker_url in ABEROWL_API_WORKERS:
+        print('Running request: ', api_worker_url)
         r = requests.get(
             api_worker_url + 'reloadOntology.groovy',
             params={'ontology': ont, 'ontologyIRI': ontIRI})

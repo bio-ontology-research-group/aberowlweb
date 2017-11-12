@@ -39,6 +39,39 @@ def search(query_type, query_data):
         return {'hits': {'hits': []}}
 
 
+
+class SearchClassesAPIView(APIView):
+
+    def get(self, request, format=None):
+        query = request.GET.get('query', None)
+        ontology = request.GET.get('ontology', None)
+        print(query)
+        if query is None:
+            return Response(
+                {'status': 'error',
+                 'message': 'Please provide query parameter!'})
+        if ontology is None:
+            return Response(
+                {'status': 'error',
+                 'message': 'Please provide ontology parameter!'})
+        try:
+            query_list = [
+                { 'match': { 'ontology': ontology } },
+                { 'match_phrase_prefix': { 'label': query } }
+            ]
+            docs = { 'query': { 'bool': { 'must': query_list } } }
+            result = search('owlclass', docs)
+            data = []
+            for hit in result['hits']['hits']:
+                item = hit['_source']
+                data.append(item)
+            data = sorted(data, key=lambda x: len(x['label']))
+            result = {'status': 'ok', 'result': data}
+            return Response(result)
+        except Exception as e:
+            return Response({'status': 'exception', 'message': e.getMessage()})
+
+    
 class QueryOntologiesAPIView(APIView):
 
     def get(self, request, format=None):
@@ -145,7 +178,9 @@ class BackendAPIView(APIView):
                     if ontology.nb_servers:
                         url = ontology.get_api_url() + script + '?' + query_string
                         r = requests.get(url)
-                        return Response(r.json())
+                        result = r.json()
+                        result['status'] = 'ok'
+                        return Response(result)
                     else:
                         raise Exception('API server is down!')
                 else:
@@ -155,7 +190,9 @@ class BackendAPIView(APIView):
                 if queryset.exists():
                     url = ABEROWL_API_URL + script + '?' + query_string
                     r = requests.get(url)
-                    return Response(r.json())
+                    result = r.json()
+                    result['status'] = 'ok'
+                    return Response(result)
                 else:
                     raise Exception('API server is down!')
         except Exception as e:

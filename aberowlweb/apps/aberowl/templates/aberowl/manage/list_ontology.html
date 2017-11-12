@@ -1,0 +1,24 @@
+{% extends 'aberowl/base.html' %}
+
+{% block content %}
+<div class="col-md-6 col-md-offset-3">
+  <table class="table table-striped">
+    <thead><th>Acronym</th><th>Name</th><th>Status</th></thead>
+    <tbody>
+      {% for ontology in object_list %}
+      <tr>
+	<td><a href="{% url "edit_ontology" ontology.pk %}">{{ ontology.acronym }}</a></td>
+	<td>{{ ontology.name }}</td>
+	<td>
+	  {% if ontology.nb_servers > 0 %}
+	  <a href="{% url "ontology" ontology.acronym %}" target="_blank">running</a>
+	  {% else %}
+	  offline
+	  {% endif %}
+	</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

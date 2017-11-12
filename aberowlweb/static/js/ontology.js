@@ -26,6 +26,9 @@ class Ontology extends React.Component {
 	    selectedProp: null,
 	    dlQuery: null,
 	    dlResults: [],
+	    search: '',
+	    searchResults: [],
+	    searchResultsShow: false,
 	};
     }
 
@@ -486,26 +489,38 @@ class Ontology extends React.Component {
 	if (currentTab == 'Browse' && params.owlClass !== undefined) {
 	    var owlClass = decodeURIComponent(params.owlClass);
 	    var classesMap = this.state.classesMap;
-	    var obj = classesMap.get(owlClass);
-	    state.selectedClass = obj;
-	    if (!('children' in obj)) {
-		fetch(
-		    '/api/backend?script=runQuery.groovy&type=subclass&direct=true&query='
-			+ encodeURIComponent(obj.owlClass) + '&ontology=' + obj.ontology)
-		    .then(function(response){
-			return response.json();
-		    })
-		    .then(function(data) {
-			console.log(data);
-			obj.children = data.result;
-			for (var i = 0; i < obj.children.length; i++) {
-			    classesMap.set(obj.children[i].owlClass, obj.children[i]);
-			}
-			state.classesMap = classesMap;
+	    if (classesMap.has(owlClass)) {
+		var obj = classesMap.get(owlClass);
+		state.selectedClass = obj;
+		if (!('children' in obj)) {
+		    fetch(
+			'/api/backend?script=runQuery.groovy&type=subclass&direct=true&query='
+			    + encodeURIComponent(obj.owlClass) + '&ontology=' + obj.ontology)
+			.then(function(response){
+			    return response.json();
+			})
+			.then(function(data) {
+			    console.log(data);
+			    obj.children = data.result;
+			    for (var i = 0; i < obj.children.length; i++) {
+				classesMap.set(obj.children[i].owlClass, obj.children[i]);
+			    }
+			    state.classesMap = classesMap;
+			    that.setState(state);
+			});
+		} else {
+		    this.setState(state);
+		}
+	    } else {
+		fetch('/api/backend?script=findRoot.groovy&query='
+		      + encodeURIComponent(owlClass) + '&ontology='
+		      + that.state.ontology.acronym)
+		    .then(function(response){ return response.json(); })
+		    .then(function(data){
+			var state = that.findRoot(owlClass, data);
+			state.currentTab = 'Browse';
 			that.setState(state);
 		    });
-	    } else {
-		this.setState(state);
 	    }
 	} else if (currentTab == 'DLQuery' && params.owlClass !== undefined && params.query !== undefined) {
 	    const owlClass = decodeURIComponent(params.owlClass);
@@ -616,26 +631,92 @@ class Ontology extends React.Component {
 	this.setState({propsMap: propsMap});
 
     }
+
+    handleSearchChange(e) {
+	const value = e.target.value;
+	this.setState({search: value});
+	if (value.length >= 3) {
+	    this.setState({searchResultsShow: true});
+	    this.executeSearch(value);
+	} else {
+	    this.setState({searchResultsShow: false});
+	}
+    }
+
+    executeSearch(search) {
+	var that = this;
+	fetch('/api/searchclasses?query=' + encodeURIComponent(search)
+		  + '&ontology=' + this.state.ontology.acronym)
+	    .then((response) => response.json())
+	    .then(function(data) {
+		if (data.status == 'ok') {
+		    that.setState({ searchResults: data.result });
+		}
+	    });
+    }
+
+    renderSearchForm() {
+	return (
+	    <form class="form">
+		<div class="form-group">
+		<input class="form-control" type="text"
+	            value={this.state.search} onChange={(e) => this.handleSearchChange(e)}
+		    placeholder="Search"/>
+		</div>
+	    </form>
+	);
+    }
+
+    handleSearchItemClick(search) {
+	this.setState({ search: search, searchResultsShow: false });
+    }
+
+    renderSearchResults() {
+	var results = this.state.searchResults;
+	const content = results.map(
+	    (item) => 
+		<li>
+		<a href={'#/Browse/' + encodeURIComponent(item.owlClass)}
+	            onClick={(e) => this.handleSearchItemClick(item.label[0])}>{item.label[0]}</a></li>
+	);
+	var open = '';
+	if (this.state.searchResultsShow) {
+	    open = 'open';
+	}
+	return (
+		<div className={'dropdown ' + open}>
+		<ul class="dropdown-menu">{content}</ul>
+	    </div>
+	);
+    }
     
     render() {
 	const ontology = this.state.ontology;
 	return (
-	<div class="row">
+	    <div class="container">
+		<div class="row">
+		<div class="col-md-5 col-sm-5">
+		{this.renderSearchForm()}
+	        {this.renderSearchResults()}
+	        </div>
+		</div>
+		<div class="row">
 		<div class="col-sm-4 col-md-3 sidebar">
 		<h4>Classes</h4>
 		<div class="tree">
 		{this.renderTree(ontology.classes)}
-	    </div>
+	        </div>
 		<h4>Object Properties</h4>
 		<div class="tree properties">
 		{this.renderObjectProperties(ontology.properties)}
 	        </div>
-	    </div><div class="col-sm-8 col-md-9 main">
+	        </div><div class="col-sm-8 col-md-9 main">
 		<h1>{ontology.acronym} - {ontology.name}</h1>
 		<h5>{ontology.description}</h5>
 		{this.renderTabs()}
 	        {this.renderCurrentTab()}
-	    </div>
+	        </div>
+		</div>
 	</div>
 	);
     }

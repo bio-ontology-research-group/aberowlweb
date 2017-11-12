@@ -215,10 +215,13 @@ class BaseConfiguration(Configuration):
     # AberOWL setttings
     ABEROWL_API_URL = 'http://localhost:8080/api/'
     ABEROWL_SERVER_URL = 'http://localhost/'
-
-    # List of ip addresses of servers for running ontology api
-    ABEROWL_API_SERVERS_POOL = [
-        '127.0.0.1'
+    
+    ABEROWL_API_WORKERS = [
+        'http://localhost:8080/api/']
+    
+    FILE_UPLOAD_HANDLERS = [
+        # 'django.core.files.uploadhandler.MemoryFileUploadHandler',
+        'django.core.files.uploadhandler.TemporaryFileUploadHandler',
     ]
 
 
@@ -232,6 +235,10 @@ class Production(BaseConfiguration):
     SITE_DOMAIN = 'aber-owl.net'
     ELASTIC_SEARCH_URL = 'http://10.254.145.42:9200/aberowl/'
     ABEROWL_API_URL = 'http://10.254.145.41/api/'
+    ABEROWL_API_WORKERS = [
+        'http://10.254.145.27:8080/api/',
+        'http://10.254.145.30:8080/api/']
+    
 
 
 class OntologyAPIWorker(BaseConfiguration):

@@ -40,10 +40,6 @@ class Ontology(models.Model):
         models.CharField(max_length=127), blank=True, null=True)
     species = ArrayField(
         models.CharField(max_length=127), blank=True, null=True)
-    server_ip = models.GenericIPAddressField(
-        protocol='IPv4', default="127.0.0.1")
-    port = models.PositiveIntegerField(unique=True)
-    is_running = models.BooleanField(default=False)
     nb_servers = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -61,6 +57,12 @@ class Ontology(models.Model):
 
     
 class Submission(models.Model):
+    LANGUAGE_CHOICES = (
+        ('OWL', 'OWL'),
+        ('OBO', 'OBO'),
+        ('SKOS', 'SKOS'),
+        ('UMLS', 'UMLS')
+    )
     ontology = models.ForeignKey(
         Ontology, on_delete=models.CASCADE, related_name='submissions')
     submission_id = models.PositiveIntegerField()
@@ -71,7 +73,9 @@ class Submission(models.Model):
     date_created = models.DateTimeField()
     home_page = models.CharField(max_length=255, blank=True, null=True)
     version = models.TextField(blank=True, null=True)
-    has_ontology_language = models.CharField(max_length=15)
+    has_ontology_language = models.CharField(
+        max_length=15, verbose_name='Ontology Language',
+        choices=LANGUAGE_CHOICES)
     nb_classes = models.PositiveIntegerField(default=0, blank=True, null=True)
     nb_individuals = models.PositiveIntegerField(
         default=0, blank=True, null=True)

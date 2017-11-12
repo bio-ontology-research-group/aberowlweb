@@ -7,7 +7,7 @@ from django.db.models import Max
 import requests
 import shutil
 from aberowl.models import Ontology, Submission
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, DEVNULL
 import json
 import random
 
@@ -17,9 +17,11 @@ BIOPORTAL_API_URL = getattr(
 BIOPORTAL_API_KEY = getattr(
     settings, 'BIOPORTAL_API_KEY', '24e0413e-54e0-11e0-9d7b-005056aa3316')
 ABEROWL_API_URL = getattr(
-    settings, 'ABEROWL_API_URL', 'http://localhost/')
-ABEROWL_API_SERVERS_POOL = getattr(
-    settings, 'ABEROWL_API_SERVERS_POOL', ['127.0.0.1'])
+    settings, 'ABEROWL_API_URL', 'http://localhost:8080/api/')
+ABEROWL_API_WORKERS = getattr(
+    settings, 'ABEROWL_API_WORKER_URLS', ['http://localhost:8080/api/'])
+ABEROWL_SERVER_URL = getattr(
+    settings, 'ABEROWL_SERVER_URL', 'http://localhost/')
 
 ELASTIC_SEARCH_URL = getattr(
     settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/')
@@ -52,9 +54,6 @@ def sync_bioportal():
     params['display'] = (
         'hasOntologyLanguage,released,creationDate,homepage,status,' +
         'publication,documentation,version,description,submissionId')
-    metric_params = params.copy()
-    metric_params['display'] = ('classes,individuals,properties,maxDepth'
-                                + ',maxChildCount,averageChildCount')
     for onto in data:
         acronym = onto['acronym']
         try:
@@ -68,17 +67,11 @@ def sync_bioportal():
             if sub.get('submissionId', None) is None or sub.get('status', None) == 'retired':
                 continue
 
-            port = Ontology.objects.aggregate(Max('port'))['port__max'] or 10000
-            port += 1
-            server_ip = ABEROWL_API_SERVERS_POOL[random.randint(
-                0, len(ABEROWL_API_SERVERS_POOL) - 1)]
             ontology, created = Ontology.objects.get_or_create(
                 acronym=acronym,
                 defaults={
                     'name': onto['name'],
                     'created_by': user,
-                    'server_ip': server_ip,
-                    'port': port,
                 }
             )
 
@@ -87,18 +80,9 @@ def sync_bioportal():
             if queryset.exists(): # Already uptodate
                 submission = queryset.get()
                 if not submission.indexed and submission.classifiable:
-                    index_submission(ontology, submission)
+                    index_submission(ontology.pk, submission.pk)
                 continue
 
-            r = requests.get(
-                BIOPORTAL_API_URL + 'ontologies/' + acronym + '/submissions/' +
-                str(sub['submissionId']) + '/metrics',
-                metric_params
-            )
-            metrics = {}
-            if r.status_code == 200:
-                metrics = r.json()
-            print(acronym, metrics)
             submission = Submission(
                 ontology=ontology,
                 submission_id=sub['submissionId'],
@@ -109,13 +93,7 @@ def sync_bioportal():
                 home_page=sub['homepage'],
                 publication=sub['publication'],
                 documentation=sub['documentation'],
-                version=sub['version'],
-                nb_classes=metrics.get('classes', 0),
-                nb_properties=metrics.get('properties', 0),
-                nb_individuals=metrics.get('individuals', 0),
-                max_depth=metrics.get('maxDepth', 0),
-                max_children=metrics.get('maxChildCount', 0),
-                avg_children=metrics.get('averageChildCount', 0)
+                version=sub['version']
             )
             download_url = (BIOPORTAL_API_URL + 'ontologies/' + acronym
                         + '/download?apikey=' + BIOPORTAL_API_KEY)
@@ -126,35 +104,50 @@ def sync_bioportal():
                 shutil.copyfile(
                     submission.get_filepath(),
                     submission.get_filepath(folder='latest'))
-                submission.save()
             else:
                 print('Downloading ontology %s failed!' % (acronym,))
                 continue
-
-            p = Popen(
-                ['groovy', 'Classify.groovy', '../' + submission.get_filepath()],
-                stdout=PIPE,
-                cwd='scripts/')
-            if p.wait() == 0:
-                output = p.stdout.readlines()
-                print(output[-1].decode('utf-8'))
-                result = json.loads(output[-1].decode('utf-8'))
+            filepath = '../' + submission.get_filepath()
+            result = classify_ontology(filepath)
+            if result['classifiable']:
                 submission.nb_inconsistent = result['incon']
                 submission.classifiable = result['classifiable']
+                submission.nb_classes = result['nb_classes']
+                submission.nb_properties = result['nb_properties']
+                submission.nb_individuals = result['nb_individuals']
+                submission.max_depth = result['max_depth']
+                submission.max_children = result['max_children']
+                submission.avg_children = result['avg_children']
+                submission.save()
                 ontology.status = result['status']
                 ontology.save()
+                ontIRI = ABEROWL_SERVER_URL + submission.get_filepath()
+                reload_ontology.delay(ontology.acronym, ontIRI)
             else:
                 print('Classifying ontology %s failed!' % (acronym,))
 
-            if not submission.classifiable:
-                continue
-
-            index_submission(ontology, submission)
+            if submission.classifiable:
+                index_submission(ontology.pk, submission.pk).delay()
         except Exception as e:
             print(acronym, e)
 
 
-def index_submission(ontology, submission):
+@task
+def classify_ontology(filepath):
+    p = Popen(
+        ['groovy', 'Classify.groovy', filepath],
+        cwd='scripts/', stderr=DEVNULL, stdout=PIPE)
+    if p.wait() == 0:
+        lines = p.stdout.readlines()
+        result = json.loads(lines[-1].decode('utf-8'))
+        return result
+    return {'classifiable': False}
+
+
+@task
+def index_submission(ontology_pk, submission_pk):
+    ontology = Ontology.objects.get(pk=ontology_pk)
+    submission = ontology.submissions.get(pk=submission_pk) 
     p = Popen(
         ['groovy', 'IndexElastic.groovy',
          ELASTIC_SEARCH_URL, '../' + submission.get_filepath()],
@@ -175,7 +168,12 @@ def index_submission(ontology, submission):
         print('Indexing ontology %s failed!' % (ontology.acronym))
 
     submission.save()
-    # Reloading ontology
-    # r = requests.get(
-    #     ABEROWL_API_URL + 'service/api/reloadOntology.groovy',
-    #     params={'name': acronym})
+
+@task
+def reload_ontology(ont, ontIRI):
+    for api_worker_url in ABEROWL_API_WORKERS:
+        r = requests.get(
+            api_worker_url + 'reloadOntology.groovy',
+            params={'ontology': ont, 'ontologyIRI': ontIRI})
+        print(r.json())
+    

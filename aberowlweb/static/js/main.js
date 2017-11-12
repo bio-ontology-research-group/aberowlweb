@@ -83,6 +83,7 @@ class ResultsTable extends React.Component {
     renderFilter() {
 	return (
 	    <form class="form">
+		<br/>
 		<input class="form-control" type="text" value={this.props.filterValue} onChange={(e) => this.filterChange(e)} placeholder="Search"/>
 	    </form>
 	);
@@ -122,12 +123,11 @@ class ResultsTable extends React.Component {
 	    (items) => this.renderRow(items.slice(0, items.length - 1))
 	);
 	return (
-	    <div class="row">
+	    <div class="container">
 		<div class="row">
 		    <div class="col-md-6">
 			{this.renderFilter()}
-		    </div>
-		    <div class="col-md-6">
+		    </div><div class="col-md-6">
 			{this.renderPaginator()}
 		    </div>
 		</div>
@@ -155,6 +155,7 @@ class Main extends React.Component {
 	    currentTab: currentTab,
 	    results: {},
 	    inputQuery: '',
+	    dlQuery: 'subeq',
 	};
     }
 
@@ -219,9 +220,38 @@ class Main extends React.Component {
 	return (<span dangerouslySetInnerHTML={html}></span>);
     }
 
+    executeDLQuery(query, dlQuery) {
+	var that = this;
+	fetch('/api/backend?script=runQuery.groovy&type=' + dlQuery + '&labels=true&query=' + encodeURIComponent(query))
+	    .then(function(response){ return response.json(); })
+	    .then(function(data) {
+		var dlQueryResults = {
+		    headers: ['Ontology', 'OWL Class', 'Definition'], rows: []};
+		if (data.status == 'ok') {
+		    console.log(data);
+		    for (var i = 0; i < data['result'].length; i++) {
+			var item = data['result'][i];
+			const onto = (<a href={'/ontology/' + item.ontology }> { item.ontology } </a>);
+			const owlClass = (
+			    <a href={'/ontology/' + item.ontology + '/#/Browse/' + encodeURIComponent(item.owlClass)}>
+				{item.label + '(' + item.owlClass + ')'}
+			    </a>
+			);
+			var filterBy = item.ontology + item.label + item.definition;
+			dlQueryResults.rows.push([onto, owlClass, item.definition, filterBy]);
+		    }
+		} else {
+		    console.log('DLQuery', data);
+		}
+		var results = that.state.results;
+		results['DLQuery'] = dlQueryResults;
+		that.setState({results: results});
+	    });
+    }
+
+
     executeQuery(query) {
 	var that = this;
-
 	Promise.all([
 	    fetch('/api/querynames?query=' + encodeURIComponent(query))
 	    .then(function(response){
@@ -232,7 +262,6 @@ class Main extends React.Component {
 		return response.json();
 	    }),
 	]).then(function(data) {
-	    console.log(data);
 	
 	    var classes = {
 		headers: ['Class', 'Definition', 'Ontology'], rows: []};
@@ -283,28 +312,7 @@ class Main extends React.Component {
 	    });
 	});
 
-	fetch('/api/backend?script=runQuery.groovy&type=subeq&labels=true&query=' + encodeURIComponent(query))
-	    .then(function(response){ return response.json(); })
-	    .then(function(data) {
-		console.log('DLQuery', data);
-		var dlQuery = {
-		    headers: ['Ontology', 'OWL Class', 'Definition'], rows: []};
-		for (var i = 0; i < data['result'].length; i++) {
-		    var item = data['result'][i];
-		    const onto = (<a href={'/ontology/' + item.ontology }> { item.ontology } </a>);
-		    const owlClass = (
-			<a href={'/ontology/' + item.ontology + '/#/Browse/' + encodeURIComponent(item.owlClass)}>
-			    {item.label + '(' + item.owlClass + ')'}
-			</a>
-		    );
-		    var filterBy = item.ontology + item.label + item.definition;
-		    dlQuery.rows.push([onto, owlClass, item.definition, filterBy]);
-		}
-		var results = that.state.results;
-		results['DLQuery'] = dlQuery;
-		that.setState({results: results});
-	    });
-
+	this.executeDLQuery(query, 'subeq');
     }
 
     renderTab(tab) {
@@ -340,15 +348,53 @@ class Main extends React.Component {
 	);
     }
 
+    renderDLQueryButtons() {
+	const buttons = [
+	    ['subclass', 'Subclasses'],
+	    ['subeq', 'Sub and Equivalent'],
+	    ['equivalent', 'Equivalent'],
+	    ['superclass', 'Superclasses'],
+	    ['supeq', 'Super and Equivalent']
+	];
+
+	var that = this;
+	var dlQuery = this.state.dlQuery;
+	const content = buttons.map(function(item) {
+	    var activeClass = '';
+	    if (dlQuery == item[0]) activeClass = 'active';
+	    return (
+		    <li role="presentation" className={ activeClass }>
+		    <a href='#' onClick={(e) => that.handleDLQueryClick(e, item[0])}> { item[1] } </a>
+		    </li>
+	    );	    
+	});
+
+	return (
+		<ul class="nav nav-pills">{ content }</ul>
+	);
+    }
+
+    handleDLQueryClick(e, dlQuery) {
+	e.preventDefault();
+	this.executeDLQuery(this.state.query, dlQuery);
+	this.setState({dlQuery: dlQuery});
+    }
+
     renderQueryResults() {
 	const currentTab = this.state.currentTab;
 	if (this.state.results[currentTab] !== undefined) {
 	    const results = this.state.results[currentTab];
 	    const page = this.state.page;
 	    const rootURI = '#/' + this.state.query + '/' + currentTab + '/';
+	    var dlQueryButtons = (<div></div>);
+	    if (currentTab == 'DLQuery') {
+		dlQueryButtons = this.renderDLQueryButtons();
+	    }
 	    return (
 		    <div class="row">
 		    {this.renderResultTabs()}
+		    {dlQueryButtons}
+		<br/>
 		    <ResultsTable data={results} page={page} rootURI={rootURI} />
 		    </div>
 	    );
@@ -358,7 +404,7 @@ class Main extends React.Component {
 
     render() {
 	return (
-	<div class="row">
+	<div class="container">
 	    <h1 align="center"><span>AberOWL ontology repository and semantic search engine</span></h1>
 	    <div class="row">
 	        <p>
@@ -376,7 +422,9 @@ class Main extends React.Component {
 		     'part of' some 'apoptotic process' and regulates some 'apoptotic process'</a> ):
 	        </p>
 	    </div>
+	    <br/>
 	    {this.renderQueryForm()}
+	    <br/>
 	    {this.renderQueryResults()}
 	</div>
 	);

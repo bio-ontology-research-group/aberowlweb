@@ -8,4 +8,5 @@ urlpatterns = [
     url(r'^ontology/(?P<onto>[-\w]+)/$',
         OntologyDetailView.as_view(), name='ontology'),
     url(r'^api/', include('aberowl.api_urls')),
+    url(r'^manage/', include('aberowl.manage_urls')),
 ]

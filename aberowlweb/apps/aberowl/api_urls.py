@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from aberowl import api_views
 
 urlpatterns = [
+    url(r'^searchclasses/$',
+        api_views.SearchClassesAPIView.as_view(), name='api-searchclasses'),
     url(r'^querynames/$',
         api_views.QueryNamesAPIView.as_view(), name='api-querynames'),
     url(r'^queryontologies/$',

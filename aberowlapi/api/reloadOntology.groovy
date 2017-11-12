@@ -1,29 +1,27 @@
 import groovy.json.*
-import src.util.Util
-
-def API_KEY = '7LWB1EK24e8Pj7XorQdG9FnsxQA3H41VDKIxN1BeEv5n'
+import src.util.Util;
+import src.RequestManager;
 
 def params = Util.extractParams(request)
-def name = params.name
-def sVersion = params.version
-def rManager = application.rManager
 
-def result = [
-  'err': null,
-  'msg': 'Loading'
-]
+def ont = params.ontology;
+def ontIRI = params.ontologyIRI;
+def managers = application.managers;
 
-print new JsonBuilder(result).toString()
-
-if(sVersion == null) {
-	sVersion = '-1';
+try {
+    if (ont != null && ontIRI != null) {
+	def manager = RequestManager.create(ont, ontIRI);
+	if (manager != null) {
+	    managers.remove(ont);
+	    managers[ont] = manager;
+	    println(new JsonBuilder(['status': 'ok']))
+	} else {
+	    throw new Exception("Unable to load ontology!");
+	}
+    } else {
+	throw new Exception("Not enough parameters!");
+    }
+} catch(Exception e) {
+  response.setStatus(400);
+  println(new JsonBuilder([ 'status': 'error', 'message': e.getMessage() ])) 
 }
-
-try{
-  def version = Integer.parseInt(sVersion);
-  rManager.reloadOntology(name,version)
-}catch(Exception e){
-  response.setStatus(400)
-  println new JsonBuilder([ 'err': true, 'message': 'Generic query error: ' + e.getMessage() ]).toString() 
-}
-// Get result and whatnot here

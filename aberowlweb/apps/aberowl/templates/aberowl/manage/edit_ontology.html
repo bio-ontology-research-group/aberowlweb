@@ -1,0 +1,48 @@
+{% extends 'aberowl/base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="col-md-6 col-md-offset-3">
+  <form class="form" method="post">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="form-group">
+      {{ field.label_tag }}
+      {{ field|add_class:"form-control" }}
+      {{ field.errors }}
+    </div>
+    {% endfor %}
+    {{ form.non_field_errors }}
+    <button type="submit" class="btn btn-primary">
+      {% if object %}
+      Save
+      {% else %}
+      Create
+      {% endif %}
+    </button>
+  </form>
+  {% if object %}
+  <h2>Submissions</h2>
+  <table class="table table-striped">
+    <thead>
+      <th>Version</th><th>Date</th>
+    </thead>
+    <tbody>
+      {% for sub in object.submissions.all %}
+      <tr>
+	<td>
+	  <a href="{% url "edit_submission" object.pk sub.pk %}">{{ sub.version }}</a>
+	</td>
+	<td>
+	  {{ sub.date_released|date:"Y-m-d" }}
+	</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+    <a class="btn btn-primary" href="{% url "create_submission" object.pk%}">
+      Create Submission
+    </a>
+    {% endif %}
+</div>
+{% endblock %}

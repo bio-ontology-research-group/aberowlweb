@@ -28,6 +28,7 @@ def MAX_UNSATISFIABLE_CLASSES = 500
 
 def fileName = args[0]
 def incon = 0
+def nb_classes = 0
 def status = "Unknown"
 def classifiable = true
 try {
@@ -48,12 +49,46 @@ try {
     } else {
 	status = "Classified"
     }
+    nb_classes = ont.getClassesInSignature().size();
+    nb_individuals = ont.getIndividualsInSignature().size();
+    nb_properties = ont.getObjectPropertiesInSignature().size();
+    def q = [[fac.getOWLThing(), 0],] as Queue
+    def used = new HashSet<OWLClass>();
+    used.add(fac.getOWLThing());
+    nb_visits = 0;
+    nb_children = 0;
+    max_children = 0;
+    max_depth = 0;
+    while(!q.isEmpty()) {
+	def item = q.poll()
+	def cur = item[0]
+	def depth = item[1]
+	def subs = reasoner.getSubClasses(cur, true).getFlattened();
+	subs.remove(fac.getOWLNothing());
+	def children = subs.size();
+	nb_children += children;
+	if (children > 0) nb_visits += 1;
+	if (max_depth < depth) max_depth = depth;
+	if (max_children < children) max_children = children;
+	subs.each {cl ->
+	    if (!used.contains(cl)) {
+		used.add(cl);
+		q.add([cl, depth + 1])
+	    }
+	}
+    }
+
+    avg_children = nb_children.intdiv(nb_visits);
+    
 } catch (Exception e) {
     status = "Unloadable"
     classifiable = false
     e.printStackTrace()
 }
 
-def json = JsonOutput.toJson(
-    [incon: incon, status: status, classifiable: classifiable])
+def json = JsonOutput.toJson([
+	incon: incon, status: status, classifiable: classifiable,
+	nb_classes: nb_classes, nb_individuals: nb_individuals,
+	nb_properties: nb_properties, max_children: max_children,
+	avg_children: avg_children, max_depth: max_depth])
 println(json)

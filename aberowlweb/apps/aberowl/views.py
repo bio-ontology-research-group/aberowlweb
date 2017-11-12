@@ -62,16 +62,14 @@ class OntologyDetailView(DetailView):
             rq = requests.get(
                 ontology.get_api_url()
                 + 'runQuery.groovy?type=subclass&direct=true&query=<http://www.w3.org/2002/07/owl%23Thing>&ontology='
-                + ontology.acronym,
-                timeout=5)
+                + ontology.acronym)
             res = rq.json()
             if 'result' in res:
                 data['classes'] = res['result']
             else:
                 print(res)
             rq = requests.get(
-                ontology.get_api_url() + 'getObjectProperties.groovy?ontology=' + ontology.acronym,
-                timeout=5)
+                ontology.get_api_url() + 'getObjectProperties.groovy?ontology=' + ontology.acronym)
             res = rq.json()
             if 'result' in res:
                 data['properties'] = res['result']

@@ -19,7 +19,7 @@ BIOPORTAL_API_KEY = getattr(
 ABEROWL_API_URL = getattr(
     settings, 'ABEROWL_API_URL', 'http://localhost:8080/api/')
 ABEROWL_API_WORKERS = getattr(
-    settings, 'ABEROWL_API_WORKER_URLS', ['http://localhost:8080/api/'])
+    settings, 'ABEROWL_API_WORKERS', ['http://localhost:8080/api/'])
 ABEROWL_SERVER_URL = getattr(
     settings, 'ABEROWL_SERVER_URL', 'http://localhost/')
 

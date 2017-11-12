@@ -6,6 +6,7 @@ import json
 from aberowl.tasks import classify_ontology, reload_ontology
 from aberowl.models import Ontology, Submission
 import shutil
+import os
 from django.conf import settings
 
 ABEROWL_SERVER_URL = getattr(
@@ -81,6 +82,7 @@ class SubmissionForm(forms.ModelForm):
             shutil.move(
                 ontology_file.temporary_file_path(),
                 self.instance.get_filepath())
+            os.chmod(self.instance.get_filepath(), 0o664)
             shutil.copy(
                 self.instance.get_filepath(),
                 self.instance.get_filepath('latest'))

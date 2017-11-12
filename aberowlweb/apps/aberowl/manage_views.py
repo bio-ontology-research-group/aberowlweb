@@ -23,7 +23,7 @@ class OntologyCreateView(FormRequestMixin, CreateView):
 
     def get_success_url(self):
         kwargs = {'onto_pk': self.object.pk}
-        return reverse('submission_create', kwargs=kwargs)
+        return reverse('create_submission', kwargs=kwargs)
 
 
 class OntologyUpdateView(FormRequestMixin, UpdateView):

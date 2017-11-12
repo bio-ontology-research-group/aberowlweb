@@ -238,12 +238,10 @@ class Production(BaseConfiguration):
     ABEROWL_API_WORKERS = [
         'http://10.254.145.27:8080/api/',
         'http://10.254.145.30:8080/api/']
+    ABEROWL_SERVER_URL = 'http://10.254.145.9/'
+
     
-
-
-class OntologyAPIWorker(BaseConfiguration):
-
-    DEBUG = False
+class OntologyAPIWorker(Production):
 
     DATABASES = {
         'default': {
@@ -254,7 +252,3 @@ class OntologyAPIWorker(BaseConfiguration):
             'PASSWORD': '111'
         }
     }
-
-    ABEROWL_SERVER_URL = 'http://10.254.145.9/'
-    ELASTIC_SEARCH_URL = 'http://10.254.145.42:9200/aberowl/'
-

@@ -36,7 +36,9 @@ public class RequestManager {
 
     OWLOntologyManager oManager;
     OWLDataFactory df = OWLManager.getOWLDataFactory();
-
+    OWLReasoner oReasoner = null;
+    OWLReasoner structReasoner = null;
+    
     def ontology = null;
     def ont = null;
     def ontIRI = null;
@@ -153,9 +155,12 @@ public class RequestManager {
 	OWLReasonerConfiguration rConf = new ElkReasonerConfiguration(
 	    ElkReasonerConfiguration.getDefaultOwlReasonerConfiguration(
 		new NullReasonerProgressMonitor()), eConf)
-	OWLReasoner oReasoner = reasonerFactory.createReasoner(ontology, rConf);
-	oReasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
+	this.oReasoner = reasonerFactory.createReasoner(ontology, rConf);
+	this.oReasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 
+	StructuralReasonerFactory sReasonerFactory = new StructuralReasonerFactory()
+	this.structReasoner = sReasonerFactory.createReasoner(ontology)
+	
 	def sForm = new NewShortFormProvider(
 	    this.aProperties, preferredLanguageMap, manager);
 
@@ -163,14 +168,13 @@ public class RequestManager {
 	queryEngine?.getoReasoner()?.dispose()
 
 	// check if there are many many unsatisfiable classes, then switch to structural reasoner
-	if (oReasoner.getEquivalentClasses(df.getOWLNothing()).getEntitiesMinusBottom().size() >= MAX_UNSATISFIABLE_CLASSES) {
-	    oReasoner.dispose()
-	    StructuralReasonerFactory sReasonerFactory = new StructuralReasonerFactory()
-	    oReasoner = sReasonerFactory.createReasoner(ontology)
-	    queryEngine = new QueryEngine(oReasoner, sForm)
+	if (this.oReasoner.getEquivalentClasses(df.getOWLNothing()).getEntitiesMinusBottom().size() >= MAX_UNSATISFIABLE_CLASSES) {
+	    this.oReasoner.dispose()
+	    this.oReasoner = this.structReasoner;
+	    queryEngine = new QueryEngine(this.oReasoner, sForm)
 	    println "Successfully classified $ont but switched to structural reasoner"
 	} else {
-	    this.queryEngine = new QueryEngine(oReasoner, sForm)
+	    this.queryEngine = new QueryEngine(this.oReasoner, sForm)
 	    println "Successfully classified $ont"
 	}
 
@@ -385,11 +389,8 @@ public class RequestManager {
     }
     
     def getObjectProperties(OWLObjectProperty prop) {
-	def reasoner = new StructuralReasoner(
-	    this.ontology, new SimpleConfiguration(),
-	    BufferingMode.NON_BUFFERING)
 
-	def subProps = reasoner.getSubObjectProperties(
+	def subProps = this.structReasoner.getSubObjectProperties(
 	    prop, true).getFlattened()
 	subProps.remove(df.getOWLBottomObjectProperty())
 	subProps.remove(df.getOWLTopObjectProperty())

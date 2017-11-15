@@ -237,6 +237,7 @@ class Main extends React.Component {
 				{item.label + '(' + item.owlClass + ')'}
 			    </a>
 			);
+			if (!item.definition) item.definition = '';
 			var filterBy = item.ontology + item.label + item.definition;
 			if (item.definition) {
 			    dlQueryResults.rows.push([onto, owlClass, item.definition, filterBy]);
@@ -277,9 +278,10 @@ class Main extends React.Component {
 		var term = data[0][i][0];
 		var res = data[0][i][1];
 		var ontos = [];
-		const definition = that.innerHTML(res[0].definition);
-		const iri = res[0].owlClass;
-		const label = res[0].label + ' (' + iri + ')';
+		if (!res[0].definition) res[0].definition = '';
+		var definition = that.innerHTML(res[0].definition);
+		var iri = res[0].owlClass;
+		var label = res[0].label + ' (' + iri + ')';
 		var filterBy = term + res[0].definition;
 		
 		for (var i = 0; i < res.length; i++) {

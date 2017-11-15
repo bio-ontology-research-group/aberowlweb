@@ -244,7 +244,9 @@ class Main extends React.Component {
 			    rest.push([onto, owlClass, item.definition, filterBy]);
 			}
 		    }
-		    dlQueryResults.rows.push.apply(dlQueryResults.rows, rest);
+		    for (var i = 0; i < rest.length; i++) {
+			dlQueryResults.rows.push(rest[i]);
+		    }
 		} else {
 		    console.log('DLQuery', data);
 		}
@@ -297,8 +299,10 @@ class Main extends React.Component {
 		}
 	    }
 
-	    classes.rows.push.apply(classes.rows, rest);
-	    
+	    for(var i = 0; i < rest.length; i++) {
+		classes.rows.push(rest[i]);
+	    }
+
 	    var ontologies = {
 		headers: ['ID', 'Name', 'Description'], rows: [] };
 	    for (var i = 0; i < data[1].length; i++) {

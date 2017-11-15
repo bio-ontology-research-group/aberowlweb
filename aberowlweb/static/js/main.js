@@ -228,7 +228,7 @@ class Main extends React.Component {
 		var dlQueryResults = {
 		    headers: ['Ontology', 'OWL Class', 'Definition'], rows: []};
 		if (data.status == 'ok') {
-		    console.log(data);
+		    var rest = [];
 		    for (var i = 0; i < data['result'].length; i++) {
 			var item = data['result'][i];
 			const onto = (<a href={'/ontology/' + item.ontology }> { item.ontology } </a>);
@@ -238,8 +238,13 @@ class Main extends React.Component {
 			    </a>
 			);
 			var filterBy = item.ontology + item.label + item.definition;
-			dlQueryResults.rows.push([onto, owlClass, item.definition, filterBy]);
+			if (item.definition) {
+			    dlQueryResults.rows.push([onto, owlClass, item.definition, filterBy]);
+			} else {
+			    rest.push([onto, owlClass, item.definition, filterBy]);
+			}
 		    }
+		    dlQueryResults.rows.push.apply(dlQueryResults.rows, rest);
 		} else {
 		    console.log('DLQuery', data);
 		}
@@ -265,6 +270,7 @@ class Main extends React.Component {
 	
 	    var classes = {
 		headers: ['Class', 'Definition', 'Ontology'], rows: []};
+	    var rest = [];
 	    for (var i in data[0]) {
 		var term = data[0][i][0];
 		var res = data[0][i][1];
@@ -284,11 +290,15 @@ class Main extends React.Component {
 			    <a href={'/ontology/' + onto[0] + '/#/Browse/' + onto[1]}> {onto[0]} </a>
 		    );
 		});
-		    
-		classes.rows.push([label, definition, ontos, filterBy]);
-
+		if (res[0].definition) {
+		    classes.rows.push([label, definition, ontos, filterBy]);
+		} else {
+		    res.push([label, definition, ontos, filterBy]);
+		}
 	    }
 
+	    classes.rows.push.apply(classes.rows, rest);
+	    
 	    var ontologies = {
 		headers: ['ID', 'Name', 'Description'], rows: [] };
 	    for (var i = 0; i < data[1].length; i++) {

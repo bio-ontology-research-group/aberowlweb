@@ -295,7 +295,7 @@ class Main extends React.Component {
 		if (res[0].definition) {
 		    classes.rows.push([label, definition, ontos, filterBy]);
 		} else {
-		    res.push([label, definition, ontos, filterBy]);
+		    rest.push([label, definition, ontos, filterBy]);
 		}
 	    }
 

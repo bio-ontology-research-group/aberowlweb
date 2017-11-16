@@ -192,10 +192,8 @@ class Main extends React.Component {
     }
 
     componentWillReceiveProps(newProps) {
-	console.log(newProps);
 	var query = newProps.match.params.query;
 	if (query !== undefined && query != this.state.query) {
-	    console.log('Executing query');
 	    query = decodeURIComponent(query);
 	    this.setState({query: query});
 	    this.executeQuery(query);

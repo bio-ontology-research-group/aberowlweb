@@ -20,7 +20,6 @@ class OntologyList extends React.Component {
 
     constructor(props) {
 	super(props);
-	console.log(props);
 	var page = 1;
 	if (props.match.params.page != undefined) {
 	    page = parseInt(props.match.params.page);

@@ -500,7 +500,6 @@ class Ontology extends React.Component {
 			    return response.json();
 			})
 			.then(function(data) {
-			    console.log(data);
 			    obj.children = data.result;
 			    for (var i = 0; i < obj.children.length; i++) {
 				classesMap.set(obj.children[i].owlClass, obj.children[i]);
@@ -549,7 +548,6 @@ class Ontology extends React.Component {
 			return response.json();
 		    })
 		    .then(function(data) {
-			console.log(data);
 			obj.children = data.result;
 			for (var i = 0; i < obj.children.length; i++) {
 			    propsMap.set(obj.children[i].owlClass, obj.children[i]);

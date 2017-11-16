@@ -112,7 +112,7 @@ class QueryNamesAPIView(APIView):
             ('oboid', 10000),
             ('label', 1000),
             ('synonym', 100),
-            ('ontology', 75),
+            ('lontology', 75),
             ('definition', 3),
         ]
 
@@ -125,7 +125,7 @@ class QueryNamesAPIView(APIView):
 
             for field, boost in fields:
                 q = {
-                    'match': { field : { 'query': query_item, 'boost': boost } }
+                    'match': { field : { 'query': query_item.lower(), 'boost': boost } }
                 }
                 omap['dis_max']['queries'].append(q)
                 query_list.append(omap)

@@ -279,7 +279,7 @@ class Main extends React.Component {
 		if (!res[0].definition) res[0].definition = '';
 		var definition = that.innerHTML(res[0].definition);
 		var iri = res[0].owlClass;
-		var label = res[0].label + ' (' + iri + ')';
+		var label = res[0].label[0] + ' (' + iri + ')';
 		var filterBy = term + res[0].definition;
 		
 		for (var i = 0; i < res.length; i++) {

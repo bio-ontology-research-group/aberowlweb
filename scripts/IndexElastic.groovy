@@ -47,7 +47,7 @@ def index(def type, def obj) {
     def m = ["query": ["bool": ["must": []]]]
     def ll = []
     ll << ["term" : ["ontology" : obj["ontology"]]]
-    if (type == "owlClass") {
+    if (type == "owlclass") {
 	ll << ["term" : ["class" : obj["class"]]]
     }
     ll.each {
@@ -123,20 +123,13 @@ void indexOntology(String fileName, def data) {
     def acronym = data.acronym
     def name = data.name
     def description = data.description
-    def omap = [:]
-    omap.query = [:]
-    omap.query.term = [:]
-    omap.query.term.ontology = acronym
     
-    // Add record for the ontology itself
-    omap = [:]
+    def omap = [:]
     omap.ontology = acronym
     omap.lontology = acronym.toLowerCase()
-    omap.type = "ontology"
     omap.name = name
     omap.lname = name.toLowerCase()
     if (description) {
-	omap.ldescription = StringEscapeUtils.escapeJava(description.toLowerCase())
 	omap.description = StringEscapeUtils.escapeJava(description)
     }
     index("ontology", omap)
@@ -154,6 +147,7 @@ void indexOntology(String fileName, def data) {
 	    "owlClass": c.toString(),
 	    "class": cIRI,
 	    "ontology": acronym,
+	    "lontology": acronym.toLowerCase(),
 	].withDefault { key -> [] };
 
 	def hasLabel = false

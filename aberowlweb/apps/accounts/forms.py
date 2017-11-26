@@ -1,6 +1,8 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 from accounts.models import UserProfile
+from snowpenguin.django.recaptcha2.fields import ReCaptchaField
+from snowpenguin.django.recaptcha2.widgets import ReCaptchaWidget
 
 
 class UserProfileForm(forms.ModelForm):
@@ -26,3 +28,11 @@ class UserProfileForm(forms.ModelForm):
         self.instance.user.last_name = last_name
         self.instance.user.save()
         return self.instance
+
+
+class SignupForm(forms.Form):
+    captcha = ReCaptchaField(widget=ReCaptchaWidget())
+
+    def signup(self, request, user):
+        """ Required, or else it throws deprecation warnings """
+        pass

@@ -59,6 +59,7 @@ class BaseConfiguration(Configuration):
         'rest_framework',
         'widget_tweaks',
         'aberowl',
+        'snowpenguin.django.recaptcha2',
     ]
 
     MIDDLEWARE = [
@@ -223,6 +224,10 @@ class BaseConfiguration(Configuration):
         # 'django.core.files.uploadhandler.MemoryFileUploadHandler',
         'django.core.files.uploadhandler.TemporaryFileUploadHandler',
     ]
+
+    RECAPTCHA_PRIVATE_KEY = '6LefajoUAAAAAEiswDUvk1quNKpTJCg49gwrLXpb'
+    RECAPTCHA_PUBLIC_KEY = '6LefajoUAAAAAOAWkZnaz-M2lgJOIR9OF5sylXmm'
+    ACCOUNT_SIGNUP_FORM_CLASS = 'accounts.forms.SignupForm'
 
 
 class Development(BaseConfiguration):

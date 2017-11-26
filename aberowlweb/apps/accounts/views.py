@@ -9,7 +9,7 @@ from accounts.forms import UserProfileForm
 from accounts.models import UserProfile
 from aberowl.models import Ontology
 
-
+    
 class ProfileDetailView(DetailView):
     model = User
     template_name = 'account/profile/view.html'

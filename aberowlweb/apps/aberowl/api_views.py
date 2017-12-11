@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 import requests
 import json
@@ -9,6 +10,8 @@ from gevent.pool import Pool
 import time
 
 from aberowl.models import Ontology
+from aberowl.serializers import OntologySerializer
+
 
 ELASTIC_SEARCH_URL = getattr(
     settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/aberowl/')
@@ -45,7 +48,6 @@ class SearchClassesAPIView(APIView):
     def get(self, request, format=None):
         query = request.GET.get('query', None)
         ontology = request.GET.get('ontology', None)
-        print(query)
         if query is None:
             return Response(
                 {'status': 'error',
@@ -200,3 +202,8 @@ class BackendAPIView(APIView):
         
                 
 
+class OntologyListAPIView(ListAPIView):
+
+    queryset = Ontology.objects.all()
+    serializer_class = OntologySerializer
+    

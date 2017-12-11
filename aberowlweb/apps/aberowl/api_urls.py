@@ -11,4 +11,6 @@ urlpatterns = [
         api_views.QueryOntologiesAPIView.as_view(), name='api-queryontologies'),
     url(r'^backend/$',
         api_views.BackendAPIView.as_view(), name='api-backend'),
+    url(r'^ontologies/$',
+        api_views.OntologyListAPIView.as_view(), name='api-ontologies'),
 ]

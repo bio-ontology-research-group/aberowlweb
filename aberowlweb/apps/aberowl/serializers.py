@@ -5,6 +5,8 @@ from aberowl.models import Ontology, Submission
 
 class SubmissionSerializer(serializers.ModelSerializer):
 
+    download_url = serializers.CharField(source='get_filepath')
+
     class Meta:
         model = Submission
         exclude = ['ontology', ]

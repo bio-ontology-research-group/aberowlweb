@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import models
 from django.contrib.auth.models import User
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.utils import timezone
 from django.conf import settings
 import os
@@ -22,11 +22,16 @@ class Ontology(models.Model):
         (INCOHERENT, INCOHERENT),
         (UNKNOWN, UNKNOWN),
     )
+    BIOPORTAL = 'bioportal'
+    OBOFOUNDRY = 'obofoundry'
+    MANUAL = 'manual'
+    
     acronym = models.CharField(max_length=63, unique=True)
     name = models.CharField(max_length=255)
     created_by = models.ForeignKey(
         User, on_delete=models.CASCADE,
         related_name='created_ontologies')
+    source = models.CharField(max_length=15, default=MANUAL)
     date_created = models.DateTimeField(default=timezone.now)
     modified_by = models.ForeignKey(
         User, on_delete=models.SET_NULL, blank=True, null=True,
@@ -41,6 +46,8 @@ class Ontology(models.Model):
     species = ArrayField(
         models.CharField(max_length=127), blank=True, null=True)
     nb_servers = models.PositiveIntegerField(default=0)
+    
+    is_obsolete = models.BooleanField(default=False)
 
     class Meta:
         verbose_name_plural = 'Ontologies'
@@ -66,9 +73,13 @@ class Submission(models.Model):
     ontology = models.ForeignKey(
         Ontology, on_delete=models.CASCADE, related_name='submissions')
     submission_id = models.PositiveIntegerField()
+    domain = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     documentation = models.CharField(max_length=255, blank=True, null=True)
     publication = models.CharField(max_length=255, blank=True, null=True)
+    publications = JSONField(blank=True, null=True)
+    products = JSONField(blank=True, null=True)
+    taxon = JSONField(blank=True, null=True)
     date_released = models.DateTimeField()
     date_created = models.DateTimeField()
     home_page = models.CharField(max_length=255, blank=True, null=True)
@@ -88,8 +99,13 @@ class Submission(models.Model):
     nb_inconsistent = models.PositiveIntegerField(default=0)
     indexed = models.BooleanField(default=False)
 
+    md5sum = models.CharField(
+        max_length=32, blank=True, null=True)
+
     class Meta:
-        unique_together = (('ontology', 'submission_id'),)
+        unique_together = (
+            ('ontology', 'submission_id'),
+            ('ontology', 'md5sum'),)
 
     def __str__(self):
         return str(self.ontology) + ' - ' + str(self.submission_id)

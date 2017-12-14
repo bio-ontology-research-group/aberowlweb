@@ -9,6 +9,7 @@ import signal
 import logging
 import gevent
 import json
+import os
 
 ABEROWL_SERVER_URL = getattr(settings, 'ABEROWL_SERVER_URL', 'http://localhost/')
 
@@ -45,9 +46,12 @@ class Command(BaseCommand):
             ontIRI = ABEROWL_SERVER_URL + ont.get_latest_submission().get_filepath()
             data.append({'ontId': ont.acronym, 'ontIRI': ontIRI})
         data = json.dumps(data)
+        env = os.environ.copy()
+        env['JAVA_OPTS'] = '-Xmx200g -Xms8g'
         self.proc = Popen(
             ['groovy', 'OntologyServer.groovy'],
-            cwd='aberowlapi/', stdin=PIPE, stdout=PIPE, universal_newlines=True)
+            cwd='aberowlapi/', stdin=PIPE, stdout=PIPE,
+            universal_newlines=True, env=env)
         self.proc.stdin.write(data)
         self.proc.stdin.close()
         for line in self.proc.stdout:

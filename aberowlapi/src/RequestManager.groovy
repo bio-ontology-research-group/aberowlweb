@@ -222,19 +222,22 @@ public class RequestManager {
 		}
 	    } else {
 		if (annot.getValue() instanceof OWLLiteral) {
-		    def aVal = annot.getValue().getLiteral()
-		    def aLabels = EntitySearcher.getAnnotations(
-			aProp, o)
-		    if (aLabels.size() > 0) {
-			aLabels.each { l ->
-			    if (l.getValue() instanceof OWLLiteral) {
-				def lab = l.getValue().getLiteral()
-				info[lab].add(aVal)
+		    try {
+			def aVal = annot.getValue().getLiteral()
+			def aLabels = EntitySearcher.getAnnotations(
+			    aProp, o)
+			if (aLabels.size() > 0) {
+			    aLabels.each { l ->
+				if (l.getValue() instanceof OWLLiteral) {
+				    def lab = l.getValue().getLiteral()
+				    info[lab].add(aVal)
+				}
 			    }
+			} else {
+			    def prop = this.shortFormProvider.getShortForm(aProp)
+			    info[prop].add(aVal)
 			}
-		    } else {
-			def prop = this.shortFormProvider.getShortForm(aProp)
-			info[prop].add(aVal)
+		    } catch (Exception e) {
 		    }
 		}
 	    }

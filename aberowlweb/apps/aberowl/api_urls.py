@@ -13,4 +13,6 @@ urlpatterns = [
         api_views.BackendAPIView.as_view(), name='api-backend'),
     url(r'^ontologies/$',
         api_views.OntologyListAPIView.as_view(), name='api-ontologies'),
+    url(r'^classes/$',
+        api_views.ClassInfoAPIView.as_view(), name='api-classinfo'),
 ]

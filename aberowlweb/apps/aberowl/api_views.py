@@ -207,3 +207,49 @@ class OntologyListAPIView(ListAPIView):
     queryset = Ontology.objects.all()
     serializer_class = OntologySerializer
     
+
+class ClassInfoAPIView(APIView):
+
+
+    def __init__(self, *args, **kwargs):
+        super(ClassInfoAPIView, self).__init__(*args, **kwargs)
+    
+
+    def get(self, request, format=None):
+        ontology = request.GET.get('ontology', None)
+        iris = request.GET.getlist('iri', None)
+
+        if ontology is None:
+            return Response(
+                {'status': 'error',
+                 'message': 'Please provide ontology!'})
+        if iris is None:
+            return Response(
+                {'status': 'error',
+                 'message': 'Please provide at least one IRI!'})
+        try: 
+            queryset = Ontology.objects.filter(acronym=ontology)
+            if queryset.exists():
+                ontology = queryset.get()
+                if ontology.nb_servers:
+                    result = {'status': 'ok', 'result': {}}
+                    for query in iris:
+                        params = {
+                            'type': 'equivalent',
+                            'direct': 'true',
+                            'query': query,
+                            'ontology': ontology.acronym
+                        }
+                        url = ontology.get_api_url() + 'runQuery.groovy'
+                        r = requests.get(url, params=params)
+                        res = r.json()
+                        if 'result' in res and len(res['result']) > 0:
+                            result['result'][query] = res['result'][0]
+                    return Response(result)
+                else:
+                    raise Exception('API server is down!')
+            else:
+                raise Exception('Ontology does not exist!')
+        except Exception as e:
+            return Response({'status': 'exception', 'message': str(e)})
+        

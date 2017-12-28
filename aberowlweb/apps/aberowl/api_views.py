@@ -237,6 +237,7 @@ class ClassInfoAPIView(APIView):
                         params = {
                             'type': 'equivalent',
                             'direct': 'true',
+                            'axioms': 'true',
                             'query': query,
                             'ontology': ontology.acronym
                         }

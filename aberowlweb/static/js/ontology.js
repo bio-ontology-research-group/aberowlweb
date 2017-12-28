@@ -70,7 +70,7 @@ class Ontology extends React.Component {
 	    }
 	    queries.push(
 		fetch('/api/backend?script=runQuery.groovy&type=' + params.query
-		      + '&direct=true&query=' + encodeURIComponent(owlClass)
+		      + '&direct=true&axioms=true&query=' + encodeURIComponent(owlClass)
 		      + '&ontology=' + this.state.ontology.acronym)
 		    .then((response) => response.json())
 		
@@ -494,7 +494,7 @@ class Ontology extends React.Component {
 		state.selectedClass = obj;
 		if (!('children' in obj)) {
 		    fetch(
-			'/api/backend?script=runQuery.groovy&type=subclass&direct=true&query='
+			'/api/backend?script=runQuery.groovy&type=subclass&direct=true&axioms=true&query='
 			    + encodeURIComponent(obj.owlClass) + '&ontology=' + obj.ontology)
 			.then(function(response){
 			    return response.json();
@@ -526,7 +526,7 @@ class Ontology extends React.Component {
 	    var queries = [];
 	    const dlQuery = params.query;
 	    fetch('/api/backend?script=runQuery.groovy&type=' + params.query
-		  + '&direct=true&query=' + encodeURIComponent(owlClass)
+		  + '&direct=true&axioms=true&query=' + encodeURIComponent(owlClass)
 		  + '&ontology=' + this.state.ontology.acronym)
 	    .then((response) => response.json())
 	    .then(function(data) {

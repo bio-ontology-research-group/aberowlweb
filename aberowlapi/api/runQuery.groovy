@@ -24,29 +24,17 @@ def query = params.query
 def type = params.type
 def direct = params.direct
 def labels = params.labels
+def axioms = params.axioms
 def ontology = params.ontology
 def managers = application.managers
 
-if(type == null) {
-    type = 'all'
-}
-if(direct == null) {
-    direct = "false"
-}
-if (direct == "true") {
-    direct = true
-} else {
-    direct = false
+if (type == null) {
+    type = "all"
 }
 
-if(labels == null) {
-    labels = 'false'
-}
-if (labels == 'false') {
-    labels = false
-} else {
-    labels = true
-}
+direct = (direct == "true") ? true : false;
+labels = (labels == "true") ? true : false;
+axioms = (axioms == "true") ? true : false;
 
 response.contentType = 'application/json'
 
@@ -55,7 +43,7 @@ try {
     def start = System.currentTimeMillis()
 
     if (ontology != null) {
-	def out = managers[ontology].runQuery(query, type, direct, labels, true)
+	def out = managers[ontology].runQuery(query, type, direct, labels, axioms)
 	def end = System.currentTimeMillis()
 	results.put('time', (end - start))
 	results.put('result', out)

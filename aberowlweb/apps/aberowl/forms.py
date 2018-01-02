@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.db.models import Max
 from subprocess import Popen, PIPE, DEVNULL
 import json
-from aberowl.tasks import classify_ontology, reload_ontology
+from aberowl.tasks import classify_ontology, reload_ontology, index_submission
 from aberowl.models import Ontology, Submission
 import shutil
 import os
@@ -100,5 +100,6 @@ class SubmissionForm(forms.ModelForm):
             ontIRI = ABEROWL_SERVER_URL + self.instance.get_filepath()
             reload_ontology.delay(self.ontology.acronym, ontIRI)
         self.instance.save()
+        index_submission.delay(self.ontology.pk, self.instance.pk)
         return self.instance
     

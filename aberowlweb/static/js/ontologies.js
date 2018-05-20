@@ -26,8 +26,8 @@ class OntologyList extends React.Component {
 	}
 	this.state = {
 	    page: page,
-	    paginateBy: 10,
-	    ontologies: props.ontologies.slice(),
+	    paginateBy: 50,
+	    ontologies: props.ontologies.slice().sort(function(a,b){return a.acronym.toLowerCase().localeCompare(b.acronym.toLowerCase());}),
 	    filterValue: ''
 	};
     }
@@ -114,7 +114,7 @@ class OntologyList extends React.Component {
 	);
 	this.setState({ontologies: ontologies});
     }
-    
+
     render() {
 	var paginateBy = this.state.paginateBy;
 	var page = this.state.page;

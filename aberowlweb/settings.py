@@ -178,7 +178,8 @@ class BaseConfiguration(Configuration):
 
     SITE_ID = 1
     SITE_DOMAIN = 'localhost:8000'
-
+    SERVER_EMAIL = 'info@aber-owl.net'
+    
     # Celery configuration
     RABBIT_HOST = 'localhost'
     RABBIT_PORT = 5672

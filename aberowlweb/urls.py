@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.conf.urls.static import static
 from aberowlweb.views import HomePageView, AboutPageView
 from django.conf import settings
+from django.views.generic import TemplateView
 
 urlpatterns = [
     # url(r'^$', HomePageView.as_view(), name='home'),
@@ -25,4 +26,5 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^accounts/', include('accounts.urls')),
     url(r'^about/$', AboutPageView.as_view(), name='about'),
+    url(r'^health', TemplateView.as_view(template_name='health.html')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

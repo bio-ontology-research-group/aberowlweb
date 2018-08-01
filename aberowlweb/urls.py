@@ -26,5 +26,5 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^accounts/', include('accounts.urls')),
     url(r'^about/$', AboutPageView.as_view(), name='about'),
-    url(r'^health', TemplateView.as_view(template_name='health.html')),
+    url(r'^healthcheck', TemplateView.as_view(template_name='health.html')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

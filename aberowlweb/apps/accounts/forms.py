@@ -3,6 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from accounts.models import UserProfile
 from snowpenguin.django.recaptcha2.fields import ReCaptchaField
 from snowpenguin.django.recaptcha2.widgets import ReCaptchaWidget
+from allauth.account.forms import LoginForm, SignupForm
 
 
 class UserProfileForm(forms.ModelForm):
@@ -30,9 +31,10 @@ class UserProfileForm(forms.ModelForm):
         return self.instance
 
 
-class SignupForm(forms.Form):
+class CaptchaSignupForm(SignupForm):
     captcha = ReCaptchaField(widget=ReCaptchaWidget())
 
-    def signup(self, request, user):
-        """ Required, or else it throws deprecation warnings """
-        pass
+
+class CaptchaLoginForm(LoginForm):
+    captcha = ReCaptchaField(widget=ReCaptchaWidget())
+

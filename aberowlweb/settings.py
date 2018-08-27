@@ -228,7 +228,10 @@ class BaseConfiguration(Configuration):
 
     RECAPTCHA_PRIVATE_KEY = '6LefajoUAAAAAEiswDUvk1quNKpTJCg49gwrLXpb'
     RECAPTCHA_PUBLIC_KEY = '6LefajoUAAAAAOAWkZnaz-M2lgJOIR9OF5sylXmm'
-    ACCOUNT_SIGNUP_FORM_CLASS = 'accounts.forms.SignupForm'
+    # ACCOUNT_SIGNUP_FORM_CLASS = 'accounts.forms.SignupForm'
+    ACCOUNT_FORMS = {
+        'login': 'accounts.forms.CaptchaLoginForm',
+        'signup': 'accounts.forms.CaptchaSignupForm'}
 
 
 class Development(BaseConfiguration):

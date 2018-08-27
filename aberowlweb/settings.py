@@ -170,7 +170,7 @@ class BaseConfiguration(Configuration):
     AUTH_PROFILE_MODULE = 'accounts.models.UserProfile'
     ACCOUNT_EMAIL_REQUIRED = True
     ACCOUNT_AUTHENTICATION_METHOD = "username_email"
-    ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+    ACCOUNT_EMAIL_VERIFICATION = "none"
     ACCOUNT_PRESERVE_USERNAME_CASING = "False"
 
     STATICFILES_DIRS = (

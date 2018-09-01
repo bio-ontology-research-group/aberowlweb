@@ -138,6 +138,9 @@ def sync_obofoundry():
 
             if submission.classifiable:
                 index_submission(ontology.pk, submission.pk)
+                filepath = '../' + submission.get_filepath(folder='latest')
+                generate_embeddings(filepath)
+            
         except Exception as e:
             print(acronym, e)
 
@@ -247,6 +250,9 @@ def sync_bioportal():
 
             if submission.classifiable:
                 index_submission(ontology.pk, submission.pk).delay()
+                filepath = '../' + submission.get_filepath(folder='latest')
+                generate_embeddings(filepath)
+            
         except Exception as e:
             print(acronym, e)
 
@@ -296,4 +302,23 @@ def reload_ontology(ont, ontIRI):
             api_worker_url + 'reloadOntology.groovy',
             params={'ontology': ont, 'ontologyIRI': ontIRI})
         print(r.json())
-    
+
+@task
+def generate_embeddings(filepath):
+    p = Popen(
+        ['groovy', 'Axioms.groovy', filepath],
+        cwd='scripts/', stderr=DEVNULL, stdout=PIPE)
+    result = {'classifiable': False}
+    if p.wait() == 0:
+        lines = p.stdout.readlines()
+        result = json.loads(lines[-1].decode('utf-8'))
+    if not result['classifiable']:
+        return result
+    p = Popen(
+        ['word2vec', '-train', (filepath + '.axms'),
+         '-output', (filepath + '.embs'), '-size', '256',
+         '-min-count', '1', '-iter', '50'],
+        cwd='scripts/', stderr=DEVNULL, stdout=DEVNULL)
+    if p.wait() == 0:
+        print('Successfully generated embeddings for ', filepath)
+    return result

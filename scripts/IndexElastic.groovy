@@ -189,10 +189,10 @@ void indexOntology(String fileName, def data) {
 	def oboId = ""
 	if (cIRI.lastIndexOf('?') > -1) {
 	    oboId = cIRI.substring(cIRI.lastIndexOf('?') + 1)
-	} else if (cIRI.lastIndexOf("#") > -1) {
-	    oboId = cIRI.substring(cIRI.lastIndexOf("#") + 1)
-	} else if (cIRI.lastIndexOf("/") > -1) {
-	    oboId = cIRI.substring(cIRI.lastIndexOf("/") + 1)
+	} else if (cIRI.lastIndexOf('#') > -1) {
+	    oboId = cIRI.substring(cIRI.lastIndexOf('#') + 1)
+	} else if (cIRI.lastIndexOf('/') > -1) {
+	    oboId = cIRI.substring(cIRI.lastIndexOf('/') + 1)
 	}
 	if (oboId.length() > 0) {
 	    oboId = oboId.replaceAll("_", ":").toLowerCase()

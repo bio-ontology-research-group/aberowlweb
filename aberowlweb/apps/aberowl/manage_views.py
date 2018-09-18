@@ -2,10 +2,18 @@ from django.views.generic import CreateView, UpdateView, ListView
 from django.urls import reverse
 from aberowl.models import Ontology, Submission
 from aberowl.forms import OntologyForm, SubmissionForm
-from aberowlweb.mixins import FormRequestMixin
+from aberowlweb.mixins import FormRequestMixin, ActionMixin
 from django.shortcuts import get_object_or_404
+from aberowl.tasks import reload_ontology
+from django.conf import settings
+from django.contrib import messages
 
-class MyOntologyListView(ListView):
+
+ABEROWL_SERVER_URL = getattr(
+    settings, 'ABEROWL_SERVER_URL', 'http://localhost/')
+
+
+class MyOntologyListView(ActionMixin, ListView):
 
     model = Ontology
     template_name = 'aberowl/manage/list_ontology.html'
@@ -13,6 +21,28 @@ class MyOntologyListView(ListView):
     def get_queryset(self, *args, **kwargs):
         return self.request.user.created_ontologies.all().order_by(
             'acronym')
+
+    def get_success_url(self):
+        return reverse('list_ontology')
+
+    def on_reload_ontology(self, request, action):
+        ont_pk = request.POST.get('ontology', None)
+        if ont_pk is None:
+            return
+        ont = self.get_queryset().get(pk=ont_pk)
+        sub = ont.get_latest_submission()
+        if sub is not None:
+            ontIRI = ABEROWL_SERVER_URL + sub.get_filepath()
+            reload_ontology.delay(ont.acronym, ontIRI)
+            messages.info(
+                request, 'Ontology %s is being reloaded!' % (ont.acronym,))
+        else:
+            messages.error(
+                request,
+                'Ontology %s does not have any submission!' % (ont.acronym,))
+        
+        
+
     
     
 class OntologyCreateView(FormRequestMixin, CreateView):

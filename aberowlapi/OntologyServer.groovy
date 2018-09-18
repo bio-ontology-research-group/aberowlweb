@@ -72,12 +72,24 @@ def startServer(def ontologies, def port) {
     println "Server started on " + server.getURI()
     def managers = [:]
     context.setAttribute("managers", managers)
+    def tryAgain = []
     GParsPool.withPool {
 	ontologies.eachParallel { ont ->
 	    def mgr = RequestManager.create(ont.ontId, ont.ontIRI)
 	    if (mgr != null) {
 		managers[ont.ontId] = mgr
+	    } else {
+		tryAgain.add(ont);
 	    }
+	}
+    }
+
+    tryAgain.each { ont ->
+	def mgr = RequestManager.create(ont.ontId, ont.ontIRI)
+	if (mgr != null) {
+	    managers[ont.ontId] = mgr
+	} else {
+	    println("Can't start " + ont.ontId)
 	}
     }
     

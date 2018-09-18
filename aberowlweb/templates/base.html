@@ -38,8 +38,23 @@
     {% endblock %}
     <div class="container">
       <div class="content">
-      {% block content %}
-      {% endblock %}
+	<div class="row">
+          <div class="col-md-12">
+            {% if messages %}
+            <ul class="list-group">
+              {% for message in messages %}
+              <li{% if message.tags %} class="list-group-item {{ message.tags }}"{% endif %}>
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}Important: {% endif %}
+                {{ message }}
+              </li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+        </div>
+          
+	{% block content %}
+	{% endblock %}
       </div>
     </div><!-- /.container -->
 

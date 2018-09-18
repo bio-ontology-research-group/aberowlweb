@@ -14,6 +14,7 @@ import os
 import sys
 from configurations import Configuration
 from kombu import Queue, Exchange
+from django.contrib import messages
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -232,6 +233,15 @@ class BaseConfiguration(Configuration):
     ACCOUNT_FORMS = {
         'login': 'accounts.forms.CaptchaLoginForm',
         'signup': 'accounts.forms.CaptchaSignupForm'}
+
+    MESSAGE_TAGS = {
+        messages.INFO: 'list-group-item-info',
+        messages.DEBUG: 'list-group-item-info',
+        messages.SUCCESS: 'list-group-item-success',
+        messages.WARNING: 'list-group-item-warning',
+        messages.ERROR: 'list-group-item-danger',
+    }
+
 
 
 class Development(BaseConfiguration):

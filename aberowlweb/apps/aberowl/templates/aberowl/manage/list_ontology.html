@@ -3,7 +3,7 @@
 {% block content %}
 <div class="col-md-6 col-md-offset-3">
   <table class="table table-striped">
-    <thead><th>Acronym</th><th>Name</th><th>Status</th></thead>
+    <thead><th>Acronym</th><th>Name</th><th>Status</th><th>Actions</th></thead>
     <tbody>
       {% for ontology in object_list %}
       <tr>
@@ -15,6 +15,14 @@
 	  {% else %}
 	  offline
 	  {% endif %}
+	</td>
+	<td>
+	  <form class="form" action="." method="post">
+	    {% csrf_token %}
+	    <input type="hidden" name="action" value="reload_ontology"/>
+	    <input type="hidden" name="ontology" value="{{ ontology.pk }}"/>
+	    <button type="submit" class="btn btn-primary"><i class="glyphicon glyphicon-refresh"></i></button>
+	  </form>
 	</td>
       </tr>
       {% endfor %}

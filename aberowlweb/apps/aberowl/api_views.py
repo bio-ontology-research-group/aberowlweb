@@ -48,6 +48,9 @@ class SearchClassesAPIView(APIView):
     def get(self, request, format=None):
         query = request.GET.get('query', None)
         ontology = request.GET.get('ontology', None)
+        return self.process_query(query, ontology)
+
+    def process_query(self, query, ontology):
         if query is None:
             return Response(
                 {'status': 'error',
@@ -213,12 +216,19 @@ class ClassInfoAPIView(APIView):
 
     def __init__(self, *args, **kwargs):
         super(ClassInfoAPIView, self).__init__(*args, **kwargs)
-    
+
+    def post(self, request, format=None):
+        ontology = request.POST.get('ontology', None)
+        iris = request.GET.getlist('iri', None)
+        return self.process_query(iris, ontology)
+
 
     def get(self, request, format=None):
         ontology = request.GET.get('ontology', None)
         iris = request.GET.getlist('iri', None)
+        return self.process_query(iris, ontology)
 
+    def process_query(self, iris, ontology):
         if ontology is None:
             return Response(
                 {'status': 'error',

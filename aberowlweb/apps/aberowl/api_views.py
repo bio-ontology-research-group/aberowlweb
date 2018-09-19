@@ -220,6 +220,7 @@ class ClassInfoAPIView(APIView):
     def post(self, request, format=None):
         ontology = request.POST.get('ontology', None)
         iris = request.POST.getlist('iri', None)
+        print(request.POST)
         return self.process_query(iris, ontology)
 
 
@@ -255,7 +256,10 @@ class ClassInfoAPIView(APIView):
                         r = requests.get(url, params=params)
                         res = r.json()
                         if 'result' in res and len(res['result']) > 0:
-                            result['result'][query] = res['result'][0]
+                            for item in res['result']:
+                                if item['owlClass'] == query:
+                                    result['result'][query] = item
+                                    break
                     return Response(result)
                 else:
                     raise Exception('API server is down!')

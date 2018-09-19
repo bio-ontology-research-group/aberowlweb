@@ -219,7 +219,7 @@ class ClassInfoAPIView(APIView):
 
     def post(self, request, format=None):
         ontology = request.POST.get('ontology', None)
-        iris = request.GET.getlist('iri', None)
+        iris = request.POST.getlist('iri', None)
         return self.process_query(iris, ontology)
 
 

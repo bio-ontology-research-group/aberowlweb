@@ -257,7 +257,7 @@ class ClassInfoAPIView(APIView):
                         res = r.json()
                         if 'result' in res and len(res['result']) > 0:
                             for item in res['result']:
-                                if item['owlClass'] == query:
+                                if item['class'] == query:
                                     result['result'][query] = item
                                     break
                     return Response(result)

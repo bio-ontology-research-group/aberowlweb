@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django.db.models import F
 from aberowl.models import Ontology
+from django import db
 
 from gevent.subprocess import Popen, PIPE
 import time
@@ -61,8 +62,15 @@ class Command(BaseCommand):
                 oid = line.split()[2]
                 if oid not in self.loaded:
                     self.loaded.add(oid)
-                    Ontology.objects.filter(
-                        acronym=oid).update(nb_servers=F('nb_servers') + 1)
+                    try:                
+                        Ontology.objects.filter(
+                            acronym=oid).update(nb_servers=F('nb_servers') + 1)
+                    except Exception as e:
+                        print('Exception:', e)
+                        # Reset database connection if update query fails
+                        db.close_connection() 
+                        Ontology.objects.filter(
+                            acronym=oid).update(nb_servers=F('nb_servers') + 1)
                     
         self.proc.stdout.close()
         self.proc.wait()

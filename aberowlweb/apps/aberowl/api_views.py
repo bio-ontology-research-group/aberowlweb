@@ -249,7 +249,7 @@ class ClassInfoAPIView(APIView):
                             'type': 'equivalent',
                             'direct': 'true',
                             'axioms': 'false',
-                            'query': query,
+                            'query': '<' + query + '>',
                             'ontology': ontology.acronym
                         }
                         url = ontology.get_api_url() + 'runQuery.groovy'

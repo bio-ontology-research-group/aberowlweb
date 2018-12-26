@@ -11,6 +11,7 @@
 
 import groovy.json.*
 import groovyx.net.http.HTTPBuilder
+import groovyx.net.http.HttpResponseException
 import groovyx.net.http.Method
 import groovyx.net.http.ContentType
 
@@ -35,46 +36,115 @@ import org.semanticweb.owlapi.reasoner.structural.*
 
 import org.apache.lucene.queryparser.classic.QueryParser;
 
-
+import java.nio.*
 import java.nio.file.*
-
+import java.util.*
 import org.apache.logging.log4j.*
 
 
-def index(def type, def obj) {
-    
-    // delete if exists
-    def m = ["query": ["bool": ["must": []]]]
-    def ll = []
-    ll << ["term" : ["ontology" : obj["ontology"]]]
-    if (type == "owlclass") {
-	ll << ["term" : ["class" : obj["class"]]]
+def indexExists(indexName) {
+    try {
+	http.get(
+	    path: '/' + indexName,
+	)
+    } catch (HttpResponseException e) {
+	r = e.response
+	return r.status != 404
     }
-    ll.each {
-	m.query.bool.must << it
+    return true
+}
+
+def initIndex() {
+    def settings = [
+	"settings" : [
+	    "number_of_shards" : 5,
+	    "number_of_replicas" : 1,
+	    "analysis": [
+		"normalizer": [
+		    "my_normalizer": [
+			"type": "custom",
+			"filter": ["lowercase",]
+		    ]
+		]
+	    ]
+	],
+	"mappings" : [
+            "owlclass" : [
+		"properties" : [
+                    "embedding_vector": [
+			"type": "binary",
+			"doc_values": true
+		    ],
+		    "class": ["type": "keyword"],
+		    "definition": ["type": "text"],
+		    "identifier": ["type": "keyword"],
+		    "label": [
+			"type": "keyword", "normalizer": "my_normalizer"],
+		    "ontology": [
+			"type": "keyword", "normalizer": "my_normalizer"],
+		    "oboid": [
+			"type": "keyword", "normalizer": "my_normalizer"],
+		    "owlClass": ["type": "keyword"],
+		    "synonyms": ["type": "text"],
+		]
+            ],
+	    "ontology": [
+		"properties" : [
+		    "name": [
+			"type": "keyword", "normalizer": "my_normalizer"],
+		    "ontology": [
+			"type": "keyword", "normalizer": "my_normalizer"],
+		    "description": ["type": "text"],
+		]
+	    ]
+	]
+    ]
+    if (!indexExists('aberowl')) {
+	try {
+	    http.request(Method.PUT, ContentType.JSON) { req ->
+		uri.path = '/aberowl'
+		body = new JsonBuilder(settings).toString()
+		response.success = {resp, json ->
+		    println(json)
+		}
+		response.failure = {resp, json ->
+		    println(json)
+		}
+	    }
+	} catch (HttpResponseException e) {
+	    e.printStackTrace()
+	}
     }
+}
+
+def deleteOntologyData(ontology) {
+    def query = ["query": ["term": ["ontology": ontology]]]
     try {
 	http.post(
 	    contentType: ContentType.JSON,
-	    path: '/aberowl/' + type + '/_delete_by_query',
-	    body: new JsonBuilder(m).toString()
+	    path: '/aberowl/ontology/_delete_by_query',
+	    body: new JsonBuilder(query).toString()
+	) {resp, reader -> }
+	http.post(
+	    contentType: ContentType.JSON,
+	    path: '/aberowl/owlclass/_delete_by_query',
+	    body: new JsonBuilder(query).toString()
 	) {resp, reader -> }
     } catch (Exception e) {
 	e.printStackTrace()
     }
-    
+
+}
+
+def index(def type, def obj) {
+        
     def j = new groovy.json.JsonBuilder(obj)
     try {
-
-	http.handler.failure = { resp, reader ->
-	    [response:resp, reader:reader]
+	http.request(Method.POST, ContentType.JSON) {
+	    uri.path = '/aberowl/'+ type + '/'
+	    body = j.toString()
+	    headers.'Content-Type' = 'application/json'
 	}
-	http.handler.success = { resp, reader ->
-	    [response:resp, reader:reader]
-	}
-	def response = http.post(
-	    path: '/aberowl/'+ type + '/',
-	    body: j.toPrettyString())
     } catch (Exception e) {
 	e.printStackTrace()
 	println "Failed: " + j.toPrettyString()
@@ -83,7 +153,9 @@ def index(def type, def obj) {
 
 
 void indexOntology(String fileName, def data) {
-
+    // Initialize index
+    initIndex()
+    
     OWLOntologyManager manager = OWLManager.createOWLOntologyManager()
     OWLOntology ont = manager.loadOntologyFromOntologyDocument(new File(fileName))
     OWLDataFactory fac = manager.getOWLDataFactory()
@@ -126,12 +198,14 @@ void indexOntology(String fileName, def data) {
     
     def omap = [:]
     omap.ontology = acronym
-    omap.lontology = acronym.toLowerCase()
     omap.name = name
-    omap.lname = name.toLowerCase()
     if (description) {
 	omap.description = StringEscapeUtils.escapeJava(description)
     }
+    
+    // Delete ontology data
+    deleteOntologyData(acronym)
+    
     index("ontology", omap)
 
     // Re-add all classes for this ont
@@ -147,7 +221,6 @@ void indexOntology(String fileName, def data) {
 	    "owlClass": c.toString(),
 	    "class": cIRI,
 	    "ontology": acronym,
-	    "lontology": acronym.toLowerCase(),
 	].withDefault { key -> [] };
 
 	def hasLabel = false
@@ -180,30 +253,46 @@ void indexOntology(String fileName, def data) {
 		}
 	    } 
 	}
-
-	if (!hasLabel) {
-	    info["label"] << c.getIRI().getFragment().toString()
-	}
-
-	// generate OBO-style ID for the index
-	def oboId = ""
-	if (cIRI.lastIndexOf('?') > -1) {
-	    oboId = cIRI.substring(cIRI.lastIndexOf('?') + 1)
-	} else if (cIRI.lastIndexOf('#') > -1) {
-	    oboId = cIRI.substring(cIRI.lastIndexOf('#') + 1)
-	} else if (cIRI.lastIndexOf('/') > -1) {
-	    oboId = cIRI.substring(cIRI.lastIndexOf('/') + 1)
-	}
-	if (oboId.length() > 0) {
-	    oboId = oboId.replaceAll("_", ":").toLowerCase()
-	    info["oboid"] = oboId
-	}
-
 	if (!deprecated) {
+	
+	    if (!hasLabel) {
+		info["label"] << c.getIRI().getFragment().toString()
+	    }
+
+	    // Add an embedding to the document
+	    if (data["embeds"].containsKey(cIRI)) {
+		info["embedding_vector"] = data["embeds"][cIRI];
+	    }
+	    
+	    // generate OBO-style ID for the index
+	    def oboId = ""
+	    if (cIRI.lastIndexOf('?') > -1) {
+		oboId = cIRI.substring(cIRI.lastIndexOf('?') + 1)
+	    } else if (cIRI.lastIndexOf('#') > -1) {
+		oboId = cIRI.substring(cIRI.lastIndexOf('#') + 1)
+	    } else if (cIRI.lastIndexOf('/') > -1) {
+		oboId = cIRI.substring(cIRI.lastIndexOf('/') + 1)
+	    }
+	    if (oboId.length() > 0) {
+		oboId = oboId.replaceAll("_", ":")
+		info["oboid"] = oboId
+	    }
+	    
+	    
 	    index("owlclass", info)
 	}
     }
+}
 
+String convertArrayToBase64(double[] array) {
+    final int capacity = 8 * array.length;
+    final ByteBuffer bb = ByteBuffer.allocate(capacity);
+    for (int i = 0; i < array.length; i++) {
+	bb.putDouble(array[i]);
+    }
+    bb.rewind();
+    final ByteBuffer encodedBB = Base64.getEncoder().encode(bb);
+    return new String(encodedBB.array());
 }
 
 def url = args[0]
@@ -214,6 +303,22 @@ def slurper = new JsonSlurper()
 data = slurper.parseText(data)
 
 http = new HTTPBuilder(url)
+
+
+
+// Read embeddings
+def embeds = [:]
+
+new File(fileName + ".embs").splitEachLine(" ") { it ->
+    double[] vector = new double[it.size() - 1]
+    for (int i = 1; i < it.size(); ++i) {
+	vector[i - 1] = Double.parseDouble(it[i]);
+    }
+    embeds[it[0]] = convertArrayToBase64(vector);
+}
+
+
+data["embeds"] = embeds
 
 indexOntology(fileName, data)  
 

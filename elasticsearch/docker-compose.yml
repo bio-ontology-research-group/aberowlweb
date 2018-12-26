@@ -1,0 +1,50 @@
+version: '2'
+services:
+  elasticsearch1:
+    build: .
+    container_name: elasticsearch1
+    environment:
+      - cluster.name=docker-cluster
+      - xpack.security.enabled=false
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms8g -Xmx8g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 8g
+    volumes:
+      - esdata1:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - esnet
+    restart: unless-stopped
+
+  elasticsearch2:
+    build: .
+    environment:
+      - cluster.name=docker-cluster
+      - xpack.security.enabled=false
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms8g -Xmx8g"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch1"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 8g
+    volumes:
+      - esdata2:/usr/share/elasticsearch/data
+    networks:
+      - esnet
+    restart: unless-stopped
+
+volumes:
+  esdata1:
+    driver: local
+  esdata2:
+    driver: local
+
+networks:
+  esnet:

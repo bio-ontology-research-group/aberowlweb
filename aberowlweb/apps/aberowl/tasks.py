@@ -138,8 +138,6 @@ def sync_obofoundry():
 
             if submission.classifiable:
                 index_submission(ontology.pk, submission.pk)
-                filepath = '../' + submission.get_filepath(folder='latest')
-                generate_embeddings(filepath)
             
         except Exception as e:
             print(acronym, e)
@@ -250,8 +248,6 @@ def sync_bioportal():
 
             if submission.classifiable:
                 index_submission(ontology.pk, submission.pk).delay()
-                filepath = '../' + submission.get_filepath(folder='latest')
-                generate_embeddings(filepath)
             
         except Exception as e:
             print(acronym, e)
@@ -272,10 +268,13 @@ def classify_ontology(filepath):
 @task
 def index_submission(ontology_pk, submission_pk):
     ontology = Ontology.objects.get(pk=ontology_pk)
-    submission = ontology.submissions.get(pk=submission_pk) 
+    submission = ontology.submissions.get(pk=submission_pk)
+    filepath = '../' + submission.get_filepath(folder='latest')
+    generate_embeddings(filepath)
+
     p = Popen(
         ['groovy', 'IndexElastic.groovy',
-         ELASTIC_SEARCH_URL, '../' + submission.get_filepath()],
+         ELASTIC_SEARCH_URL, filepath],
         stdin=PIPE,
         cwd='scripts/')
     data = {

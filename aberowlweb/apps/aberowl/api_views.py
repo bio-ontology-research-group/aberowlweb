@@ -16,7 +16,7 @@ from aberowl.serializers import OntologySerializer
 ELASTIC_SEARCH_URL = getattr(
     settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/')
 ELASTIC_INDEX_NAME = getattr(
-    settings, 'ELASTIC_INDEX_NAME', 'aberowl_test')
+    settings, 'ELASTIC_INDEX_NAME', 'aberowl')
 ELASTIC_INDEX_URL = ELASTIC_SEARCH_URL + ELASTIC_INDEX_NAME + '/'
 
 ABEROWL_API_URL = getattr(
@@ -65,10 +65,13 @@ class SearchClassesAPIView(APIView):
                  'message': 'Please provide ontology parameter!'})
         try:
             query_list = [
-                { 'match': { 'ontology': ontology } },
-                { 'match_phrase_prefix': { 'label': query } }
+                { 'term': { 'ontology': ontology } },
+                { 'prefix': { 'label': query } }
             ]
-            docs = { 'query': { 'bool': { 'must': query_list } } }
+            docs = {
+                'query': { 'bool': { 'must': query_list } },
+                '_source': {'excludes': ['embedding_vector',]}
+            }
             result = search('owlclass', docs)
             data = []
             for hit in result['hits']['hits']:
@@ -78,7 +81,72 @@ class SearchClassesAPIView(APIView):
             result = {'status': 'ok', 'result': data}
             return Response(result)
         except Exception as e:
-            return Response({'status': 'exception', 'message': e.getMessage()})
+            return Response({'status': 'exception', 'message': str(e)})
+
+
+class MostSimilarAPIView(APIView):
+
+    def get(self, request, format=None):
+        cls = request.GET.get('class', None)
+        size = request.GET.get('size', 50)
+        ontology = request.GET.get('ontology', None)
+        return self.process_query(cls, size, ontology)
+
+    def process_query(self, cls, size, ontology):
+        if cls is None:
+            return Response(
+                {'status': 'error',
+                 'message': 'Please provide class parameter!'})
+        if ontology is None:
+            return Response(
+                {'status': 'error',
+                 'message': 'Please provide ontology parameter!'})
+        try:
+            size = int(size)
+            query_list = [
+                { 'term': { 'ontology': ontology } },
+                { 'term': { 'class': cls } }
+            ]
+            docs = {
+                'query': { 'bool': { 'must': query_list } },
+            }
+            result = search('owlclass', docs)
+            data = result['hits']['hits']
+            if len(data) == 0:
+                return Response({'status': 'error', 'message': 'not found'})
+            obj = data[0]['_source']
+            encoded_vector = obj['embedding_vector']
+            query = {
+                "query": {
+                    "function_score": {
+                        "query": {"term": {"ontology": ontology}},
+                        "boost_mode": "replace",
+                        "script_score": {
+                            "script": {
+                                "inline": "binary_vector_score",
+                                "lang": "knn",
+                                "params": {
+                                    "cosine": True,
+                                    "field": "embedding_vector",
+                                    "encoded_vector": encoded_vector
+                                }
+                            }
+                        }
+                    }
+                },
+                "_source": {"excludes": ["embedding_vector",]},
+                "size": size
+            }
+
+            result = search('owlclass', query)
+            data = []
+            for hit in result['hits']['hits']:
+                item = hit['_source']
+                data.append(item)
+            result = {'status': 'ok', 'result': data}
+            return Response(result)
+        except Exception as e:
+            return Response({'status': 'exception', 'message': str(e)})
 
     
 class QueryOntologiesAPIView(APIView):
@@ -91,12 +159,15 @@ class QueryOntologiesAPIView(APIView):
                 {'status': 'error',
                  'message': 'Please provide query parameter!'})
         
-        fields = ['name', 'lontology', 'description']
+        fields = ['name', 'ontology', 'description']
         query_list = []
         for field in fields:
             q = { 'match': { field: { 'query': query } } }
             query_list.append(q)
-        omap = { 'query': { 'bool': { 'should': query_list } } }
+        omap = {
+            'query': { 'bool': { 'should': query_list } },
+            '_source': {'excludes': ['embedding_vector',]}
+        }
         result = search('ontology', omap)
         data = []
         for hit in result['hits']['hits']:
@@ -121,33 +192,33 @@ class QueryNamesAPIView(APIView):
             ('oboid', 10000),
             ('label', 1000),
             ('synonym', 100),
-            ('lontology', 75),
+            ('ontology', 75),
             ('definition', 3),
         ]
 
         query_list = []
 
-        for query_item in query.split():
-            omap = {}
-            omap['dis_max'] = {}
-            omap['dis_max']['queries'] = []
-
-            for field, boost in fields:
-                q = {
-                    'match': { field : { 'query': query_item.lower(), 'boost': boost } }
-                }
-                omap['dis_max']['queries'].append(q)
-                query_list.append(omap)
+        omap = {}
+        omap['dis_max'] = {}
+        queries = [
+            {'term': { 'oboid' : { 'value': query, 'boost': 10000 }}},
+            {'prefix': { 'label' : { 'value': query, 'boost': 1000 }}},
+            {'match': { 'synonym' : { 'query': query, 'boost': 100 }}},
+            {'term': { 'ontology' : { 'value': query, 'boost': 100 }}},
+            {'match': { 'definition' : { 'query': query, 'boost': 10 }}},
+        ]
+        omap['dis_max']['queries'] = queries
+        query_list.append(omap)
         if ontology is not None:
             query_list.append({ 'match': { 'ontology': ontology } })
 
         f_query = {
             'query': { 'bool': { 'must': query_list } },
+            '_source': {'excludes': ['embedding_vector',]},
             'from': 0,
             'size': 1000}
 
         result = search("owlclass", f_query)
-
         data = defaultdict(list)
         for hit in result['hits']['hits']:
             item = hit['_source']

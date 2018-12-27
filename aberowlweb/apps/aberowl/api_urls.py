@@ -15,4 +15,6 @@ urlpatterns = [
         api_views.OntologyListAPIView.as_view(), name='api-ontologies'),
     url(r'^classes/$',
         api_views.ClassInfoAPIView.as_view(), name='api-classinfo'),
+    url(r'^mostsimilar/$',
+        api_views.MostSimilarAPIView.as_view(), name='api-mostsimilar'),
 ]

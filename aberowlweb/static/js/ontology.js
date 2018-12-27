@@ -18,7 +18,7 @@ class Ontology extends React.Component {
 	    classesMap: classesMap,
 	    propsMap: propsMap,
 	    tabs: [
-		'Overview', 'Browse', 'DLQuery',
+		'Overview', 'Browse', 'DLQuery', 'MostSimilar',
 		// 'Visualise', 'PubMed', 'Data', 'SPARQL',
 		'Download'],
 	    currentTab: currentTab,
@@ -26,6 +26,7 @@ class Ontology extends React.Component {
 	    selectedProp: null,
 	    dlQuery: null,
 	    dlResults: [],
+	    simResults: [],
 	    search: '',
 	    searchResults: [],
 	    searchResultsShow: false,
@@ -90,6 +91,41 @@ class Ontology extends React.Component {
 		    state.dlQuery = dlQuery;
 		    that.setState(state);
 		});
+	}else if (params.tab == 'MostSimilar' && params.owlClass !== undefined) {
+	    const owlClass = decodeURIComponent(params.owlClass);
+	    var cls = owlClass.substring(1, owlClass.length - 1);
+	    var queries = [];
+	    if (classesMap.has(owlClass)) {
+		selectedClass = classesMap.get(owlClass);
+		this.setState({ selectedClass: selectedClass });
+	    } else {
+		queries.push(
+		    fetch('/api/backend?script=findRoot.groovy&query='
+			  + encodeURIComponent(owlClass) + '&ontology='
+			  + this.state.ontology.acronym)
+		    .then((response) => response.json())
+		);
+	    }
+	    queries.push(
+		fetch('/api/mostsimilar?class=' + encodeURIComponent(cls)
+		      + '&ontology=' + this.state.ontology.acronym)
+		    .then((response) => response.json())
+		
+	    );
+	    Promise.all(queries)
+		.then(function(data) {
+		    var simResults = [];
+		    var state = that.state;
+		    if(queries.length == 2) {
+			state = that.findRoot(owlClass, data[0]);
+			simResults = data[1].result;
+		    } else {
+			simResults = data[0].result;
+		    }
+		    state.simResults = simResults;
+		    state.currentTab = 'MostSimilar';
+		    that.setState(state);
+		});
 	} else if (params.tab == 'Property' && params.owlClass !== undefined){
 	    const owlClass = decodeURIComponent(params.owlClass);
 	    const selectedProp = this.state.propsMap.get(owlClass);
@@ -127,6 +163,14 @@ class Ontology extends React.Component {
 	var currentTab = this.state.currentTab;
 	if (tab === currentTab || (tab == 'Browse' && currentTab == 'Property')) {
 	    activeClass = 'active';
+	}
+	var obj = this.state.selectedClass;
+	if (tab == 'MostSimilar' && obj != null) {
+	    return (
+		<li role="presentation" className={activeClass}>
+		    <a href={'#/' + tab + '/' + encodeURIComponent(obj.owlClass)}>{tab}</a>
+		</li>
+	    );
 	}
 	return (
 		<li role="presentation" className={activeClass}>
@@ -398,6 +442,44 @@ class Ontology extends React.Component {
 	);
     }
 
+    renderMostSimilar() {
+	const obj = this.state.selectedClass;
+	if (obj == null) {
+	    return (
+		<h2> Please select an ontology class. </h2>
+	    );
+	}
+	
+	const fields = [
+	    'OWLClass',
+	    'Label',
+	    'Definition',
+	];
+	
+	const header = fields.map(
+	    (item) => <th>{ item }</th>);
+	const simResults = this.state.simResults;
+	
+	const content = simResults.map(
+	    (item) =>
+		<tr>
+		<td><a href={'#/Browse/' + encodeURIComponent(item.owlClass)}>{ item.owlClass }</a></td>
+		<td>{ item.label[0] }</td>
+		<td>{ item.definition }</td>
+		</tr>
+	);
+	return (
+	    <div>
+		<table class="table table-hover">
+		<thead>{ header }</thead>
+		<tbody>
+		{ content }
+	        </tbody>
+		</table>
+	    </div>
+	);
+    }
+
     renderDownload() {
 	const downloads = this.state.ontology.downloads;
 	const fields = [
@@ -432,6 +514,7 @@ class Ontology extends React.Component {
 	    'Overview': this.renderOverview(),
 	    'Browse': this.renderBrowse(),
 	    'DLQuery': this.renderDLQuery(),
+	    'MostSimilar': this.renderMostSimilar(),
 	    'Download': this.renderDownload(),
 	    'Property': this.renderPropertyView()
 	};
@@ -534,6 +617,23 @@ class Ontology extends React.Component {
 		state.dlResults = data.result;
 		state.dlQuery = dlQuery
 		that.setState(state);
+	    });
+	} else if (currentTab == 'MostSimilar' && params.owlClass !== undefined) {
+	    const owlClass = decodeURIComponent(params.owlClass);
+	    const cls = owlClass.substring(1, owlClass.length - 1);
+	    var queries = [];
+	    fetch('/api/mostsimilar?class=' + encodeURIComponent(cls)
+		  + '&ontology=' + this.state.ontology.acronym)
+	    .then((response) => response.json())
+	    .then(function(data) {
+		var simResults = [];
+		if (data.status == 'ok') {
+		    state.simResults = data.result;
+		    that.setState(state);
+		} else {
+		    state.simResults = [];
+		    that.setState(state);
+		}
 	    });
 	} else if (currentTab == 'Property' && params.owlClass !== undefined){
 	    const owlClass = decodeURIComponent(params.owlClass);

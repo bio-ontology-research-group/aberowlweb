@@ -14,7 +14,11 @@ from aberowl.serializers import OntologySerializer
 
 
 ELASTIC_SEARCH_URL = getattr(
-    settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/aberowl/')
+    settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/')
+ELASTIC_INDEX_NAME = getattr(
+    settings, 'ELASTIC_INDEX_NAME', 'aberowl_test')
+ELASTIC_INDEX_URL = ELASTIC_SEARCH_URL + ELASTIC_INDEX_NAME + '/'
+
 ABEROWL_API_URL = getattr(
     settings, 'ABEROWL_API_URL', 'http://localhost:8080/api/')
 
@@ -34,7 +38,7 @@ def make_request(url):
 def search(query_type, query_data):
     try:
         r = requests.post(
-            ELASTIC_SEARCH_URL + query_type + '/_search',
+            ELASTIC_INDEX_URL + query_type + '/_search',
             data=json.dumps(query_data),
             timeout=5)
         return r.json()
@@ -249,7 +253,7 @@ class ClassInfoAPIView(APIView):
                             'type': 'equivalent',
                             'direct': 'true',
                             'axioms': 'false',
-                            'query': query,
+                            'query': '<' + query + '>',
                             'ontology': ontology.acronym
                         }
                         url = ontology.get_api_url() + 'runQuery.groovy'

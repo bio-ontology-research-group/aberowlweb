@@ -257,7 +257,21 @@ class Production(BaseConfiguration):
 
     DEBUG = False
     SITE_DOMAIN = 'aber-owl.net'
-    ELASTIC_SEARCH_URL = 'http://10.254.145.42:9200/aberowl/'
+    ELASTIC_SEARCH_URL = 'http://10.254.145.42:9200/'
+    ELASTIC_INDEX_NAME = 'aberowl'
+    ABEROWL_API_URL = 'http://10.254.145.41/api/'
+    ABEROWL_API_WORKERS = [
+        'http://10.254.145.27:8080/api/',
+        'http://10.254.145.30:8080/api/']
+    ABEROWL_SERVER_URL = 'http://10.254.145.9/'
+
+
+class ProductionCelery(BaseConfiguration):
+
+    DEBUG = False
+    SITE_DOMAIN = 'aber-owl.net'
+    ELASTIC_SEARCH_URL = 'http://10.254.145.178:9200/'
+    ELASTIC_INDEX_NAME = 'aberowl'
     ABEROWL_API_URL = 'http://10.254.145.41/api/'
     ABEROWL_API_WORKERS = [
         'http://10.254.145.27:8080/api/',

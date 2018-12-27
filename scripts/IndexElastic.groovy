@@ -42,9 +42,9 @@ import java.util.*
 import org.apache.logging.log4j.*
 
 
-def url = args[0]
-def indexName = args[1]
-def fileName = args[2]
+url = args[0]
+indexName = args[1]
+fileName = args[2]
 
 http = new HTTPBuilder(url)
 

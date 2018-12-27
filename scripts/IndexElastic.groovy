@@ -99,10 +99,10 @@ def initIndex() {
 	    ]
 	]
     ]
-    if (!indexExists('aberowl')) {
+    if (!indexExists(indexName)) {
 	try {
 	    http.request(Method.PUT, ContentType.JSON) { req ->
-		uri.path = '/aberowl'
+		uri.path = '/' + indexName
 		body = new JsonBuilder(settings).toString()
 		response.success = {resp, json ->
 		    println(json)
@@ -122,12 +122,12 @@ def deleteOntologyData(ontology) {
     try {
 	http.post(
 	    contentType: ContentType.JSON,
-	    path: '/aberowl/ontology/_delete_by_query',
+	    path: '/' + indexName + '/ontology/_delete_by_query',
 	    body: new JsonBuilder(query).toString()
 	) {resp, reader -> }
 	http.post(
 	    contentType: ContentType.JSON,
-	    path: '/aberowl/owlclass/_delete_by_query',
+	    path: '/' + indexName + '/owlclass/_delete_by_query',
 	    body: new JsonBuilder(query).toString()
 	) {resp, reader -> }
     } catch (Exception e) {
@@ -141,7 +141,7 @@ def index(def type, def obj) {
     def j = new groovy.json.JsonBuilder(obj)
     try {
 	http.request(Method.POST, ContentType.JSON) {
-	    uri.path = '/aberowl/'+ type + '/'
+	    uri.path = '/' + indexName + '/'+ type + '/'
 	    body = j.toString()
 	    headers.'Content-Type' = 'application/json'
 	}
@@ -296,7 +296,8 @@ String convertArrayToBase64(double[] array) {
 }
 
 def url = args[0]
-def fileName = args[1]
+def indexName = args[1]
+def fileName = args[2]
 
 def data = System.in.newReader().getText()
 def slurper = new JsonSlurper()

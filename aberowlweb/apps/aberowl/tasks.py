@@ -31,6 +31,9 @@ ABEROWL_SERVER_URL = getattr(
 
 ELASTIC_SEARCH_URL = getattr(
     settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/')
+ELASTIC_INDEX_NAME = getattr(
+    settings, 'ELASTIC_INDEX_NAME', 'aberowl_test')
+ELASTIC_INDEX_URL = ELASTIC_SEARCH_URL + ELASTIC_INDEX_NAME + '/'
 
 
 @periodic_task(run_every=crontab(hour=12, minute=0, day_of_week=1))
@@ -274,7 +277,7 @@ def index_submission(ontology_pk, submission_pk):
 
     p = Popen(
         ['groovy', 'IndexElastic.groovy',
-         ELASTIC_SEARCH_URL, filepath],
+         ELASTIC_SEARCH_URL, ELASTIC_INDEX_NAME, filepath],
         stdin=PIPE,
         cwd='scripts/')
     data = {

@@ -42,6 +42,12 @@ import java.util.*
 import org.apache.logging.log4j.*
 
 
+def url = args[0]
+def indexName = args[1]
+def fileName = args[2]
+
+http = new HTTPBuilder(url)
+
 def indexExists(indexName) {
     try {
 	http.get(
@@ -295,16 +301,9 @@ String convertArrayToBase64(double[] array) {
     return new String(encodedBB.array());
 }
 
-def url = args[0]
-def indexName = args[1]
-def fileName = args[2]
-
 def data = System.in.newReader().getText()
 def slurper = new JsonSlurper()
 data = slurper.parseText(data)
-
-http = new HTTPBuilder(url)
-
 
 
 // Read embeddings

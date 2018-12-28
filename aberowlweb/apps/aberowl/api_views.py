@@ -216,7 +216,7 @@ class QueryNamesAPIView(APIView):
             'query': { 'bool': { 'must': query_list } },
             '_source': {'excludes': ['embedding_vector',]},
             'from': 0,
-            'size': 1000}
+            'size': 100}
 
         result = search("owlclass", f_query)
         data = defaultdict(list)

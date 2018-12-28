@@ -40,7 +40,7 @@ def search(query_type, query_data):
         r = requests.post(
             ELASTIC_INDEX_URL + query_type + '/_search',
             data=json.dumps(query_data),
-            timeout=5)
+            timeout=15)
         return r.json()
     except Exception as e:
         return {'hits': {'hits': []}}

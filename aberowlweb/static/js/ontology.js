@@ -18,7 +18,7 @@ class Ontology extends React.Component {
 	    classesMap: classesMap,
 	    propsMap: propsMap,
 	    tabs: [
-		'Overview', 'Browse', 'DLQuery', 'MostSimilar',
+		'Overview', 'Browse', 'DLQuery', 'SimilarClasses',
 		// 'Visualise', 'PubMed', 'Data', 'SPARQL',
 		'Download'],
 	    currentTab: currentTab,
@@ -91,7 +91,7 @@ class Ontology extends React.Component {
 		    state.dlQuery = dlQuery;
 		    that.setState(state);
 		});
-	}else if (params.tab == 'MostSimilar' && params.owlClass !== undefined) {
+	}else if (params.tab == 'SimilarClasses' && params.owlClass !== undefined) {
 	    const owlClass = decodeURIComponent(params.owlClass);
 	    var cls = owlClass.substring(1, owlClass.length - 1);
 	    var queries = [];
@@ -123,7 +123,7 @@ class Ontology extends React.Component {
 			simResults = data[0].result;
 		    }
 		    state.simResults = simResults;
-		    state.currentTab = 'MostSimilar';
+		    state.currentTab = 'SimilarClasses';
 		    that.setState(state);
 		});
 	} else if (params.tab == 'Property' && params.owlClass !== undefined){
@@ -165,7 +165,7 @@ class Ontology extends React.Component {
 	    activeClass = 'active';
 	}
 	var obj = this.state.selectedClass;
-	if (tab == 'MostSimilar' && obj != null) {
+	if (tab == 'SimilarClasses' && obj != null) {
 	    return (
 		<li role="presentation" className={activeClass}>
 		    <a href={'#/' + tab + '/' + encodeURIComponent(obj.owlClass)}>{tab}</a>
@@ -442,7 +442,7 @@ class Ontology extends React.Component {
 	);
     }
 
-    renderMostSimilar() {
+    renderSimilarClasses() {
 	const obj = this.state.selectedClass;
 	if (obj == null) {
 	    return (
@@ -514,7 +514,7 @@ class Ontology extends React.Component {
 	    'Overview': this.renderOverview(),
 	    'Browse': this.renderBrowse(),
 	    'DLQuery': this.renderDLQuery(),
-	    'MostSimilar': this.renderMostSimilar(),
+	    'SimilarClasses': this.renderSimilarClasses(),
 	    'Download': this.renderDownload(),
 	    'Property': this.renderPropertyView()
 	};
@@ -618,7 +618,7 @@ class Ontology extends React.Component {
 		state.dlQuery = dlQuery
 		that.setState(state);
 	    });
-	} else if (currentTab == 'MostSimilar' && params.owlClass !== undefined) {
+	} else if (currentTab == 'SimilarClasses' && params.owlClass !== undefined) {
 	    const owlClass = decodeURIComponent(params.owlClass);
 	    const cls = owlClass.substring(1, owlClass.length - 1);
 	    var queries = [];

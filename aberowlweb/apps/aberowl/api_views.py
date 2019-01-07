@@ -201,10 +201,10 @@ class QueryNamesAPIView(APIView):
         omap = {}
         omap['dis_max'] = {}
         queries = [
-            {'term': { 'oboid' : { 'value': query, 'boost': 10000 }}},
-            {'prefix': { 'label' : { 'value': query, 'boost': 1000 }}},
+            {'match': { 'oboid' : { 'query': query, 'boost': 10000 }}},
+            {'match': { 'label' : { 'query': query, 'boost': 1000 }}},
             {'match': { 'synonym' : { 'query': query, 'boost': 100 }}},
-            {'term': { 'ontology' : { 'value': query, 'boost': 100 }}},
+            {'match': { 'ontology' : { 'query': query, 'boost': 100 }}},
             {'match': { 'definition' : { 'query': query, 'boost': 10 }}},
         ]
         omap['dis_max']['queries'] = queries

@@ -432,8 +432,8 @@ class Main extends React.Component {
 		     <a href="#/infectious disease">infectious disease</a>,
 		     <a href="#/GFO">GFO</a> or <a href="#/pathology">pathology</a>),
 		    or perform a Description Logic query across all ontologies in AberOWL
-		    (try <a href="#/'part of' some 'apoptotic process' and regulates some 'apoptotic process'">
-		     'part of' some 'apoptotic process' and regulates some 'apoptotic process'</a> ):
+		    (try <a href="#/'part of' some 'apoptotic process'">
+		     'part of' some 'apoptotic process'</a> ):
 	        </p>
 	    </div>
 	    <br/>

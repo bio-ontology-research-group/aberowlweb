@@ -7,7 +7,7 @@ services:
       - cluster.name=docker-cluster
       - xpack.security.enabled=false
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms14g -Xmx14g"
+      - "ES_JAVA_OPTS=-Xms12g -Xmx12g"
     ulimits:
       memlock:
         soft: -1
@@ -27,7 +27,7 @@ services:
       - cluster.name=docker-cluster
       - xpack.security.enabled=false
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms14g -Xmx14g"
+      - "ES_JAVA_OPTS=-Xms12g -Xmx12g"
       - "discovery.zen.ping.unicast.hosts=elasticsearch1"
     ulimits:
       memlock:

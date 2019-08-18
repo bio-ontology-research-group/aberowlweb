@@ -42,6 +42,12 @@ import java.util.*
 import org.apache.logging.log4j.*
 
 
+url = args[0]
+indexName = args[1]
+fileName = args[2]
+
+http = new HTTPBuilder(url)
+
 def indexExists(indexName) {
     try {
 	http.get(
@@ -57,7 +63,7 @@ def indexExists(indexName) {
 def initIndex() {
     def settings = [
 	"settings" : [
-	    "number_of_shards" : 5,
+	    "number_of_shards" : 1,
 	    "number_of_replicas" : 1,
 	    "analysis": [
 		"normalizer": [
@@ -295,16 +301,9 @@ String convertArrayToBase64(double[] array) {
     return new String(encodedBB.array());
 }
 
-def url = args[0]
-def indexName = args[1]
-def fileName = args[2]
-
 def data = System.in.newReader().getText()
 def slurper = new JsonSlurper()
 data = slurper.parseText(data)
-
-http = new HTTPBuilder(url)
-
 
 
 // Read embeddings

@@ -153,3 +153,7 @@ td > span > span:first-child {
   -moz-border-radius: 0px;
   background-image: none;
 }
+
+.margin-top-15 {
+  margin-top: 15px;
+} 

@@ -4,6 +4,7 @@ from rest_framework.response import Response
 import requests
 import json
 import itertools
+from django.http import HttpResponse
 from django.conf import settings
 from collections import defaultdict
 from gevent.pool import Pool
@@ -343,3 +344,24 @@ class ClassInfoAPIView(APIView):
         except Exception as e:
             return Response({'status': 'exception', 'message': str(e)})
         
+class SparqlAPIView(APIView):
+
+    def get(self, request, format=None):
+        query = request.GET.get('query', None)
+        try:
+            return self.process_query(query)
+        except KeyError:
+            raise Exception("Malformed data!")
+
+    def process_query(self, query):
+        if query is None:
+            return Response(
+                {'status': 'error',
+                 'message': 'Please provide query element!'})
+        try:
+            url = ABEROWL_API_URL + 'sparql.groovy'
+            print("URL" + url)
+            r = requests.get(url, params = {'query': query})
+            return HttpResponse(r.text)
+        except Exception as e:
+            return Response({'status': 'exception', 'message': str(e)})

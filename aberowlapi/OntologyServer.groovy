@@ -1,4 +1,5 @@
 @Grapes([
+	@Grab(group='org.eclipse.rdf4j', module='rdf4j-runtime', version='2.5.4'),
 	@Grab(group='javax.servlet', module='javax.servlet-api', version='3.1.0'),
         @Grab(group='javax.servlet.jsp', module='javax.servlet.jsp-api', version='2.3.1'),
         @Grab(group='org.eclipse.jetty', module='jetty-server', version='9.4.7.v20170914'),
@@ -13,15 +14,13 @@
         @Grab(group='net.sourceforge.owlapi', module='owlapi-parsers', version='4.3.2'),
 	@Grab(group='org.codehaus.gpars', module='gpars', version='1.1.0'),
 	@Grab(group='com.google.guava', module='guava', version='19.0'),
-	
 	@Grab(group='org.codehaus.groovy.modules.http-builder', module='http-builder', version='0.7.1' ),
 	@GrabExclude(group='xml-apis', module='xml-apis'),
 	@Grab(group='aopalliance', module='aopalliance', version='1.0'),
 	@Grab(group='javax.el', module='javax.el-api', version='3.0.0'),
 	@GrabConfig(systemClassLoader=true)
-    ])
-
-
+])
+ 
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.ServerConnector
 import org.eclipse.jetty.servlet.*
@@ -66,6 +65,7 @@ def startServer(def ontologies, def port) {
     context.addServlet(GroovyServlet, '/api/getObjectProperties.groovy')
     context.addServlet(GroovyServlet, '/api/retrieveRSuccessors.groovy')
     context.addServlet(GroovyServlet, '/api/retrieveAllLabels.groovy')
+    context.addServlet(GroovyServlet, '/api/sparql.groovy')
     context.setAttribute('port', port)
     context.setAttribute('version', '0.2')
     server.start()

@@ -58,6 +58,7 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
       def sparql = " SELECT ?a ?b ?abt \n" +
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
+                    "       ?b rdf:type ?abt .\n" +
                     "       FILTER ( ?abt in ( \n" +
                     "           OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
                     "               part_of some 'someclass' \n" +
@@ -125,6 +126,7 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
       def sparql = " SELECT ?a ?b ?abt \n" +
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
+                    "       ?b rdf:type ?abt .\n" +
                     "       FILTER ( ?abt in ( \n" +
                     "           OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
                     "               part_of some 'someclass' \n" +
@@ -184,6 +186,7 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
       def sparql = " SELECT ?a ?b ?abt \n" +
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
+                    "       ?b rdf:type ?abt .\n" +
                     "       FILTER ( ?abt in ( \n" +
                     "           OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
                     "               part_of some 'someclass' \n" +
@@ -191,10 +194,11 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "       )) \n" +
                     "    }"; 
       def result = parser.removeAberowlManchesterOwlFrame(sparql);
-      def expected ="SELECT ?a ?b  \n" +
-                     "   WHERE {\n" +
-                    "       ?a rdf:label ?b .\n" +
-                    "       }"; 
+      def expected ="SELECT ?a ?b ?abt \n" +
+                  "   WHERE {\n" +
+                  "       ?a rdf:label ?b .\n" +
+                  "       ?b rdf:type ?abt .\n" +
+                  "       }"; 
       assertToString(expected, result.trim())
    }
 
@@ -223,6 +227,7 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
       def sparql = " SELECT ?a ?b ?abt \n" +
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
+                    "       ?b rdf:type ?abt .\n" +
                     "       FILTER ( ?abt in ( \n" +
                     "           OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
                     "               part_of some 'someclass' \n" +
@@ -234,6 +239,7 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
       def expected ="SELECT ?a ?b ?abt \n" +
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
+                    "       ?b rdf:type ?abt .\n" +
                     "       FILTER ( ?abt in ( \n" +
                     "           <https://www.w3.org/TR/owl2-manchester-syntax/1>, <https://www.w3.org/TR/owl2-manchester-syntax/2>)) \n" +
                     "    }";

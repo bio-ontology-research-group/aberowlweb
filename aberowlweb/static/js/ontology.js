@@ -18,7 +18,7 @@ class Ontology extends React.Component {
 	    classesMap: classesMap,
 	    propsMap: propsMap,
 	    tabs: [
-		'Overview', 'Browse', 'DLQuery', 'SimilarClasses',
+		'Overview', 'Browse', 'DLQuery', 'SimilarClasses', 'SPARQL',
 		// 'Visualise', 'PubMed', 'Data', 'SPARQL',
 		'Download'],
 	    currentTab: currentTab,
@@ -437,10 +437,70 @@ class Ontology extends React.Component {
     }
 
     renderSPARQL() {
-	return (
-	    <h2>Not yet implemented!</h2>
-	);
-    }
+		var resultDisplay = '';
+		if (this.state.sparqlResults) {
+			const fields = this.state.sparqlResults.head.vars;
+			const header = fields.map(
+				(item) => <th class="padding-8">{ item }</th>);
+
+			const content = this.state.sparqlResults.results.bindings.map((item) =>
+					<tr>
+						{ Object.keys(item).map(key => <td>{ item[key].value }</td>) }
+					</tr>
+				);
+			resultDisplay = (	
+					<table class="table table-striped table-bordered">
+					<thead>{ header }</thead>
+					<tbody>
+					{ content }
+						</tbody>
+					</table> 
+				);
+		} else if (this.state.errorMessage) {
+			resultDisplay = (
+				<div class="alert alert-danger alert-dismissible show">
+					<strong>Error:</strong> {this.state.errorMessage}
+				</div>
+			);
+		}
+		
+		return (
+			<div>
+				<form onSubmit={(e) => this.executeSparql(e)}>
+					<div layout="row">
+						<div class="form-group margin-top-15">
+							<textarea class="form-control" id="sparql" rows="10" col="5" placeholder="SPARQL Query" value={this.state.query}
+							onChange={(e) => this.onSparqlChange(e)}></textarea>
+						</div>
+					</div>
+					<div layout="row">
+						<button type="submit" class="btn btn-primary">Execute</button>
+					</div>
+				</form>
+				<div layout="row" class="margin-top-15 result-container"> {resultDisplay} </div>
+			</div>
+        );
+	}
+
+	onSparqlChange(event) {
+		this.setState({query: event.target.value});
+	}
+	
+
+	executeSparql(event) {
+		event.preventDefault();
+		const query = this.state.query;	
+		var that = this;
+	    fetch('/api/sparql?query=' + encodeURIComponent(query))
+	    .then((response) => response.json())
+	    .then(function(data) {
+			if (data.error) {
+				that.setState({ errorMessage: data.message, sparqlResults : null});
+			} else {
+				that.setState({ sparqlResults: data});
+			}
+	    });
+	}
 
     renderSimilarClasses() {
 	const obj = this.state.selectedClass;
@@ -515,6 +575,7 @@ class Ontology extends React.Component {
 	    'Browse': this.renderBrowse(),
 	    'DLQuery': this.renderDLQuery(),
 	    'SimilarClasses': this.renderSimilarClasses(),
+	    'SPARQL': this.renderSPARQL(),
 	    'Download': this.renderDownload(),
 	    'Property': this.renderPropertyView()
 	};

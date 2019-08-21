@@ -26,6 +26,10 @@ public class AberowlManchesterOwlQueryEngine {
     public def expandAndExecQuery(def managers, def sparql) {
         AberowlManchesterOwlParser parser = new AberowlManchesterOwlParser();
         AberowlManchesterOwlQuery query = parser.parseSparql(sparql);
+        if (query == null) {
+            throw new RuntimeException("Invalid Sparql query");
+        }
+
         println("Query: "+ query.query + "| Service Url" + query.sparqlServiceUrl + "| Ontology:" + query.ontologyIri + "| Type:" + query.queryType) 
 
         def classes = this.executeQuery(managers, query);

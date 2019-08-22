@@ -370,8 +370,7 @@ class Ontology extends React.Component {
 	);
     }
 
-    renderDLQueryButtons() {
-	const obj = this.state.selectedClass;
+    renderDLQueryButtons(obj) {
 	const buttons = [
 	    ['subclass', 'Subclasses'],
 	    ['subeq', 'Sub and Equivalent'],
@@ -387,7 +386,7 @@ class Ontology extends React.Component {
 	    if (dlQuery == item[0]) activeClass = 'active';
 	    return (
 		    <li role="presentation" className={ activeClass }>
-		    <a href={'#/DLQuery/' + encodeURIComponent(obj.owlClass) + '/' + item[0]}> { item[1] } </a>
+		    <a href={'#/DLQuery/' + encodeURIComponent(obj) + '/' + item[0]}> { item[1] } </a>
 		    </li>
 	    );	    
 	});
@@ -397,44 +396,56 @@ class Ontology extends React.Component {
 	);
     }
 
-    renderDLQuery() {
-	const obj = this.state.selectedClass;
-	if (obj == null) {
-	    return (
-		<h2> Please select an ontology class. </h2>
-	    );
+    
+	renderDLQuery() {
+		var obj = this.state.dlQueryExp;
+		const dlqueryInput = (
+			<div layout="row">
+				<form>
+					<div class="form-group margin-top-15">
+						<input class="form-control" type="text" id="dlquery" placeholder="Query" value={this.state.dlQueryExp} 
+							onChange={(e) => this.onDlQueryChange(e)}/>
+					</div>
+				</form>
+			</div>
+		);
+
+	
+		const fields = [
+			'OWLClass',
+			'Label',
+			'Definition',
+		];
+		
+		const header = fields.map(
+			(item) => <th>{ item }</th>);
+		const dlResults = this.state.dlResults;
+		
+		const content =  dlResults.map(
+			(item) =>
+			<tr>
+			<td><a href={'#/Browse/' + encodeURIComponent(this.state.dlQueryExp) + '/' + this.dlQuery}>{ item.owlClass }</a></td>
+			<td>{ item.label }</td>
+			<td>{ item.definition }</td>
+			</tr>
+		);
+		return (
+			<div>
+			{ dlqueryInput }
+			{ this.renderDLQueryButtons(obj) }
+			<table class="table table-hover">
+			<thead>{ header }</thead>
+			<tbody>
+			{ content }
+				</tbody>
+			</table>
+			</div>
+		);
 	}
 	
-	const fields = [
-	    'OWLClass',
-	    'Label',
-	    'Definition',
-	];
-	
-	const header = fields.map(
-	    (item) => <th>{ item }</th>);
-	const dlResults = this.state.dlResults;
-	
-	const content = dlResults.map(
-	    (item) =>
-		<tr>
-		<td><a href={'#/Browse/' + encodeURIComponent(item.owlClass)}>{ item.owlClass }</a></td>
-		<td>{ item.label }</td>
-		<td>{ item.definition }</td>
-		</tr>
-	);
-	return (
-	    <div>
-		{ this.renderDLQueryButtons() }
-		<table class="table table-hover">
-		<thead>{ header }</thead>
-		<tbody>
-		{ content }
-	        </tbody>
-		</table>
-	    </div>
-	);
-    }
+	onDlQueryChange(event) {
+		this.setState({dlQueryExp: event.target.value, dlQuery:null});
+	}
 
     renderSPARQL() {
 		var resultDisplay = '';
@@ -636,6 +647,9 @@ class Ontology extends React.Component {
 	    if (classesMap.has(owlClass)) {
 		var obj = classesMap.get(owlClass);
 		state.selectedClass = obj;
+		state.dlQueryExp = state.selectedClass ? state.selectedClass.owlClass : null;
+		state.dlQuery=null;
+		state.dlResults=[];
 		if (!('children' in obj)) {
 		    fetch(
 			'/api/backend?script=runQuery.groovy&type=subclass&direct=true&axioms=true&query='

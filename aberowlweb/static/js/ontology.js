@@ -647,7 +647,8 @@ class Ontology extends React.Component {
 	    if (classesMap.has(owlClass)) {
 		var obj = classesMap.get(owlClass);
 		state.selectedClass = obj;
-		state.dlQueryExp = state.selectedClass ? state.selectedClass.owlClass : null;
+		state.dlQueryExp =  state.selectedClass ?  state.selectedClass.label : null;
+		state.dlQueryExp =  state.dlQueryExp && state.dlQueryExp.includes(' ') ? "\'" + state.dlQueryExp +  "\'" : state.dlQueryExp;
 		state.dlQuery=null;
 		state.dlResults=[];
 		if (!('children' in obj)) {
@@ -684,7 +685,7 @@ class Ontology extends React.Component {
 	    var queries = [];
 	    const dlQuery = params.query;
 	    fetch('/api/backend?script=runQuery.groovy&type=' + params.query
-		  + '&direct=true&axioms=true&query=' + encodeURIComponent(owlClass)
+		  + '&axioms=true&labels=true&query=' + encodeURIComponent(owlClass)
 		  + '&ontology=' + this.state.ontology.acronym)
 	    .then((response) => response.json())
 	    .then(function(data) {

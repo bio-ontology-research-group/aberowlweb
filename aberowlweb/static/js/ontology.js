@@ -647,7 +647,7 @@ class Ontology extends React.Component {
 	    if (classesMap.has(owlClass)) {
 		var obj = classesMap.get(owlClass);
 		state.selectedClass = obj;
-		state.dlQueryExp =  state.selectedClass ?  state.selectedClass.label : null;
+		state.dlQueryExp =  state.selectedClass ?  state.selectedClass.label.toLowerCase() : null;
 		state.dlQueryExp =  state.dlQueryExp && state.dlQueryExp.includes(' ') ? "\'" + state.dlQueryExp +  "\'" : state.dlQueryExp;
 		state.dlQuery=null;
 		state.dlResults=[];

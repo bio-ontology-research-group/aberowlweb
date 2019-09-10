@@ -31,10 +31,10 @@ ABEROWL_SERVER_URL = getattr(
 
 ELASTIC_SEARCH_URL = getattr(
     settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/')
-ELASTIC_INDEX_NAME = getattr(
-    settings, 'ELASTIC_INDEX_NAME', 'aberowl_test')
-ELASTIC_INDEX_URL = ELASTIC_SEARCH_URL + ELASTIC_INDEX_NAME + '/'
-
+ELASTIC_ONTOLOGY_INDEX_NAME = getattr(
+    settings, 'ELASTIC_ONTOLOGY_INDEX_NAME', 'aberowl_ontology')
+ELASTIC_CLASS_INDEX_NAME = getattr(
+    settings, 'ELASTIC_CLASS_INDEX_NAME', 'aberowl_class')
 
 @periodic_task(run_every=crontab(hour=12, minute=0, day_of_week=1))
 def sync_obofoundry():
@@ -269,15 +269,16 @@ def classify_ontology(filepath):
 
 
 @task
-def index_submission(ontology_pk, submission_pk):
+def index_submission(ontology_pk, submission_pk, skip_embedding = False, es_url=ELASTIC_SEARCH_URL):
     ontology = Ontology.objects.get(pk=ontology_pk)
     submission = ontology.submissions.get(pk=submission_pk)
     filepath = '../' + submission.get_filepath(folder='latest')
-    generate_embeddings(filepath)
+    if not skip_embedding:
+        generate_embeddings(filepath)
 
     p = Popen(
         ['groovy', 'IndexElastic.groovy',
-         ELASTIC_SEARCH_URL, ELASTIC_INDEX_NAME, filepath],
+         es_url, ELASTIC_ONTOLOGY_INDEX_NAME,  ELASTIC_CLASS_INDEX_NAME, filepath, str(skip_embedding)],
         stdin=PIPE,
         cwd='scripts/')
     data = {
@@ -324,3 +325,17 @@ def generate_embeddings(filepath):
     if p.wait() == 0:
         print('Successfully generated embeddings for ', filepath)
     return result
+
+
+@task
+def reload_indexes(skip_embedding, es_url=ELASTIC_SEARCH_URL):
+    try: 
+        ontologies =  Ontology.objects.filter(
+            status=Ontology.CLASSIFIED)
+        for ontology in ontologies :
+            for submission in ontology.submissions.all() :
+                print('Indexing ontology %s started' % (ontology.acronym))
+                index_submission(ontology.pk, submission.pk, skip_embedding, es_url)
+
+    except Exception as e:
+            print(e)

@@ -16,9 +16,10 @@ from aberowl.serializers import OntologySerializer
 
 ELASTIC_SEARCH_URL = getattr(
     settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/')
-ELASTIC_INDEX_NAME = getattr(
-    settings, 'ELASTIC_INDEX_NAME', 'aberowl')
-ELASTIC_INDEX_URL = ELASTIC_SEARCH_URL + ELASTIC_INDEX_NAME + '/'
+ELASTIC_ONTOLOGY_INDEX_NAME = getattr(
+    settings, 'ELASTIC_ONTOLOGY_INDEX_NAME', 'aberowl_ontology')
+ELASTIC_CLASS_INDEX_NAME = getattr(
+    settings, 'ELASTIC_ONTOLOGY_INDEX_NAME', 'aberowl_class')
 
 ABEROWL_API_URL = getattr(
     settings, 'ABEROWL_API_URL', 'http://localhost:8080/api/')
@@ -36,10 +37,10 @@ def make_request(url):
     return []
 
 
-def search(query_type, query_data):
+def search(indexName, query_data):
     try:
         r = requests.post(
-            ELASTIC_INDEX_URL + query_type + '/_search',
+            ELASTIC_SEARCH_URL + indexName + '/_doc/_search',
             data=json.dumps(query_data),
             timeout=15)
         return r.json()
@@ -73,7 +74,7 @@ class SearchClassesAPIView(APIView):
                 'query': { 'bool': { 'must': query_list } },
                 '_source': {'excludes': ['embedding_vector',]}
             }
-            result = search('owlclass', docs)
+            result = search(ELASTIC_CLASS_INDEX_NAME, docs)
             data = []
             for hit in result['hits']['hits']:
                 item = hit['_source']
@@ -111,7 +112,7 @@ class MostSimilarAPIView(APIView):
             docs = {
                 'query': { 'bool': { 'must': query_list } },
             }
-            result = search('owlclass', docs)
+            result = search(ELASTIC_CLASS_INDEX_NAME, docs)
             data = result['hits']['hits']
             if len(data) == 0:
                 return Response({'status': 'error', 'message': 'not found'})
@@ -139,7 +140,7 @@ class MostSimilarAPIView(APIView):
                 "size": size
             }
 
-            result = search('owlclass', query)
+            result = search(ELASTIC_CLASS_INDEX_NAME, query)
             data = []
             for hit in result['hits']['hits']:
                 item = hit['_source']
@@ -169,7 +170,7 @@ class QueryOntologiesAPIView(APIView):
             'query': { 'bool': { 'should': query_list } },
             '_source': {'excludes': ['embedding_vector',]}
         }
-        result = search('ontology', omap)
+        result = search(ELASTIC_ONTOLOGY_INDEX_NAME, omap)
         data = []
         for hit in result['hits']['hits']:
             item = hit['_source']
@@ -219,7 +220,7 @@ class QueryNamesAPIView(APIView):
             'from': 0,
             'size': 100}
 
-        result = search("owlclass", f_query)
+        result = search(ELASTIC_ONTOLOGY_INDEX_NAME, f_query)
         data = defaultdict(list)
         for hit in result['hits']['hits']:
             item = hit['_source']

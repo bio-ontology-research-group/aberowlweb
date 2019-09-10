@@ -41,10 +41,11 @@ import java.nio.file.*
 import java.util.*
 import org.apache.logging.log4j.*
 
-
 url = args[0]
-indexName = args[1]
-fileName = args[2]
+ontologyIndexName = args[1]
+owlClassIndexName = args[2]
+fileName = args[3]
+skip_embbedding = args[4]
 
 http = new HTTPBuilder(url)
 
@@ -61,51 +62,65 @@ def indexExists(indexName) {
 }
 
 def initIndex() {
-    def settings = [
-	"settings" : [
+	def settings = [
 	    "number_of_shards" : 1,
 	    "number_of_replicas" : 1,
 	    "analysis": [
-		"normalizer": [
-		    "my_normalizer": [
-			"type": "custom",
-			"filter": ["lowercase",]
-		    ]
-		]
-	    ]
-	],
-	"mappings" : [
-            "owlclass" : [
-		"properties" : [
-                    "embedding_vector": [
-			"type": "binary",
-			"doc_values": true
-		    ],
-		    "class": ["type": "keyword"],
-		    "definition": ["type": "text"],
-		    "identifier": ["type": "keyword"],
-		    "label": [
-			"type": "keyword", "normalizer": "my_normalizer"],
-		    "ontology": [
-			"type": "keyword", "normalizer": "my_normalizer"],
-		    "oboid": [
-			"type": "keyword", "normalizer": "my_normalizer"],
-		    "owlClass": ["type": "keyword"],
-		    "synonyms": ["type": "text"],
-		]
-            ],
-	    "ontology": [
-		"properties" : [
-		    "name": [
-			"type": "keyword", "normalizer": "my_normalizer"],
-		    "ontology": [
-			"type": "keyword", "normalizer": "my_normalizer"],
-		    "description": ["type": "text"],
-		]
+			"normalizer": [
+				"my_normalizer": [
+				"type": "custom",
+				"filter": ["lowercase",]
+				]
+			]
 	    ]
 	]
+
+    def ontologyIndexSettings = [
+		"settings" : settings,
+		"mappings":[
+		"properties" : [
+			"name": [
+			"type": "keyword", "normalizer": "my_normalizer"],
+			"ontology": [
+			"type": "keyword", "normalizer": "my_normalizer"],
+			"description": ["type": "text"],
+		]
+		]
     ]
-    if (!indexExists(indexName)) {
+
+	def classIndexSettings = [
+		"settings" : settings,
+		"mappings":[
+		"properties" : [
+			"embedding_vector": [
+				"type": "binary",
+				"doc_values": true
+			],
+			"class": ["type": "keyword"],
+			"definition": ["type": "text"],
+			"identifier": ["type": "keyword"],
+			"label": [
+			"type": "keyword", "normalizer": "my_normalizer"],
+			"ontology": [
+			"type": "keyword", "normalizer": "my_normalizer"],
+			"oboid": [
+			"type": "keyword", "normalizer": "my_normalizer"],
+			"owlClass": ["type": "keyword"],
+			"synonyms": ["type": "text"],
+		]
+		]
+	]
+
+    if (!indexExists(ontologyIndexName)) {
+		createIndex(ontologyIndexName, ontologyIndexSettings);
+    }
+
+	if (!indexExists(owlClassIndexName)) {
+		createIndex(owlClassIndexName, classIndexSettings);
+    }
+}
+
+def createIndex(indexName, settings) {
 	try {
 	    http.request(Method.PUT, ContentType.JSON) { req ->
 		uri.path = '/' + indexName
@@ -120,40 +135,42 @@ def initIndex() {
 	} catch (HttpResponseException e) {
 	    e.printStackTrace()
 	}
-    }
 }
 
 def deleteOntologyData(ontology) {
     def query = ["query": ["term": ["ontology": ontology]]]
     try {
-	http.post(
-	    contentType: ContentType.JSON,
-	    path: '/' + indexName + '/ontology/_delete_by_query',
-	    body: new JsonBuilder(query).toString()
-	) {resp, reader -> }
-	http.post(
-	    contentType: ContentType.JSON,
-	    path: '/' + indexName + '/owlclass/_delete_by_query',
-	    body: new JsonBuilder(query).toString()
-	) {resp, reader -> }
+		http.request(Method.POST, ContentType.JSON){ req ->
+			uri.path = '/' + ontologyIndexName + '/_delete_by_query'
+			body = new JsonBuilder(query).toString()
+			response.success = { resp, json -> println(json) }
+			response.failure = { resp, json -> println(json) }
+		}
+
+		http.request(Method.POST, ContentType.JSON){ req ->
+			uri.path = '/' + owlClassIndexName + '/_delete_by_query'
+			body = new JsonBuilder(query).toString()
+			response.success = { resp, json -> println(json) }
+			response.failure = { resp, json -> println(json) }
+		}
     } catch (Exception e) {
-	e.printStackTrace()
+		e.printStackTrace()
     }
 
 }
 
-def index(def type, def obj) {
+def index(def indexName, def obj) {
         
     def j = new groovy.json.JsonBuilder(obj)
     try {
-	http.request(Method.POST, ContentType.JSON) {
-	    uri.path = '/' + indexName + '/'+ type + '/'
-	    body = j.toString()
-	    headers.'Content-Type' = 'application/json'
-	}
+		http.request(Method.POST, ContentType.JSON) {
+			uri.path = '/' + indexName  + '/_doc'
+			body = j.toString()
+			headers.'Content-Type' = 'application/json'
+		}
     } catch (Exception e) {
-	e.printStackTrace()
-	println "Failed: " + j.toPrettyString()
+		e.printStackTrace()
+		println "Failed: " + j.toPrettyString()
     }
 }
 
@@ -212,7 +229,7 @@ void indexOntology(String fileName, def data) {
     // Delete ontology data
     deleteOntologyData(acronym)
     
-    index("ontology", omap)
+    index(ontologyIndexName, omap)
 
     // Re-add all classes for this ont
 
@@ -266,9 +283,9 @@ void indexOntology(String fileName, def data) {
 	    }
 
 	    // Add an embedding to the document
-	    if (data["embeds"].containsKey(cIRI)) {
-		info["embedding_vector"] = data["embeds"][cIRI];
-	    }
+	    if (data["embeds"] != null && data["embeds"].containsKey(cIRI)) {
+			info["embedding_vector"] = data["embeds"][cIRI];
+	    } 
 	    
 	    // generate OBO-style ID for the index
 	    def oboId = ""
@@ -285,7 +302,7 @@ void indexOntology(String fileName, def data) {
 	    }
 	    
 	    
-	    index("owlclass", info)
+	    index(owlClassIndexName, info)
 	}
     }
 }
@@ -306,19 +323,21 @@ def slurper = new JsonSlurper()
 data = slurper.parseText(data)
 
 
-// Read embeddings
-def embeds = [:]
+if (skip_embbedding.equals("False")) {
+	// Read embeddings
+	def embeds = [:]
 
-new File(fileName + ".embs").splitEachLine(" ") { it ->
-    double[] vector = new double[it.size() - 1]
-    for (int i = 1; i < it.size(); ++i) {
-	vector[i - 1] = Double.parseDouble(it[i]);
-    }
-    embeds[it[0]] = convertArrayToBase64(vector);
+	new File(fileName + ".embs").splitEachLine(" ") { it ->
+		double[] vector = new double[it.size() - 1]
+		for (int i = 1; i < it.size(); ++i) {
+		vector[i - 1] = Double.parseDouble(it[i]);
+		}
+		embeds[it[0]] = convertArrayToBase64(vector);
+	}
+
+
+	data["embeds"] = embeds
 }
-
-
-data["embeds"] = embeds
 
 indexOntology(fileName, data)  
 

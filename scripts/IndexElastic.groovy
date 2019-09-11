@@ -1,20 +1,23 @@
 @Grapes([
-	@Grab(group='org.codehaus.groovy.modules.http-builder', module='http-builder', version='0.7.1' ),
+	@Grab(group='org.elasticsearch.client', module='elasticsearch-rest-client', version='7.3.1'),
+	@Grab(group='org.elasticsearch.client', module='elasticsearch-rest-high-level-client', version='7.3.1'),
 	@Grab(group='org.semanticweb.elk', module='elk-owlapi', version='0.4.2'),
         @Grab(group='net.sourceforge.owlapi', module='owlapi-api', version='4.2.3'),
         @Grab(group='net.sourceforge.owlapi', module='owlapi-apibinding', version='4.2.3'),
         @Grab(group='net.sourceforge.owlapi', module='owlapi-impl', version='4.2.3'),
         @Grab(group='net.sourceforge.owlapi', module='owlapi-parsers', version='4.2.3'),
 	@Grab(group='org.slf4j', module='slf4j-nop', version='1.7.25'),
-	@Grab(group='org.apache.lucene', module='lucene-queryparser', version='7.1.0')
     ])
 
-import groovy.json.*
-import groovyx.net.http.HTTPBuilder
-import groovyx.net.http.HttpResponseException
-import groovyx.net.http.Method
-import groovyx.net.http.ContentType
 
+import groovy.json.*
+
+import org.apache.http.auth.AuthScope
+import org.apache.http.auth.UsernamePasswordCredentials
+import org.apache.http.impl.client.BasicCredentialsProvider
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
+import org.apache.http.client.CredentialsProvider
+import org.apache.http.HttpHost
 import org.apache.http.client.methods.*
 import org.apache.http.entity.*
 import org.apache.http.impl.client.*
@@ -34,31 +37,63 @@ import org.semanticweb.owlapi.search.*;
 import org.semanticweb.owlapi.manchestersyntax.renderer.*;
 import org.semanticweb.owlapi.reasoner.structural.*
 
-import org.apache.lucene.queryparser.classic.QueryParser;
+import org.elasticsearch.client.indices.*
+import org.elasticsearch.action.index.IndexRequest
+import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.client.RestClientBuilder
+import org.elasticsearch.client.RestClient
+import org.elasticsearch.client.RequestOptions
+import org.elasticsearch.client.RestHighLevelClient
+import org.elasticsearch.index.reindex.DeleteByQueryRequest
+import org.elasticsearch.index.query.TermQueryBuilder
 
 import java.nio.*
 import java.nio.file.*
 import java.util.*
 import org.apache.logging.log4j.*
+import java.net.URL
 
 url = args[0]
-ontologyIndexName = args[1]
-owlClassIndexName = args[2]
-fileName = args[3]
-skip_embbedding = args[4]
+username = args[1]
+password = args[2]
+ontologyIndexName = args[3]
+owlClassIndexName = args[4]
+fileName = args[5]
+skip_embbedding = args[6]
 
-http = new HTTPBuilder(url)
+esUrl = new URL(url);
+restClient = null
+
+if (!username.isEmpty() &&  !password.isEmpty()) {
+	final CredentialsProvider credentialsProvider =
+		new BasicCredentialsProvider();
+	credentialsProvider.setCredentials(AuthScope.ANY,
+		new UsernamePasswordCredentials(username, password));
+
+	restClient = RestClient.builder(
+		new HttpHost(esUrl.getHost(), esUrl.getPort()))
+		.setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
+        @Override
+        public HttpAsyncClientBuilder customizeHttpClient(
+                HttpAsyncClientBuilder httpClientBuilder) {
+            return httpClientBuilder
+                .setDefaultCredentialsProvider(credentialsProvider);
+        }
+    });
+} else {
+	restClient = RestClient.builder(new HttpHost(esUrl.getHost(), esUrl.getPort()))
+}
+
+esClient = new RestHighLevelClient(restClient)
 
 def indexExists(indexName) {
-    try {
-	http.get(
-	    path: '/' + indexName,
-	)
-    } catch (HttpResponseException e) {
-	r = e.response
-	return r.status != 404
-    }
-    return true
+	try {
+		GetIndexRequest request = new GetIndexRequest(indexName);
+		return  esClient.indices().exists(request, RequestOptions.DEFAULT);
+	}  catch (Exception e) {
+		e.printStackTrace();
+		return false;
+	}
 }
 
 def initIndex() {
@@ -120,57 +155,36 @@ def initIndex() {
     }
 }
 
-def createIndex(indexName, settings) {
+def createIndex(indexName, settings) { 
 	try {
-	    http.request(Method.PUT, ContentType.JSON) { req ->
-		uri.path = '/' + indexName
-		body = new JsonBuilder(settings).toString()
-		response.success = {resp, json ->
-		    println(json)
-		}
-		response.failure = {resp, json ->
-		    println(json)
-		}
-	    }
-	} catch (HttpResponseException e) {
-	    e.printStackTrace()
+		CreateIndexRequest request = new CreateIndexRequest(indexName);
+		request.source(new JsonBuilder(settings).toString(), XContentType.JSON)
+		CreateIndexResponse createIndexResponse = esClient.indices().create(request, RequestOptions.DEFAULT);
+		println('Index created :' + indexName)
+	}  catch (Exception e) {
+		e.printStackTrace();
 	}
 }
 
 def deleteOntologyData(ontology) {
-    def query = ["query": ["term": ["ontology": ontology]]]
-    try {
-		http.request(Method.POST, ContentType.JSON){ req ->
-			uri.path = '/' + ontologyIndexName + '/_delete_by_query'
-			body = new JsonBuilder(query).toString()
-			response.success = { resp, json -> println(json) }
-			response.failure = { resp, json -> println(json) }
-		}
-
-		http.request(Method.POST, ContentType.JSON){ req ->
-			uri.path = '/' + owlClassIndexName + '/_delete_by_query'
-			body = new JsonBuilder(query).toString()
-			response.success = { resp, json -> println(json) }
-			response.failure = { resp, json -> println(json) }
-		}
-    } catch (Exception e) {
-		e.printStackTrace()
-    }
-
+	try {
+		DeleteByQueryRequest request = new DeleteByQueryRequest(ontologyIndexName, owlClassIndexName);
+		request.setQuery(new TermQueryBuilder("ontology", ontology));
+		response = esClient.deleteByQuery(request, RequestOptions.DEFAULT);
+		println("total=" + response.total + "|deletedDocs=" + response.deleted + "|searchRetries=" 
+			+ response.searchRetries + "|bulkRetries=" + response.bulkRetries)
+	}  catch (Exception e) {
+		e.printStackTrace();
+	}
 }
 
 def index(def indexName, def obj) {
-        
-    def j = new groovy.json.JsonBuilder(obj)
-    try {
-		http.request(Method.POST, ContentType.JSON) {
-			uri.path = '/' + indexName  + '/_doc'
-			body = j.toString()
-			headers.'Content-Type' = 'application/json'
-		}
+	try {
+		request = new IndexRequest(indexName)
+		request.source(new JsonBuilder(obj).toString(), XContentType.JSON);
+		esClient.index(request, RequestOptions.DEFAULT);
     } catch (Exception e) {
 		e.printStackTrace()
-		println "Failed: " + j.toPrettyString()
     }
 }
 
@@ -305,6 +319,8 @@ void indexOntology(String fileName, def data) {
 	    index(owlClassIndexName, info)
 	}
     }
+
+	println('Finished indexing :' + acronym)
 }
 
 String convertArrayToBase64(double[] array) {
@@ -340,5 +356,4 @@ if (skip_embbedding.equals("False")) {
 }
 
 indexOntology(fileName, data)  
-
-http.shutdown()
+esClient.close()

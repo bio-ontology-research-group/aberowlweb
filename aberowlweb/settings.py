@@ -248,6 +248,8 @@ class BaseConfiguration(Configuration):
     CORS_URLS_REGEX = r'^/api/.*$'
 
     ELASTIC_SEARCH_URL="http://localhost:9200/"
+    ELASTIC_SEARCH_USERNAME=""
+    ELASTIC_SEARCH_PASSWORD=""
     ELASTIC_ONTOLOGY_INDEX_NAME = 'aberowl_ontology'
     ELASTIC_CLASS_INDEX_NAME = 'aberowl_class'
 
@@ -261,6 +263,8 @@ class Production(BaseConfiguration):
     DEBUG = False
     SITE_DOMAIN = 'aber-owl.net'
     ELASTIC_SEARCH_URL = 'http://10.254.145.178:9200/'
+    ELASTIC_SEARCH_USERNAME=""
+    ELASTIC_SEARCH_PASSWORD=""
     ELASTIC_ONTOLOGY_INDEX_NAME = 'aberowl_ontology'
     ELASTIC_CLASS_INDEX_NAME = 'aberowl_class'
     ABEROWL_API_URL = 'http://10.254.145.41/api/'
@@ -275,6 +279,8 @@ class ProductionCelery(BaseConfiguration):
     DEBUG = False
     SITE_DOMAIN = 'aber-owl.net'
     ELASTIC_SEARCH_URL = 'http://10.254.145.178:9200/'
+    ELASTIC_SEARCH_USERNAME=""
+    ELASTIC_SEARCH_PASSWORD=""
     ELASTIC_ONTOLOGY_INDEX_NAME = 'aberowl_ontology'
     ELASTIC_CLASS_INDEX_NAME = 'aberowl_class'
     ABEROWL_API_URL = 'http://10.254.145.41/api/'

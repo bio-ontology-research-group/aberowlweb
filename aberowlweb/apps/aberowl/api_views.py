@@ -12,10 +12,15 @@ import time
 
 from aberowl.models import Ontology
 from aberowl.serializers import OntologySerializer
+from elasticsearch import Elasticsearch
 
 
 ELASTIC_SEARCH_URL = getattr(
     settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/')
+ELASTIC_SEARCH_USERNAME = getattr(
+    settings, 'ELASTIC_SEARCH_USERNAME', '')
+ELASTIC_SEARCH_PASSWORD = getattr(
+    settings, 'ELASTIC_SEARCH_PASSWORD', '')
 ELASTIC_ONTOLOGY_INDEX_NAME = getattr(
     settings, 'ELASTIC_ONTOLOGY_INDEX_NAME', 'aberowl_ontology')
 ELASTIC_CLASS_INDEX_NAME = getattr(
@@ -24,6 +29,11 @@ ELASTIC_CLASS_INDEX_NAME = getattr(
 ABEROWL_API_URL = getattr(
     settings, 'ABEROWL_API_URL', 'http://localhost:8080/api/')
 
+es = None
+if ELASTIC_SEARCH_USERNAME and ELASTIC_SEARCH_PASSWORD:
+    es = Elasticsearch([ELASTIC_SEARCH_URL], http_auth=(ELASTIC_SEARCH_USERNAME, ELASTIC_SEARCH_PASSWORD))
+else :
+    es = Elasticsearch([ELASTIC_SEARCH_URL])
 
 def make_request(url):
     try:
@@ -39,11 +49,8 @@ def make_request(url):
 
 def search(indexName, query_data):
     try:
-        r = requests.post(
-            ELASTIC_SEARCH_URL + indexName + '/_doc/_search',
-            data=json.dumps(query_data),
-            timeout=15)
-        return r.json()
+        res = es.search(index=indexName, body=query_data, timeout=15)
+        return res.json()
     except Exception as e:
         return {'hits': {'hits': []}}
 

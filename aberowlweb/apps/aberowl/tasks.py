@@ -31,6 +31,10 @@ ABEROWL_SERVER_URL = getattr(
 
 ELASTIC_SEARCH_URL = getattr(
     settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/')
+ELASTIC_SEARCH_USERNAME = getattr(
+    settings, 'ELASTIC_SEARCH_USERNAME', '')
+ELASTIC_SEARCH_PASSWORD = getattr(
+    settings, 'ELASTIC_SEARCH_PASSWORD', '')
 ELASTIC_ONTOLOGY_INDEX_NAME = getattr(
     settings, 'ELASTIC_ONTOLOGY_INDEX_NAME', 'aberowl_ontology')
 ELASTIC_CLASS_INDEX_NAME = getattr(
@@ -269,7 +273,8 @@ def classify_ontology(filepath):
 
 
 @task
-def index_submission(ontology_pk, submission_pk, skip_embedding = False, es_url=ELASTIC_SEARCH_URL):
+def index_submission(ontology_pk, submission_pk, skip_embedding = False, es_url=ELASTIC_SEARCH_URL, 
+                        es_username=ELASTIC_SEARCH_USERNAME, es_password=ELASTIC_SEARCH_PASSWORD):
     ontology = Ontology.objects.get(pk=ontology_pk)
     submission = ontology.submissions.get(pk=submission_pk)
     filepath = '../' + submission.get_filepath(folder='latest')
@@ -277,8 +282,8 @@ def index_submission(ontology_pk, submission_pk, skip_embedding = False, es_url=
         generate_embeddings(filepath)
 
     p = Popen(
-        ['groovy', 'IndexElastic.groovy',
-         es_url, ELASTIC_ONTOLOGY_INDEX_NAME,  ELASTIC_CLASS_INDEX_NAME, filepath, str(skip_embedding)],
+        ['groovy', 'IndexElastic.groovy', es_url, es_username, es_password,
+        ELASTIC_ONTOLOGY_INDEX_NAME,  ELASTIC_CLASS_INDEX_NAME, filepath, str(skip_embedding)],
         stdin=PIPE,
         cwd='scripts/')
     data = {
@@ -328,14 +333,14 @@ def generate_embeddings(filepath):
 
 
 @task
-def reload_indexes(skip_embedding, es_url=ELASTIC_SEARCH_URL):
+def reload_indexes(skip_embedding, es_url=ELASTIC_SEARCH_URL, es_username=ELASTIC_SEARCH_USERNAME, es_password=ELASTIC_SEARCH_PASSWORD):
     try: 
         ontologies =  Ontology.objects.filter(
             status=Ontology.CLASSIFIED)
         for ontology in ontologies :
             for submission in ontology.submissions.all() :
                 print('Indexing ontology %s started' % (ontology.acronym))
-                index_submission(ontology.pk, submission.pk, skip_embedding, es_url)
+                index_submission(ontology.pk, submission.pk, skip_embedding, es_url, es_username, es_password)
 
     except Exception as e:
             print(e)

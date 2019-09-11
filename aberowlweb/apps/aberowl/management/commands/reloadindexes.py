@@ -22,6 +22,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('elasticsearch_url', type=str, help='elasticsearch server')
+        parser.add_argument('-u', '--elasticsearch_username', type=str, help='elasticsearch user name', )
+        parser.add_argument('-p', '--elasticsearch_password', type=str, help='elasticsearch password', )
     
     def stop_subprocesses(self, signum, frame):
         if self.proc.poll() is None:
@@ -29,5 +31,10 @@ class Command(BaseCommand):
         exit(0)
                 
     def handle(self, *args, **options):
-        elasticsearch_url = options['elasticsearch_url']
-        reload_indexes(skip_embedding = True, es_url=elasticsearch_url)
+        es_url = options['elasticsearch_url']
+        es_username = options['elasticsearch_username']
+        es_password = options['elasticsearch_password']
+        if  es_username and es_password:
+            reload_indexes(True, es_url, es_username, es_password)
+        else:
+            reload_indexes(True, es_url)

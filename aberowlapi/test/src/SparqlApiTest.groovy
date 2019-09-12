@@ -7,7 +7,7 @@ import groovy.json.JsonSlurper;
 /**
  * API tests for sparql api in aberowl.
  * Rightnow the tests are run under some assumptions including 
- * there is EDAM onotology already loaded into the aberowl 
+ * there is ECO onotology already loaded into the aberowl 
  * repository and there is DDIEM sparql endpoint available. 
  **/
 class SparqlApiTest extends GroovyTestCase {
@@ -21,8 +21,8 @@ class SparqlApiTest extends GroovyTestCase {
                     "          { \n" +
                     "<https://www.omim.org/entry/202110> <http://www.cbrc.kaust.edu.sa/ddiem/terms/has_omim_id> ?OMIM_ID . \n" +
                     "        VALUES ?class {  \n" +
-                    "            OWL subclass <http://ontolinator.kaust.edu.sa:8891/sparql> <EDAM> {  \n" +
-                    "            <http://edamontology.org/format_1915> \n" +
+                    "            OWL equivalent <http://ontolinator.kaust.edu.sa:8891/sparql> <ECO> {  \n" +
+                    "             evidence \n" +
                     "            }  \n" +
                     "        } .  \n" +
                     "    }";
@@ -42,11 +42,11 @@ class SparqlApiTest extends GroovyTestCase {
 
 
         assertNotNull(object.results.bindings)
-        assertEquals(object.results.bindings.size(), 6)
+        assertEquals(object.results.bindings.size(), 1)
 
 
         assertEquals(object.results.bindings[0].OMIM_ID.value, '202110')
-        assertEquals(object.results.bindings[0].class.value, 'http://edamontology.org/format_2333')
+        assertEquals(object.results.bindings[0].class.value, 'http://purl.obolibrary.org/obo/ECO_0000000')
     }
 
     void testExecuteSparqlWhenFilter(){
@@ -56,8 +56,8 @@ class SparqlApiTest extends GroovyTestCase {
                 "              <https://www.omim.org/entry/202110> <http://www.cbrc.kaust.edu.sa/ddiem/terms/has_omim_id> ?OMIM_ID . \n" +
                 "              <https://www.omim.org/entry/202110> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?class . \n" +
                 "       FILTER ( ?class in ( \n" +
-                "                              OWL subclass <http://ontolinator.kaust.edu.sa:8891/sparql> <EDAM> {  \n" +
-                "                                  <http://edamontology.org/format_1915> \n" +
+                "                              OWL subclass <http://ontolinator.kaust.edu.sa:8891/sparql> <ECO> {  \n" +
+                "                                  equivalent \n" +
                 "                              }  \n" +
                 "       ))  \n" +
                 "    }";
@@ -71,7 +71,7 @@ class SparqlApiTest extends GroovyTestCase {
 
         assertNotNull(object.head.vars)
 
-        assertEquals(object.head.vars.size(), 0)
+        assertEquals(object.head.vars.size(), 2)
         assertEquals(object.head.vars[0], 'OMIM_ID')
         assertEquals(object.head.vars[1], 'class')
 

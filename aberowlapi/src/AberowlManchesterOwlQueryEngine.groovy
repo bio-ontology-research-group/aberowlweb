@@ -69,13 +69,13 @@ public class AberowlManchesterOwlQueryEngine {
 
     private def executeQuery(def managers, AberowlManchesterOwlQuery query) {
         if (query.getOntologyIri() != null && !query.getOntologyIri().isEmpty()) {
-            def out = managers[query.getOntologyIri()].runQuery(query.query, query.queryType, true, false, false)
+            def out = managers[query.getOntologyIri()].runQuery(query.query, query.queryType, false, true, false)
             return out;
         } else {
             def res = []
             GParsPool.withPool {
                 managers.values().eachParallel { manager ->
-                    def out = manager.runQuery(query.query, query.queryType, true, false, false)
+                    def out = manager.runQuery(query.query, query.queryType, false, true, false)
                     res.addAll(out)
                 }
             }

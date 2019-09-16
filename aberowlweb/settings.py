@@ -301,3 +301,17 @@ class OntologyAPIWorker(Production):
             'PASSWORD': '111'
         }
     }
+
+
+class TestConfiguration(BaseConfiguration):
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'HOST': 'localhost',
+            'USER': 'postgres',
+            'PASSWORD': '111'
+        }
+    }
+
+    

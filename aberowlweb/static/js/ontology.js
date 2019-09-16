@@ -18,7 +18,7 @@ class Ontology extends React.Component {
 	    classesMap: classesMap,
 	    propsMap: propsMap,
 	    tabs: [
-		'Overview', 'Browse', 'DLQuery', 'SimilarClasses',
+		'Overview', 'Browse', 'DLQuery', 'SimilarClasses', 'SPARQL',
 		// 'Visualise', 'PubMed', 'Data', 'SPARQL',
 		'Download'],
 	    currentTab: currentTab,
@@ -370,8 +370,7 @@ class Ontology extends React.Component {
 	);
     }
 
-    renderDLQueryButtons() {
-	const obj = this.state.selectedClass;
+    renderDLQueryButtons(obj) {
 	const buttons = [
 	    ['subclass', 'Subclasses'],
 	    ['subeq', 'Sub and Equivalent'],
@@ -387,7 +386,7 @@ class Ontology extends React.Component {
 	    if (dlQuery == item[0]) activeClass = 'active';
 	    return (
 		    <li role="presentation" className={ activeClass }>
-		    <a href={'#/DLQuery/' + encodeURIComponent(obj.owlClass) + '/' + item[0]}> { item[1] } </a>
+		    <a href={'#/DLQuery/' + encodeURIComponent(obj) + '/' + item[0]}> { item[1] } </a>
 		    </li>
 	    );	    
 	});
@@ -397,50 +396,122 @@ class Ontology extends React.Component {
 	);
     }
 
-    renderDLQuery() {
-	const obj = this.state.selectedClass;
-	if (obj == null) {
-	    return (
-		<h2> Please select an ontology class. </h2>
-	    );
+    
+	renderDLQuery() {
+		var obj = this.state.dlQueryExp;
+		const dlqueryInput = (
+			<div layout="row">
+				<form>
+					<div class="form-group margin-top-15">
+						<input class="form-control" type="text" id="dlquery" placeholder="Query" value={this.state.dlQueryExp} 
+							onChange={(e) => this.onDlQueryChange(e)}/>
+					</div>
+				</form>
+			</div>
+		);
+
+	
+		const fields = [
+			'OWLClass',
+			'Label',
+			'Definition',
+		];
+		
+		const header = fields.map(
+			(item) => <th>{ item }</th>);
+		const dlResults = this.state.dlResults;
+		
+		const content =  dlResults.map(
+			(item) =>
+			<tr>
+			<td><a href={'#/Browse/' + encodeURIComponent(this.state.dlQueryExp) + '/' + this.dlQuery}>{ item.owlClass }</a></td>
+			<td>{ item.label }</td>
+			<td>{ item.definition }</td>
+			</tr>
+		);
+		return (
+			<div>
+			{ dlqueryInput }
+			{ this.renderDLQueryButtons(obj) }
+			<table class="table table-hover">
+			<thead>{ header }</thead>
+			<tbody>
+			{ content }
+				</tbody>
+			</table>
+			</div>
+		);
 	}
 	
-	const fields = [
-	    'OWLClass',
-	    'Label',
-	    'Definition',
-	];
-	
-	const header = fields.map(
-	    (item) => <th>{ item }</th>);
-	const dlResults = this.state.dlResults;
-	
-	const content = dlResults.map(
-	    (item) =>
-		<tr>
-		<td><a href={'#/Browse/' + encodeURIComponent(item.owlClass)}>{ item.owlClass }</a></td>
-		<td>{ item.label }</td>
-		<td>{ item.definition }</td>
-		</tr>
-	);
-	return (
-	    <div>
-		{ this.renderDLQueryButtons() }
-		<table class="table table-hover">
-		<thead>{ header }</thead>
-		<tbody>
-		{ content }
-	        </tbody>
-		</table>
-	    </div>
-	);
-    }
+	onDlQueryChange(event) {
+		this.setState({dlQueryExp: event.target.value, dlQuery:null});
+	}
 
     renderSPARQL() {
-	return (
-	    <h2>Not yet implemented!</h2>
-	);
-    }
+		var resultDisplay = '';
+		if (this.state.sparqlResults) {
+			const fields = this.state.sparqlResults.head.vars;
+			const header = fields.map(
+				(item) => <th class="padding-8">{ item }</th>);
+
+			const content = this.state.sparqlResults.results.bindings.map((item) =>
+					<tr>
+						{ Object.keys(item).map(key => <td>{ item[key].value }</td>) }
+					</tr>
+				);
+			resultDisplay = (	
+					<table class="table table-striped table-bordered">
+					<thead>{ header }</thead>
+					<tbody>
+					{ content }
+						</tbody>
+					</table> 
+				);
+		} else if (this.state.errorMessage) {
+			resultDisplay = (
+				<div class="alert alert-danger alert-dismissible show">
+					<strong>Error:</strong> {this.state.errorMessage}
+				</div>
+			);
+		}
+		
+		return (
+			<div>
+				<form onSubmit={(e) => this.executeSparql(e)}>
+					<div layout="row">
+						<div class="form-group margin-top-15">
+							<textarea class="form-control" id="sparql" rows="10" col="5" placeholder="SPARQL Query" value={this.state.query}
+							onChange={(e) => this.onSparqlChange(e)}></textarea>
+						</div>
+					</div>
+					<div layout="row">
+						<button type="submit" class="btn btn-primary">Execute</button>
+					</div>
+				</form>
+				<div layout="row" class="margin-top-15 result-container"> {resultDisplay} </div>
+			</div>
+        );
+	}
+
+	onSparqlChange(event) {
+		this.setState({query: event.target.value});
+	}
+	
+
+	executeSparql(event) {
+		event.preventDefault();
+		const query = this.state.query;	
+		var that = this;
+	    fetch('/api/sparql?query=' + encodeURIComponent(query))
+	    .then((response) => response.json())
+	    .then(function(data) {
+			if (data.error) {
+				that.setState({ errorMessage: data.message, sparqlResults : null});
+			} else {
+				that.setState({ sparqlResults: data});
+			}
+	    });
+	}
 
     renderSimilarClasses() {
 	const obj = this.state.selectedClass;
@@ -515,6 +586,7 @@ class Ontology extends React.Component {
 	    'Browse': this.renderBrowse(),
 	    'DLQuery': this.renderDLQuery(),
 	    'SimilarClasses': this.renderSimilarClasses(),
+	    'SPARQL': this.renderSPARQL(),
 	    'Download': this.renderDownload(),
 	    'Property': this.renderPropertyView()
 	};
@@ -575,6 +647,10 @@ class Ontology extends React.Component {
 	    if (classesMap.has(owlClass)) {
 		var obj = classesMap.get(owlClass);
 		state.selectedClass = obj;
+		state.dlQueryExp =  state.selectedClass ?  state.selectedClass.label.toLowerCase() : null;
+		state.dlQueryExp =  state.dlQueryExp && state.dlQueryExp.includes(' ') ? "\'" + state.dlQueryExp +  "\'" : state.dlQueryExp;
+		state.dlQuery=null;
+		state.dlResults=[];
 		if (!('children' in obj)) {
 		    fetch(
 			'/api/backend?script=runQuery.groovy&type=subclass&direct=true&axioms=true&query='
@@ -609,7 +685,7 @@ class Ontology extends React.Component {
 	    var queries = [];
 	    const dlQuery = params.query;
 	    fetch('/api/backend?script=runQuery.groovy&type=' + params.query
-		  + '&direct=true&axioms=true&query=' + encodeURIComponent(owlClass)
+		  + '&axioms=true&labels=true&query=' + encodeURIComponent(owlClass)
 		  + '&ontology=' + this.state.ontology.acronym)
 	    .then((response) => response.json())
 	    .then(function(data) {

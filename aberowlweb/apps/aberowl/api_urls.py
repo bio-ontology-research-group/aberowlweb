@@ -17,4 +17,6 @@ urlpatterns = [
         api_views.ClassInfoAPIView.as_view(), name='api-classinfo'),
     url(r'^mostsimilar/$',
         api_views.MostSimilarAPIView.as_view(), name='api-mostsimilar'),
+    url(r'^sparql/$',
+        api_views.SparqlAPIView.as_view(), name='api-sparql'),
 ]

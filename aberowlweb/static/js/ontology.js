@@ -18,7 +18,7 @@ class Ontology extends React.Component {
 	    classesMap: classesMap,
 	    propsMap: propsMap,
 	    tabs: [
-		'Overview', 'Browse', 'DLQuery', 'SimilarClasses', 'SPARQL',
+		'Overview', 'Browse', 'DLQuery', /*'SimilarClasses'*/, 'SPARQL',
 		// 'Visualise', 'PubMed', 'Data', 'SPARQL',
 		'Download'],
 	    currentTab: currentTab,
@@ -585,7 +585,7 @@ class Ontology extends React.Component {
 	    'Overview': this.renderOverview(),
 	    'Browse': this.renderBrowse(),
 	    'DLQuery': this.renderDLQuery(),
-	    'SimilarClasses': this.renderSimilarClasses(),
+	    // 'SimilarClasses': this.renderSimilarClasses(),
 	    'SPARQL': this.renderSPARQL(),
 	    'Download': this.renderDownload(),
 	    'Property': this.renderPropertyView()

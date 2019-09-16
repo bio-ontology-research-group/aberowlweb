@@ -273,7 +273,7 @@ def classify_ontology(filepath):
 
 
 @task
-def index_submission(ontology_pk, submission_pk, skip_embedding = False, es_url=ELASTIC_SEARCH_URL, 
+def index_submission(ontology_pk, submission_pk, skip_embedding = True, es_url=ELASTIC_SEARCH_URL, 
                         es_username=ELASTIC_SEARCH_USERNAME, es_password=ELASTIC_SEARCH_PASSWORD):
     ontology = Ontology.objects.get(pk=ontology_pk)
     submission = ontology.submissions.get(pk=submission_pk)

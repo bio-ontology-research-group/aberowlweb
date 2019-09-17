@@ -71,7 +71,7 @@ if (!username.isEmpty() &&  !password.isEmpty()) {
 		new UsernamePasswordCredentials(username, password));
 
 	restClient = RestClient.builder(
-		new HttpHost(esUrl.getHost(), esUrl.getPort()))
+		new HttpHost(esUrl.getHost(), esUrl.getPort(), esUrl.getProtocol()))
 		.setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
         @Override
         public HttpAsyncClientBuilder customizeHttpClient(
@@ -81,7 +81,7 @@ if (!username.isEmpty() &&  !password.isEmpty()) {
         }
     });
 } else {
-	restClient = RestClient.builder(new HttpHost(esUrl.getHost(), esUrl.getPort()))
+	restClient = RestClient.builder(new HttpHost(esUrl.getHost(), esUrl.getPort(), esUrl.getProtocol()))
 }
 
 esClient = new RestHighLevelClient(restClient)

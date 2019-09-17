@@ -13,8 +13,8 @@ django-recaptcha2==1.0.3
 django-rest-framework==0.1.0
 django-widget-tweaks==1.4.1
 djangorestframework==3.7.0
-gevent==1.2.2
-greenlet==0.4.12
+gevent==1.4
+greenlet==0.4.14
 idna==2.6
 kombu==4.1.0
 numpy==1.15.1
@@ -31,7 +31,7 @@ six==1.11.0
 urllib3==1.22
 vine==1.1.4
 word2vec==0.9.4
-elasticsearch=7.0.4
+elasticsearch==7.0.4
 pytest==5.1.2
 pytest-django==3.5.1
 pytest-cov==2.7.1

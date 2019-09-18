@@ -251,7 +251,7 @@ class BaseConfiguration(Configuration):
     ELASTIC_SEARCH_USERNAME=""
     ELASTIC_SEARCH_PASSWORD=""
     ELASTIC_ONTOLOGY_INDEX_NAME = 'aberowl_ontology'
-    ELASTIC_CLASS_INDEX_NAME = 'aberowl_class'
+    ELASTIC_CLASS_INDEX_NAME = 'aberowl_owlclass'
 
 
 class Development(BaseConfiguration):
@@ -266,7 +266,7 @@ class Production(BaseConfiguration):
     ELASTIC_SEARCH_USERNAME=""
     ELASTIC_SEARCH_PASSWORD=""
     ELASTIC_ONTOLOGY_INDEX_NAME = 'aberowl_ontology'
-    ELASTIC_CLASS_INDEX_NAME = 'aberowl_class'
+    ELASTIC_CLASS_INDEX_NAME = 'aberowl_owlclass'
     ABEROWL_API_URL = 'http://10.254.145.41/api/'
     ABEROWL_API_WORKERS = [
         'http://10.254.145.27:8080/api/',
@@ -282,7 +282,7 @@ class ProductionCelery(BaseConfiguration):
     ELASTIC_SEARCH_USERNAME=""
     ELASTIC_SEARCH_PASSWORD=""
     ELASTIC_ONTOLOGY_INDEX_NAME = 'aberowl_ontology'
-    ELASTIC_CLASS_INDEX_NAME = 'aberowl_class'
+    ELASTIC_CLASS_INDEX_NAME = 'aberowl_owlclass'
     ABEROWL_API_URL = 'http://10.254.145.41/api/'
     ABEROWL_API_WORKERS = [
         'http://10.254.145.27:8080/api/',

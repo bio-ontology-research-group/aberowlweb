@@ -38,7 +38,7 @@ ELASTIC_SEARCH_PASSWORD = getattr(
 ELASTIC_ONTOLOGY_INDEX_NAME = getattr(
     settings, 'ELASTIC_ONTOLOGY_INDEX_NAME', 'aberowl_ontology')
 ELASTIC_CLASS_INDEX_NAME = getattr(
-    settings, 'ELASTIC_CLASS_INDEX_NAME', 'aberowl_class')
+    settings, 'ELASTIC_CLASS_INDEX_NAME', 'aberowl_owlclass')
 
 @periodic_task(run_every=crontab(hour=12, minute=0, day_of_week=1))
 def sync_obofoundry():

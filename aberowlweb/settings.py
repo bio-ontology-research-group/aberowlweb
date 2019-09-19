@@ -262,7 +262,7 @@ class Production(BaseConfiguration):
 
     DEBUG = False
     SITE_DOMAIN = 'aber-owl.net'
-    ELASTIC_SEARCH_URL = 'http://10.254.145.178:9200/'
+    ELASTIC_SEARCH_URL = 'https://rc-elastic-1.kaust.edu.sa:9200'
     ELASTIC_SEARCH_USERNAME=""
     ELASTIC_SEARCH_PASSWORD=""
     ELASTIC_ONTOLOGY_INDEX_NAME = 'aberowl_ontology'
@@ -278,7 +278,7 @@ class ProductionCelery(BaseConfiguration):
 
     DEBUG = False
     SITE_DOMAIN = 'aber-owl.net'
-    ELASTIC_SEARCH_URL = 'http://10.254.145.178:9200/'
+    ELASTIC_SEARCH_URL = 'https://rc-elastic-1.kaust.edu.sa:9200'
     ELASTIC_SEARCH_USERNAME=""
     ELASTIC_SEARCH_PASSWORD=""
     ELASTIC_ONTOLOGY_INDEX_NAME = 'aberowl_ontology'

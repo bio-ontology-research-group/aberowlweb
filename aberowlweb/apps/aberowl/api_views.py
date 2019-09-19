@@ -49,8 +49,8 @@ def make_request(url):
 
 def search(indexName, query_data):
     try:
-        res = es.search(index=indexName, body=query_data, timeout=15)
-        return res.json()
+        res = es.search(index=indexName, body=query_data, request_timeout=15)
+        return res
     except Exception as e:
         return {'hits': {'hits': []}}
 

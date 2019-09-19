@@ -25,6 +25,7 @@ import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
 import groovyx.net.http.ContentType
 import com.google.common.collect.*
+import org.semanticweb.owlapi.model.UnloadableImportException
 
 
 
@@ -92,6 +93,10 @@ public class RequestManager {
 	    mgr.createReasoner()
 	    println("Finished loading $ont")
 	    return mgr;
+	} catch (UnloadableImportException e) {
+	    println("Unloadable ontology $ont")
+	    e.printStackTrace();
+	    return null;
 	} catch (Exception e) {
 	    println("Failed loading $ont")
 	    e.printStackTrace();

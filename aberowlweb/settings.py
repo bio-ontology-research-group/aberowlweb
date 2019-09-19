@@ -16,6 +16,8 @@ from configurations import Configuration
 from kombu import Queue, Exchange
 from django.contrib import messages
 
+import os, shutil, configparser
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,10 +27,22 @@ def rel(*x):
 
 sys.path.insert(0, rel('apps'))
 
+# Reading setup properties from configuration file
+config_dir = os.path.expanduser("~") + "/.config"
+configFile = config_dir + "/aberowl.ini"
+
+if not os.path.isfile(configFile):
+    os.makedirs(config_dir, exist_ok=True)
+    shutil.copyfile("default_aberowl.ini", configFile)
+
+config = configparser.RawConfigParser()
+config.read(configFile)
 
 class BaseConfiguration(Configuration):
     # Quick-start development settings - unsuitable for production
     # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
+
+    global config
 
     # SECURITY WARNING: keep the secret key used in production secret!
     SECRET_KEY = 'm^a2@&q12j-t1$*sf+@5#mqbd3b6inp)w)y&)sgalm0g*)^)&q'
@@ -247,11 +261,11 @@ class BaseConfiguration(Configuration):
     CORS_ORIGIN_ALLOW_ALL = True
     CORS_URLS_REGEX = r'^/api/.*$'
 
-    ELASTIC_SEARCH_URL="http://localhost:9200/"
-    ELASTIC_SEARCH_USERNAME=""
-    ELASTIC_SEARCH_PASSWORD=""
-    ELASTIC_ONTOLOGY_INDEX_NAME = 'aberowl_ontology'
-    ELASTIC_CLASS_INDEX_NAME = 'aberowl_owlclass'
+    ELASTIC_SEARCH_URL=config['elasticsearch']['ELASTIC_SEARCH_URL']
+    ELASTIC_SEARCH_USERNAME=config['elasticsearch']['ELASTIC_SEARCH_USERNAME']
+    ELASTIC_SEARCH_PASSWORD=config['elasticsearch']['ELASTIC_SEARCH_PASSWORD']
+    ELASTIC_ONTOLOGY_INDEX_NAME = config['elasticsearch']['ELASTIC_ONTOLOGY_INDEX_NAME']
+    ELASTIC_CLASS_INDEX_NAME = config['elasticsearch']['ELASTIC_CLASS_INDEX_NAME']
 
 
 class Development(BaseConfiguration):
@@ -262,11 +276,6 @@ class Production(BaseConfiguration):
 
     DEBUG = False
     SITE_DOMAIN = 'aber-owl.net'
-    ELASTIC_SEARCH_URL = 'https://rc-elastic-1.kaust.edu.sa:9200'
-    ELASTIC_SEARCH_USERNAME=""
-    ELASTIC_SEARCH_PASSWORD=""
-    ELASTIC_ONTOLOGY_INDEX_NAME = 'aberowl_ontology'
-    ELASTIC_CLASS_INDEX_NAME = 'aberowl_owlclass'
     ABEROWL_API_URL = 'http://10.254.145.41/api/'
     ABEROWL_API_WORKERS = [
         'http://10.254.145.27:8080/api/',
@@ -278,11 +287,6 @@ class ProductionCelery(BaseConfiguration):
 
     DEBUG = False
     SITE_DOMAIN = 'aber-owl.net'
-    ELASTIC_SEARCH_URL = 'https://rc-elastic-1.kaust.edu.sa:9200'
-    ELASTIC_SEARCH_USERNAME=""
-    ELASTIC_SEARCH_PASSWORD=""
-    ELASTIC_ONTOLOGY_INDEX_NAME = 'aberowl_ontology'
-    ELASTIC_CLASS_INDEX_NAME = 'aberowl_owlclass'
     ABEROWL_API_URL = 'http://10.254.145.41/api/'
     ABEROWL_API_WORKERS = [
         'http://10.254.145.27:8080/api/',

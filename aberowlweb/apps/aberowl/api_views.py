@@ -24,7 +24,7 @@ ELASTIC_SEARCH_PASSWORD = getattr(
 ELASTIC_ONTOLOGY_INDEX_NAME = getattr(
     settings, 'ELASTIC_ONTOLOGY_INDEX_NAME', 'aberowl_ontology')
 ELASTIC_CLASS_INDEX_NAME = getattr(
-    settings, 'ELASTIC_ONTOLOGY_INDEX_NAME', 'aberowl_owlclass')
+    settings, 'ELASTIC_CLASS_INDEX_NAME', 'aberowl_owlclass')
 
 ABEROWL_API_URL = getattr(
     settings, 'ABEROWL_API_URL', 'http://localhost:8080/api/')
@@ -227,7 +227,7 @@ class QueryNamesAPIView(APIView):
             'from': 0,
             'size': 100}
 
-        result = search(ELASTIC_ONTOLOGY_INDEX_NAME, f_query)
+        result = search(ELASTIC_CLASS_INDEX_NAME, f_query)
         data = defaultdict(list)
         for hit in result['hits']['hits']:
             item = hit['_source']

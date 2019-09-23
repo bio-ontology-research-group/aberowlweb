@@ -74,7 +74,7 @@ class SearchClassesAPIView(APIView):
                  'message': 'Please provide ontology parameter!'})
         try:
             query_list = [
-                { 'term': { 'ontology': ontology } },
+                { 'match': { 'ontology': ontology } },
                 { 'prefix': { 'label': query } }
             ]
             docs = {

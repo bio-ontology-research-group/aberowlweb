@@ -71,6 +71,11 @@ class Command(BaseCommand):
                         db.close_connection() 
                         Ontology.objects.filter(
                             acronym=oid).update(nb_servers=F('nb_servers') + 1)
-                    
+            if line.startswith('Unloadable ontology'):
+                oid = line.split()[2]
+                try:                
+                    Ontology.objects.filter(acronym=oid).update(status=Ontology.UNLOADABLE)
+                except Exception as e:
+                        print('Exception:', e)
         self.proc.stdout.close()
         self.proc.wait()

@@ -24,7 +24,7 @@ ELASTIC_SEARCH_PASSWORD = getattr(
 ELASTIC_ONTOLOGY_INDEX_NAME = getattr(
     settings, 'ELASTIC_ONTOLOGY_INDEX_NAME', 'aberowl_ontology')
 ELASTIC_CLASS_INDEX_NAME = getattr(
-    settings, 'ELASTIC_ONTOLOGY_INDEX_NAME', 'aberowl_class')
+    settings, 'ELASTIC_CLASS_INDEX_NAME', 'aberowl_owlclass')
 
 ABEROWL_API_URL = getattr(
     settings, 'ABEROWL_API_URL', 'http://localhost:8080/api/')
@@ -49,8 +49,8 @@ def make_request(url):
 
 def search(indexName, query_data):
     try:
-        res = es.search(index=indexName, body=query_data, timeout=15)
-        return res.json()
+        res = es.search(index=indexName, body=query_data, request_timeout=15)
+        return res
     except Exception as e:
         return {'hits': {'hits': []}}
 
@@ -74,7 +74,7 @@ class SearchClassesAPIView(APIView):
                  'message': 'Please provide ontology parameter!'})
         try:
             query_list = [
-                { 'term': { 'ontology': ontology } },
+                { 'match': { 'ontology': ontology } },
                 { 'prefix': { 'label': query } }
             ]
             docs = {
@@ -227,7 +227,7 @@ class QueryNamesAPIView(APIView):
             'from': 0,
             'size': 100}
 
-        result = search(ELASTIC_ONTOLOGY_INDEX_NAME, f_query)
+        result = search(ELASTIC_CLASS_INDEX_NAME, f_query)
         data = defaultdict(list)
         for hit in result['hits']['hits']:
             item = hit['_source']

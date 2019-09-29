@@ -4,7 +4,7 @@ import sys
 
 if __name__ == "__main__":
 
-    os.environ.setdefault("DJANGO_CONFIGURATION", "OntologyAPIWorker")
+    os.environ.setdefault("DJANGO_CONFIGURATION", "Production")
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aberowlweb.settings")
     
     try:

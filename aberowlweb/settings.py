@@ -122,11 +122,11 @@ class BaseConfiguration(Configuration):
 
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'aberowlweb',
-            'HOST': 'localhost',
-            'USER': 'postgres',
-            'PASSWORD': '111'
+            'ENGINE': config['database']['DATABASE_ENGINE'],
+            'NAME': config['database']['DATABASE_NAME'],
+            'HOST': config['database']['DATABASE_HOST'],
+            'USER': config['database']['DATABASE_USER'],
+            'PASSWORD': config['database']['DATABASE_PASSWORD'],
         }
     }
 
@@ -202,8 +202,8 @@ class BaseConfiguration(Configuration):
     RABBIT_PORT = 5672
 
     CELERY_BROKER_URL = 'pyamqp://{user}:{pwd}@{host}:{port}//'.format(
-        user=os.environ.get('RABBIT_USER', 'guest'),
-        pwd=os.environ.get('RABBIT_PASSWORD', 'guest'),
+        user=os.environ.get('RABBIT_USER', config['celery']['CELERY_BROKER_USER']),
+        pwd=os.environ.get('RABBIT_PASSWORD', config['celery']['CELERY_BROKER_PASSWORD']),
         host=RABBIT_HOST,
         port=RABBIT_PORT)
 
@@ -293,28 +293,15 @@ class ProductionCelery(BaseConfiguration):
         'http://10.254.145.30:8080/api/']
     ABEROWL_SERVER_URL = 'http://10.254.145.9/'
 
-    
-class OntologyAPIWorker(Production):
-
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'aberowlweb',
-            'HOST': '10.254.145.9',
-            'USER': 'postgres',
-            'PASSWORD': '111'
-        }
-    }
-
 
 class TestConfiguration(BaseConfiguration):
 
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'HOST': 'localhost',
-            'USER': 'postgres',
-            'PASSWORD': '111'
+            'ENGINE': config['database']['DATABASE_ENGINE'],
+            'HOST': config['database']['DATABASE_HOST'],
+            'USER': config['database']['DATABASE_USER'],
+            'PASSWORD': config['database']['DATABASE_PASSWORD'],
         }
     }
 

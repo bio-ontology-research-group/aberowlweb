@@ -52,6 +52,7 @@ def search(indexName, query_data):
         res = es.search(index=indexName, body=query_data, request_timeout=15)
         return res
     except Exception as e:
+        print("elasticsearch err", e)
         return {'hits': {'hits': []}}
 
 
@@ -75,7 +76,7 @@ class SearchClassesAPIView(APIView):
         try:
             query_list = [
                 { 'match': { 'ontology': ontology } },
-                { 'prefix': { 'label': query } }
+                { 'prefix': { 'label': query.lower() } }
             ]
             docs = {
                 'query': { 'bool': { 'must': query_list } },

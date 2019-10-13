@@ -339,7 +339,7 @@ def reload_indexes(skip_embedding, es_url=ELASTIC_SEARCH_URL, es_username=ELASTI
             status=Ontology.CLASSIFIED)
         for ontology in ontologies :
             submission = ontology.get_latest_submission()
-            print('Indexing ontology %s started' % (ontologies[0].acronym))
+            print('Indexing ontology %s started' % (ontology.acronym))
             index_submission(ontology.pk, submission.pk)
 
     except Exception as e:

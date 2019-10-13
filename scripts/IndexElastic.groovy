@@ -102,7 +102,7 @@ def initIndex() {
 	    "number_of_replicas" : 1,
 	    "analysis": [
 			"normalizer": [
-				"my_normalizer": [
+				"aberowl_normalizer": [
 				"type": "custom",
 				"filter": ["lowercase",]
 				]
@@ -115,9 +115,9 @@ def initIndex() {
 		"mappings":[
 		"properties" : [
 			"name": [
-			"type": "keyword", "normalizer": "my_normalizer"],
+			"type": "keyword", "normalizer": "aberowl_normalizer"],
 			"ontology": [
-			"type": "keyword", "normalizer": "my_normalizer"],
+			"type": "keyword", "normalizer": "aberowl_normalizer"],
 			"description": ["type": "text"],
 		]
 		]
@@ -135,11 +135,11 @@ def initIndex() {
 			"definition": ["type": "text"],
 			"identifier": ["type": "keyword"],
 			"label": [
-			"type": "keyword", "normalizer": "my_normalizer"],
+			"type": "keyword", "normalizer": "aberowl_normalizer"],
 			"ontology": [
-			"type": "keyword", "normalizer": "my_normalizer"],
+			"type": "keyword", "normalizer": "aberowl_normalizer"],
 			"oboid": [
-			"type": "keyword", "normalizer": "my_normalizer"],
+			"type": "keyword", "normalizer": "aberowl_normalizer"],
 			"owlClass": ["type": "keyword"],
 			"synonyms": ["type": "text"],
 		]

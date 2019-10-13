@@ -76,7 +76,7 @@ class SearchClassesAPIView(APIView):
         try:
             query_list = [
                 { 'match': { 'ontology': ontology } },
-                { 'prefix': { 'label': query.lower() } }
+                { 'match_bool_prefix': { 'label': query.lower() } }
             ]
             docs = {
                 'query': { 'bool': { 'must': query_list } },

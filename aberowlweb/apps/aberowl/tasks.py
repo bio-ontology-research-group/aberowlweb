@@ -344,3 +344,16 @@ def reload_indexes(skip_embedding, es_url=ELASTIC_SEARCH_URL, es_username=ELASTI
 
     except Exception as e:
             print(e)
+
+@task
+def reload_index(ontology_acronym):
+    try: 
+        ontologies =  Ontology.objects.filter(
+            acronym=ontology_acronym, status=Ontology.CLASSIFIED)
+        if len(ontologies) > 0:
+            for submission in ontologies[0].submissions.all() :
+                print('Indexing ontology %s started' % (ontologies[0].acronym))
+                index_submission(ontologies[0].pk, submission.pk)
+
+    except Exception as e:
+            print(e)

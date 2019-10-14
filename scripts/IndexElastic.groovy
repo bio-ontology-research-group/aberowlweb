@@ -45,7 +45,7 @@ import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.RestHighLevelClient
 import org.elasticsearch.index.reindex.DeleteByQueryRequest
-import org.elasticsearch.index.query.TermQueryBuilder
+import org.elasticsearch.index.query.MatchQueryBuilder
 
 import java.nio.*
 import java.nio.file.*
@@ -169,7 +169,7 @@ def createIndex(indexName, settings) {
 def deleteOntologyData(ontology) {
 	try {
 		DeleteByQueryRequest request = new DeleteByQueryRequest(ontologyIndexName, owlClassIndexName);
-		request.setQuery(new TermQueryBuilder("ontology", ontology));
+		request.setQuery(new MatchQueryBuilder("ontology", ontology));
 		response = esClient.deleteByQuery(request, RequestOptions.DEFAULT);
 		println("total=" + response.total + "|deletedDocs=" + response.deleted + "|searchRetries=" 
 			+ response.searchRetries + "|bulkRetries=" + response.bulkRetries)

@@ -46,6 +46,7 @@ import org.elasticsearch.client.RequestOptions
 import org.elasticsearch.client.RestHighLevelClient
 import org.elasticsearch.index.reindex.DeleteByQueryRequest
 import org.elasticsearch.index.query.MatchQueryBuilder
+import org.elasticsearch.common.unit.TimeValue;
 
 import java.nio.*
 import java.nio.file.*
@@ -53,7 +54,7 @@ import java.util.*
 import org.apache.logging.log4j.*
 import java.net.URL
 
-url = args[0]
+urls = args[0].split(",")
 username = args[1]
 password = args[2]
 ontologyIndexName = args[3]
@@ -61,7 +62,16 @@ owlClassIndexName = args[4]
 fileName = args[5]
 skip_embbedding = args[6]
 
-esUrl = new URL(url);
+esUrls = new ArrayList<URL>();
+hosts = new HttpHost[urls.length];
+idx=0
+
+for (String url:urls) {
+	esUrl= new URL(url) 
+	hosts[idx] = new HttpHost(esUrl.getHost(), esUrl.getPort(), esUrl.getProtocol());
+	idx++;
+}
+
 restClient = null
 
 if (!username.isEmpty() &&  !password.isEmpty()) {
@@ -70,8 +80,7 @@ if (!username.isEmpty() &&  !password.isEmpty()) {
 	credentialsProvider.setCredentials(AuthScope.ANY,
 		new UsernamePasswordCredentials(username, password));
 
-	restClient = RestClient.builder(
-		new HttpHost(esUrl.getHost(), esUrl.getPort(), esUrl.getProtocol()))
+	restClient = RestClient.builder(hosts)
 		.setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
         @Override
         public HttpAsyncClientBuilder customizeHttpClient(
@@ -170,6 +179,7 @@ def deleteOntologyData(ontology) {
 	try {
 		DeleteByQueryRequest request = new DeleteByQueryRequest(ontologyIndexName, owlClassIndexName);
 		request.setQuery(new MatchQueryBuilder("ontology", ontology));
+		request.setTimeout(new TimeValue(10 * 60000));
 		response = esClient.deleteByQuery(request, RequestOptions.DEFAULT);
 		println("total=" + response.total + "|deletedDocs=" + response.deleted + "|searchRetries=" 
 			+ response.searchRetries + "|bulkRetries=" + response.bulkRetries)

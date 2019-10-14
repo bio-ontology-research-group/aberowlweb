@@ -30,10 +30,11 @@ ABEROWL_API_URL = getattr(
     settings, 'ABEROWL_API_URL', 'http://localhost:8080/api/')
 
 es = None
+esUrl = ELASTIC_SEARCH_URL.split(",")
 if ELASTIC_SEARCH_USERNAME and ELASTIC_SEARCH_PASSWORD:
-    es = Elasticsearch([ELASTIC_SEARCH_URL], http_auth=(ELASTIC_SEARCH_USERNAME, ELASTIC_SEARCH_PASSWORD))
+    es = Elasticsearch(esUrl, http_auth=(ELASTIC_SEARCH_USERNAME, ELASTIC_SEARCH_PASSWORD))
 else :
-    es = Elasticsearch([ELASTIC_SEARCH_URL])
+    es = Elasticsearch(esUrl)
 
 def make_request(url):
     try:

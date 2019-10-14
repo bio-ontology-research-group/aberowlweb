@@ -6,7 +6,7 @@ from django.conf import settings
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'aberowlweb.settings')
-os.environ.setdefault('DJANGO_CONFIGURATION', 'ProductionCelery')
+os.environ.setdefault('DJANGO_CONFIGURATION', 'Development')
 
 configurations.setup()
 

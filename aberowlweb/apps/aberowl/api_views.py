@@ -14,6 +14,9 @@ from aberowl.models import Ontology
 from aberowl.serializers import OntologySerializer
 from elasticsearch import Elasticsearch
 
+from django.core.paginator import Paginator
+from expiringdict import ExpiringDict
+
 
 ELASTIC_SEARCH_URL = getattr(
     settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/')
@@ -28,6 +31,9 @@ ELASTIC_CLASS_INDEX_NAME = getattr(
 
 ABEROWL_API_URL = getattr(
     settings, 'ABEROWL_API_URL', 'http://localhost:8080/api/')
+
+DEFUALT_PAGE_SIZE = 10
+page_cache = ExpiringDict(max_len=100, max_age_seconds=3600)
 
 es = None
 esUrl = ELASTIC_SEARCH_URL.split(",")
@@ -254,8 +260,11 @@ class BackendAPIView(APIView):
 
     def get(self, request, format=None):
         query_string = request.GET.urlencode()
+        query = request.GET.get('query', None)
+        query_type = request.GET.get('type', None)
         ontology = request.GET.get('ontology', None)
         script = request.GET.get('script', None)
+        offset = request.GET.get('offset', None)
 
         if script is None:
             return Response(
@@ -271,11 +280,32 @@ class BackendAPIView(APIView):
                         r = requests.get(url)
                         result = r.json()
                         result['status'] = 'ok'
+                        result['total'] = result['result'].length
                         return Response(result)
                     else:
                         raise Exception('API server is down!')
                 else:
                     raise Exception('Ontology does not exist!')
+            elif ontology is None and script == 'runQuery.groovy' and query is not None and query_type is not None and offset is not None:
+                pages_key = query + ":" + query_type
+                if page_cache.get(pages_key):
+                    result = { 'status' : 'ok'}
+                    result['result'] = page_cache.get(pages_key).page(offset).object_list
+                    result['total'] = page_cache.get(pages_key).count
+                    return Response(result)
+                else :
+                    queryset = Ontology.objects.filter(nb_servers__gt=0)
+                    if queryset.exists():
+                        url = ABEROWL_API_URL + script + '?' + query_string
+                        r = requests.get(url)
+                        result = r.json()
+                        page_cache[pages_key] = Paginator(result['result'], DEFUALT_PAGE_SIZE)
+                        result['result'] = page_cache.get(pages_key).page(offset).object_list
+                        result['total'] = page_cache.get(pages_key).count
+                        result['status'] = 'ok'
+                        return Response(result)
+                    else:
+                        raise Exception('API server is down!')
             else:
                 queryset = Ontology.objects.filter(nb_servers__gt=0)
                 if queryset.exists():
@@ -283,6 +313,7 @@ class BackendAPIView(APIView):
                     r = requests.get(url)
                     result = r.json()
                     result['status'] = 'ok'
+                    result['total'] = result['result'].length
                     return Response(result)
                 else:
                     raise Exception('API server is down!')

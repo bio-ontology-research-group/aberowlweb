@@ -280,7 +280,7 @@ class BackendAPIView(APIView):
                         r = requests.get(url)
                         result = r.json()
                         result['status'] = 'ok'
-                        result['total'] = result['result'].length
+                        result['total'] = len(result['result'])
                         return Response(result)
                     else:
                         raise Exception('API server is down!')
@@ -313,7 +313,7 @@ class BackendAPIView(APIView):
                     r = requests.get(url)
                     result = r.json()
                     result['status'] = 'ok'
-                    result['total'] = result['result'].length
+                    result['total'] = len(result['result'])
                     return Response(result)
                 else:
                     raise Exception('API server is down!')

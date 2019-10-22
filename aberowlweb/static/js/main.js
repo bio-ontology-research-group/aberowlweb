@@ -141,6 +141,138 @@ class ResultsTable extends React.Component {
     }
 }
 
+class DLResultTab extends React.Component {
+
+	constructor(props) {
+		super(props);
+		var headers = props.headers ? props.headers : []
+		var dlQuery = props.dlQuery ? props.dlQuery : null
+		var query = props.query ? props.query : null
+		this.state = {
+			dlQuery: dlQuery,
+			query: query,
+			classes: [],
+			total: null,
+			per_page: 10,
+			current_page: 1,
+			headers:headers
+		}
+	}
+  
+  
+	componentDidMount() {
+	  this.executeDLQuery(1);
+	}
+
+	componentDidUpdate(props) {
+		if (props.dlQuery !== this.props.dlQuery || props.query !== this.props.query) {
+			this.setState({
+				dlQuery: this.props.dlQuery,
+				query: this.props.query
+			});
+			this.executeDLQuery(1, this.props.dlQuery, this.props.query)
+		}
+		
+	}
+  
+	executeDLQuery(pageNumber, dlQuery, query) {
+		var that = this;
+		const response = fetch(`/api/backend?script=runQuery.groovy&type=${dlQuery ? dlQuery : this.state.dlQuery}&labels=true&query=${encodeURIComponent(query ? query : this.state.query)}&offset=${pageNumber}`)
+		.then(function(response){ return response.json(); })
+		.then(function(data) {
+			that.setState({
+				classes: data.result,
+				total: data.total,
+				per_page: 10,
+				current_page: pageNumber
+			});
+		});  
+	}
+  
+	renderRow(items) {
+	const cells = items.map(
+		(item) => <td> {item} </td>);
+	return (<tr> {cells} </tr>);
+	}
+  
+	render() {
+		let classes, renderPageNumbers;
+		var n = Math.ceil(this.state.total/ this.state.per_page);
+		const pageNumbers = [];
+		if (this.state.total !== null) {
+			for (var i = this.state.current_page - 2; i <= this.state.current_page + 2; i++) {
+				if (i >= 1 && i <= n) {
+					pageNumbers.push(i);
+				}
+			}
+	
+	
+			renderPageNumbers = pageNumbers.map(number => {
+			let classes = this.state.current_page === number ? 'active' : '';
+	
+			return (
+				<span key={number} className={classes} onClick={() => this.executeDLQuery(number)}>{number}</span>
+			);
+			});
+		}
+		const paginator = (
+			<div className={'serv-page  pull-right'}>
+				<span class='first' onClick={() => this.executeDLQuery(this.state.current_page > 1 ? (this.state.current_page - 1): 1)}>&laquo;</span>
+				{renderPageNumbers}
+				<span class='last' onClick={() => this.executeDLQuery(this.state.current_page < n ? (this.state.current_page + 1): n)}>&raquo;</span>
+			</div>
+		);
+
+		const header = this.state.headers.map((item) => <th> {item} </th>);
+		
+
+		if (this.state.classes != null) {
+			classes = this.state.classes.map(item => {
+				const onto = (<a href={'/ontology/' + item.ontology }> { item.ontology } </a>);
+				const owlClass = (
+					<a href={'/ontology/' + item.ontology + '/#/Browse/' + encodeURIComponent(item.owlClass)}>
+					{item.label + '(' + item.owlClass + ')'}
+					</a>
+				);
+				if (!item.definition) item.definition = '';
+				var filterBy = item.ontology + item.label + item.definition;
+				return (
+					<tr>
+						<td>{onto}</td>
+						<td>{owlClass}</td>
+						<td>{item.definition}</td>
+						<td>{filterBy}</td>
+					</tr>
+			  	)
+			}); 
+		}
+	  	return (
+			<div class="container">
+			<div class="row">
+				<div class="col-md-8">
+				</div>
+				<div class="col-md-4">
+				{paginator}
+				</div>
+			</div>
+			<table class="table table-striped">
+				<thead> {header} </thead>
+				<tbody> {classes} </tbody>
+			</table>
+			<div class="row">
+				<div class="col-md-8">
+				</div>
+				<div class="col-md-4">
+				{paginator}
+				</div>
+			</div>
+			</div>
+		);
+
+	}
+  
+  }
+
 
 class Main extends React.Component {
 
@@ -218,13 +350,13 @@ class Main extends React.Component {
 	return (<span dangerouslySetInnerHTML={html}></span>);
     }
 
-    executeDLQuery(query, dlQuery) {
+    executeDLQuery(query, dlQuery, page) {
 	var that = this;
-	fetch('/api/backend?script=runQuery.groovy&type=' + dlQuery + '&labels=true&query=' + encodeURIComponent(query))
+	fetch('/api/backend?script=runQuery.groovy&type=' + dlQuery + '&labels=true&query=' + encodeURIComponent(query) + '&offset=' + page)
 	    .then(function(response){ return response.json(); })
 	    .then(function(data) {
 		var dlQueryResults = {
-		    headers: ['Ontology', 'OWL Class', 'Definition'], rows: []};
+		    headers: ['Ontology', 'OWL Class', 'Definition'], rows: [], total:0};
 		if (data.status == 'ok') {
 		    var rest = [];
 		    for (var i = 0; i < data['result'].length; i++) {
@@ -245,7 +377,8 @@ class Main extends React.Component {
 		    }
 		    for (var i = 0; i < rest.length; i++) {
 			dlQueryResults.rows.push(rest[i]);
-		    }
+			}
+			dlQueryResults['total'] = data['total']
 		} else {
 		    console.log('DLQuery', data);
 		}
@@ -326,8 +459,8 @@ class Main extends React.Component {
 	    });
 	});
 
-	this.executeDLQuery(query, 'subeq');
-    }
+	this.executeDLQuery(query, 'subeq', 1);
+	}
 
     renderTab(tab) {
 	var activeClass = '';
@@ -347,7 +480,8 @@ class Main extends React.Component {
 	const tabs = this.state.resultTabs.map(
 	    function(tab){
 		if (tab in that.state.results) {
-		    return [tab, that.state.results[tab].rows.length];
+			var total = that.state.results[tab].total ? that.state.results[tab].total : that.state.results[tab].rows.length;
+		    return [tab, total];
 		}
 		return [tab, 0];
 	    });
@@ -390,7 +524,6 @@ class Main extends React.Component {
 
     handleDLQueryClick(e, dlQuery) {
 	e.preventDefault();
-	this.executeDLQuery(this.state.query, dlQuery);
 	this.setState({dlQuery: dlQuery});
     }
 
@@ -400,16 +533,20 @@ class Main extends React.Component {
 	    const results = this.state.results[currentTab];
 	    const page = this.state.page;
 	    const rootURI = '#/' + this.state.query + '/' + currentTab + '/';
-	    var dlQueryButtons = (<div></div>);
+		var dlQueryButtons = (<div></div>);
+		var resultsTab=(<div></div>)
 	    if (currentTab == 'DLQuery') {
-		dlQueryButtons = this.renderDLQueryButtons();
-	    }
+			dlQueryButtons = this.renderDLQueryButtons();
+			resultsTab = (<DLResultTab dlQuery={this.state.dlQuery} query={this.state.query} headers={results.headers}/>)
+	    } else {
+			resultsTab = (<ResultsTable data={results} page={page} rootURI={rootURI} pageFunction={this.executeDLQuery}/>)
+		}
 	    return (
 		    <div class="row">
 		    {this.renderResultTabs()}
 		    {dlQueryButtons}
-		<br/>
-		    <ResultsTable data={results} page={page} rootURI={rootURI} />
+			<br/>
+		    {resultsTab}
 		    </div>
 	    );
 	}

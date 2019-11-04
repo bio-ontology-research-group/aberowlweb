@@ -72,6 +72,8 @@ def sync_obofoundry():
                     'source': Ontology.OBOFOUNDRY
                 }
             )
+            ontology.name = onto['title']
+            ontology.save()
 
             if ontology.source != Ontology.OBOFOUNDRY:
                 ontology.source = Ontology.OBOFOUNDRY

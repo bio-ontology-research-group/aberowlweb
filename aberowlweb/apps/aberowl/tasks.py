@@ -203,7 +203,7 @@ def sync_bioportal():
                 }
             )
 
-            if ontology.name != onto['name']:
+            if ontology.name != onto['name'] and ontology.source == Ontology.BIOPORTAL:
                 ontology.name = onto['name']
                 ontology.save()
                 print('Ontology %s name updated to %s' % (acronym, onto['name'],))

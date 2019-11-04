@@ -72,8 +72,10 @@ def sync_obofoundry():
                     'source': Ontology.OBOFOUNDRY
                 }
             )
-            ontology.name = onto['title']
-            ontology.save()
+            if ontology.name != onto['title']:
+                ontology.name = onto['title']
+                ontology.save()
+                print('Ontology %s name updated to %s' % (acronym, onto['title'],))
 
             if ontology.source != Ontology.OBOFOUNDRY:
                 ontology.source = Ontology.OBOFOUNDRY
@@ -200,6 +202,11 @@ def sync_bioportal():
                     'source': Ontology.BIOPORTAL
                 }
             )
+
+            if ontology.name != onto['name']:
+                ontology.name = onto['name']
+                ontology.save()
+                print('Ontology %s name updated to %s' % (acronym, onto['name'],))
 
             if ontology.source != Ontology.BIOPORTAL:
                 continue

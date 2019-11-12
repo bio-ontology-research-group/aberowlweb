@@ -19,6 +19,9 @@ from django.conf.urls.static import static
 from aberowlweb.views import HomePageView, AboutPageView
 from django.conf import settings
 from django.views.generic import TemplateView
+from rest_framework_swagger.views import get_swagger_view
+
+schema_view = get_swagger_view(title='AberOwl API')
 
 urlpatterns = [
     # url(r'^$', HomePageView.as_view(), name='home'),
@@ -27,4 +30,5 @@ urlpatterns = [
     url(r'^accounts/', include('accounts.urls')),
     url(r'^about/$', AboutPageView.as_view(), name='about'),
     url(r'^healthcheck', TemplateView.as_view(template_name='health.html')),
+    url(r'docs/', schema_view),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

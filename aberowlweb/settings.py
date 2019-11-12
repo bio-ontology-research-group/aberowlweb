@@ -56,7 +56,6 @@ class BaseConfiguration(Configuration):
         ('Maxat Kulmanov', 'coolmaksat@gmail.com'),
     ]
 
-
     # Application definition
 
     INSTALLED_APPS = [
@@ -72,11 +71,19 @@ class BaseConfiguration(Configuration):
         'allauth.account',
         'allauth.socialaccount',
         'rest_framework',
+        'rest_framework_swagger',
         'widget_tweaks',
         'aberowl',
         'snowpenguin.django.recaptcha2',
         'corsheaders',
     ]
+
+    REST_FRAMEWORK = {
+        'DEFAULT_RENDERER_CLASSES': [
+            'rest_framework.renderers.JSONRenderer',
+            'rest_framework.renderers.BrowsableAPIRenderer',
+        ]
+    }
 
     MIDDLEWARE = [
         'django.middleware.security.SecurityMiddleware',
@@ -281,6 +288,9 @@ class Production(BaseConfiguration):
         'http://10.254.145.27:8080/api/',
         'http://10.254.145.30:8080/api/']
     ABEROWL_SERVER_URL = 'http://10.254.145.9/'
+    SESSION_COOKIE_SECURE=True
+    SESSION_COOKIE_HTTPONLY=True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
 
 
 class ProductionCelery(BaseConfiguration):

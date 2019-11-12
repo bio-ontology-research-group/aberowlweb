@@ -1,9 +1,14 @@
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
+from rest_framework import schemas
+from urllib import parse
+
+import coreapi
 import requests
 import json
 import itertools
+
 from django.http import HttpResponse
 from django.conf import settings
 from collections import defaultdict
@@ -66,6 +71,23 @@ def search(indexName, query_data):
 
 class SearchClassesAPIView(APIView):
 
+    schema = schemas.ManualSchema(fields=[
+                    coreapi.Field(
+                        name='query',
+                        location='query',
+                        required=True,
+                        type='string',
+                        description='query may contain text that contains name of the class or part of class name'
+                    ),
+                    coreapi.Field(
+                        name='ontology',
+                        location='query',
+                        required=True,
+                        type='string',
+                        description='ontology acronym to search classes in a given ontology'
+                    )
+                ], description="API for searching a class in an ontology for given text which can be full name of the class or a part of it")
+
     def get(self, request, format=None):
         query = request.GET.get('query', None)
         ontology = request.GET.get('ontology', None)
@@ -75,11 +97,11 @@ class SearchClassesAPIView(APIView):
         if query is None:
             return Response(
                 {'status': 'error',
-                 'message': 'Please provide query parameter!'})
+                 'message': 'query is required'})
         if ontology is None:
             return Response(
                 {'status': 'error',
-                 'message': 'Please provide ontology parameter!'})
+                 'message': 'ontology is required'})
         try:
             query_list = [
                 { 'match': { 'ontology': ontology } },
@@ -103,6 +125,31 @@ class SearchClassesAPIView(APIView):
 
 class MostSimilarAPIView(APIView):
 
+    schema = schemas.ManualSchema(description="Search API for finding most similar classes of a given class in an ontology",
+                fields=[
+                    coreapi.Field(
+                        name='ontology',
+                        location='query',
+                        required=True,
+                        type='string',
+                        description='ontology acronym'
+                    ),
+                    coreapi.Field(
+                        name='class',
+                        location='query',
+                        required=True,
+                        type='string',
+                        description='name of the class'
+                    ),
+                    coreapi.Field(
+                        name='size',
+                        location='query',
+                        required=False,
+                        type='string',
+                        description='number of most similar classes to be fetched. By default, the size is 50.'
+                    )
+                ])
+
     def get(self, request, format=None):
         cls = request.GET.get('class', None)
         size = request.GET.get('size', 50)
@@ -113,11 +160,11 @@ class MostSimilarAPIView(APIView):
         if cls is None:
             return Response(
                 {'status': 'error',
-                 'message': 'Please provide class parameter!'})
+                 'message': 'class is required'})
         if ontology is None:
             return Response(
                 {'status': 'error',
-                 'message': 'Please provide ontology parameter!'})
+                 'message': 'ontology is required'})
         try:
             size = int(size)
             query_list = [
@@ -168,13 +215,24 @@ class MostSimilarAPIView(APIView):
     
 class QueryOntologiesAPIView(APIView):
 
+    schema = schemas.ManualSchema(description="Search API for ontologies in aberowl repository for given text.",
+                fields=[
+                    coreapi.Field(
+                        name='query',
+                        location='query',
+                        required=True,
+                        type='string',
+                        description='query may contain name of the ontology, acronym of the ontology or text part of ontology description'
+                    )
+                ])
+
     def get(self, request, format=None):
         query = request.GET.get('query', None)
 
         if query is None:
             return Response(
                 {'status': 'error',
-                 'message': 'Please provide query parameter!'})
+                 'message': 'query field is required'})
         
         fields = ['name', 'ontology', 'description']
         query_list = []
@@ -196,6 +254,24 @@ class QueryOntologiesAPIView(APIView):
 
 class QueryNamesAPIView(APIView):
 
+    schema = schemas.ManualSchema(description="Search API for ontology classes in aberowl repository for given search criteria.",
+                fields=[
+                    coreapi.Field(
+                        name='query',
+                        location='query',
+                        required=True,
+                        type='string',
+                        description='query may contain text that contains name, synonym, and oboid of the class'
+                    ),
+                    coreapi.Field(
+                        name='ontology',
+                        location='query',
+                        required=False,
+                        type='string',
+                        description='ontology acronym to search classes in a given ontology'
+                    )
+                ])
+
     def get(self, request, format=None):
         
         query = request.GET.get('query', None)
@@ -204,14 +280,6 @@ class QueryNamesAPIView(APIView):
             return Response(
                 {'status': 'error',
                  'message': 'Please provide query parameter!'})
-    
-        fields = [
-            ('oboid', 10000),
-            ('label', 1000),
-            ('synonym', 100),
-            ('ontology', 75),
-            ('definition', 3),
-        ]
 
         query_list = []
 
@@ -253,6 +321,44 @@ class QueryNamesAPIView(APIView):
 
 class BackendAPIView(APIView):
 
+    schema = schemas.ManualSchema(description="Multi function API for executing different functions on aberowl knowledge graph including executing DL query, finding root class in an ontology and getting object properties of an ontology",
+                fields=[
+                    coreapi.Field(
+                        name='script',
+                        location='query',
+                        required=True,
+                        type='string',
+                        description='functions to be performed on aberowl knowledge base include findRoot.groovy, runQuery.groovy and getObjectProperties.groovy'
+                    ),
+                    coreapi.Field(
+                        name='query',
+                        location='query',
+                        required=False,
+                        type='string',
+                        description='DL query to be executed'
+                    ),
+                    coreapi.Field(
+                        name='type',
+                        location='query',
+                        required=False,
+                        type='string',
+                        description='Type of DL query includes subclass, subeq, equivalent, superclass and supeq'
+                    ),
+                    coreapi.Field(
+                        name='ontology',
+                        location='query',
+                        required=False,
+                        type='string',
+                        description='ontology acronym'
+                    ),
+                    coreapi.Field(
+                        name='offset',
+                        location='query',
+                        required=False,
+                        type='string',
+                        description='page number if given will return a page with 10 results by default'
+                    )
+                ])
 
     def __init__(self, *args, **kwargs):
         super(BackendAPIView, self).__init__(*args, **kwargs)
@@ -269,7 +375,7 @@ class BackendAPIView(APIView):
         if script is None:
             return Response(
                 {'status': 'error',
-                 'message': 'Please provide script parameter!'})
+                 'message': 'script is required'})
         try: 
             if ontology is not None:
                 queryset = Ontology.objects.filter(acronym=ontology)
@@ -320,16 +426,72 @@ class BackendAPIView(APIView):
         except Exception as e:
             return Response({'status': 'exception', 'message': str(e)})
         
-                
 
 class OntologyListAPIView(ListAPIView):
+    """
+    get: Returns the list of all ontologies in aberowl
+    """
 
     queryset = Ontology.objects.all()
     serializer_class = OntologySerializer
-    
 
+class CustomClassInfoAPISchema(schemas.AutoSchema):
+    def __init__(self, description=''):
+        self._description=description
+    
+    """
+    Overrides `get_link()` to provide Custom Behavior X
+    """
+    def get_link(self, path, method, base_url):
+        # link = super().get_link(path, method, base_url)
+        encoding=None
+        fields=[]
+        if method=='GET':
+            fields = [
+                    coreapi.Field(
+                        name='ontology',
+                        location='query',
+                        required=True,
+                        type='string',
+                    ),
+                    coreapi.Field(
+                        name='iri',
+                        location='query',
+                        required=True,
+                        type='string'
+                    )
+                ]
+        elif method=='POST':
+            fields = [
+                    coreapi.Field(
+                        name='ontology',
+                        location='form',
+                        required=True,
+                        type='string'
+                    ),
+                    coreapi.Field(
+                        name='iri',
+                        location='form',
+                        required=True,
+                        type='string'
+                    )
+                ]
+            encoding = "application/x-www-form-urlencoded"
+        if base_url and path.startswith('/'):
+            path = path[1:]
+
+        return coreapi.Link(
+            url=parse.urljoin(base_url, path),
+            action=method.lower(),
+            encoding=encoding,
+            fields=fields,
+            description=self._description
+        )
+        
 class ClassInfoAPIView(APIView):
 
+    schema = CustomClassInfoAPISchema("""Search API for ontology class objects in aberowl based on ontology acronym and 
+        class iris. Returns a list of classes for given ontology and class iris""")
 
     def __init__(self, *args, **kwargs):
         super(ClassInfoAPIView, self).__init__(*args, **kwargs)
@@ -350,7 +512,7 @@ class ClassInfoAPIView(APIView):
         if ontology is None:
             return Response(
                 {'status': 'error',
-                 'message': 'Please provide ontology!'})
+                 'message': 'ontoglogy is required'})
         if iris is None:
             return Response(
                 {'status': 'error',
@@ -386,6 +548,16 @@ class ClassInfoAPIView(APIView):
             return Response({'status': 'exception', 'message': str(e)})
         
 class SparqlAPIView(APIView):
+    schema = schemas.ManualSchema(description="Executes the given aberowl SPARQL query and returns the results of the query in json format",
+                fields=[
+                    coreapi.Field(
+                        name='query',
+                        location='query',
+                        required=True,
+                        type='string',
+                        description='the aberowl SPARQL query field'
+                    )
+                ])
 
     def get(self, request, format=None):
         query = request.GET.get('query', None)
@@ -398,7 +570,7 @@ class SparqlAPIView(APIView):
         if query is None:
             return Response(
                 {'status': 'error',
-                 'message': 'Please provide query element!'})
+                 'message': 'query is required'})
         try:
             url = ABEROWL_API_URL + 'sparql.groovy'
             print("URL" + url)

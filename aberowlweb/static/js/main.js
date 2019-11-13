@@ -390,6 +390,7 @@ class Main extends React.Component {
 
 
     executeQuery(query) {
+	this.setState({inputQuery: query});
 	var that = this;
 	Promise.all([
 	    fetch('/api/querynames?query=' + encodeURIComponent(query))
@@ -560,16 +561,15 @@ class Main extends React.Component {
 	    <div class="row">
 	        <p>
 		    Type any term or phrase to search the AberOWL ontology
-		    repository for a class that is described using the phrase
-		    (try <a href="#/pancreas">pancreas</a>,
-		     <a href="#/PATO:0001234">PATO:0001234</a>,
-		     <a href="#/sugar binding go" >sugar binding GO</a>),
-		    for ontologies that use the phrase in their description
-		    (try  <a href="#/integrated upper ontology">integrated upper ontology</a>,
-		     <a href="#/infectious disease">infectious disease</a>,
-		     <a href="#/GFO">GFO</a> or <a href="#/pathology">pathology</a>),
-		    or perform a Description Logic query across all ontologies in AberOWL
-		    (try <a href="#/'part of' some 'apoptotic process'">
+		    repository for a class with label (try <a href="#/pancreas">pancreas</a>), 
+			class description containing searched phrase or part of it (try <a href="#/sugar binding go" >sugar binding GO</a>),
+		    using class OBO ID (try <a href="#/PATO:0001234">PATO:0001234</a>),
+		    for ontologies by acronym (try  <a href="#/ECO/Ontologies">ECO</a>) or 
+			by phrase part of ontology description (try <a href="#/integrated upper ontology/Ontologies">integrated upper ontology</a>,
+		     <a href="#/infectious disease/Ontologies">infectious disease</a>,
+		     or <a href="#/pathology/Ontologies">pathology</a>),
+		    or perform a Description Logic query
+		    (try <a href="#/'part of' some 'apoptotic process'/DLQuery">
 		     'part of' some 'apoptotic process'</a> ):
 	        </p>
 	    </div>

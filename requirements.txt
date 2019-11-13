@@ -12,7 +12,7 @@ django-cors-headers==2.4.0
 django-recaptcha2==1.0.3
 django-rest-framework==0.1.0
 django-widget-tweaks==1.4.1
-djangorestframework==3.7.0
+djangorestframework==3.9.1
 gevent==1.4
 greenlet==0.4.14
 idna==2.6

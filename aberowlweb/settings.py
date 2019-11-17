@@ -94,6 +94,7 @@ class BaseConfiguration(Configuration):
         'django.contrib.auth.middleware.AuthenticationMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        'aberowl.dl_query_logger.DLQueryLogger'
     ]
 
     ROOT_URLCONF = 'aberowlweb.urls'
@@ -273,7 +274,8 @@ class BaseConfiguration(Configuration):
     ELASTIC_SEARCH_PASSWORD=config['elasticsearch']['ELASTIC_SEARCH_PASSWORD']
     ELASTIC_ONTOLOGY_INDEX_NAME = config['elasticsearch']['ELASTIC_ONTOLOGY_INDEX_NAME']
     ELASTIC_CLASS_INDEX_NAME = config['elasticsearch']['ELASTIC_CLASS_INDEX_NAME']
-
+    
+    DLQUERY_LOGS_FOLDER='logs'
 
 class Development(BaseConfiguration):
     pass

@@ -19,4 +19,8 @@ urlpatterns = [
         api_views.MostSimilarAPIView.as_view(), name='api-mostsimilar'),
     url(r'^sparql/$',
         api_views.SparqlAPIView.as_view(), name='api-sparql'),
+    url(r'^dlquery/$',
+        api_views.DLQueryAPIView.as_view(), name='api-dlquery'),
+    url(r'^dlquery/logs$',
+        api_views.DLQueryLogsDownloadAPIView.as_view(), name='api-dlquery-logs')
 ]

@@ -15,6 +15,7 @@ from collections import defaultdict
 from gevent.pool import Pool
 import time
 
+from aberowlweb.apps.aberowl.ont_server_request_processor import OntServerRequestProcessor
 from aberowl.models import Ontology
 from aberowl.serializers import OntologySerializer
 from elasticsearch import Elasticsearch
@@ -37,8 +38,12 @@ ELASTIC_CLASS_INDEX_NAME = getattr(
 ABEROWL_API_URL = getattr(
     settings, 'ABEROWL_API_URL', 'http://localhost:8080/api/')
 
+LOG_FOLDER = getattr(
+    settings, 'DLQUERY_LOGS_FOLDER', 'logs')
+
 DEFUALT_PAGE_SIZE = 10
 page_cache = ExpiringDict(max_len=100, max_age_seconds=3600)
+ont_server = OntServerRequestProcessor()
 
 es = None
 esUrl = ELASTIC_SEARCH_URL.split(",")
@@ -578,3 +583,56 @@ class SparqlAPIView(APIView):
             return HttpResponse(r.text)
         except Exception as e:
             return Response({'status': 'exception', 'message': str(e)})
+
+
+class DLQueryAPIView(APIView):
+
+    def get(self, request, format=None):
+        query = request.GET.get('query', None)
+        query_type = request.GET.get('type', None)
+        ontology = request.GET.get('ontology', None)
+        axioms = request.GET.get('axioms', None)
+        labels = request.GET.get('labels', None)
+        offset = request.GET.get('offset', None)
+
+        if query is None:
+            return Response({'status': 'error', 'message': 'query is required'})
+        if query_type is None:
+            return Response({'status': 'error', 'message': 'type is required'})
+
+        try: 
+            if ontology is None and offset is not None:
+                pages_key = query + ":" + query_type
+                if page_cache.get(pages_key):
+                    result = { 'status' : 'ok'}
+                    result['result'] = page_cache.get(pages_key).page(offset).object_list
+                    result['total'] = page_cache.get(pages_key).count
+                    return Response(result)
+                
+                else:
+                    result = ont_server.execute_dl_query(query, query_type, None, axioms, labels)
+                    page_cache[pages_key] = Paginator(result['result'], DEFUALT_PAGE_SIZE)
+                    result['result'] = page_cache.get(pages_key).page(offset).object_list
+                    result['total'] = page_cache.get(pages_key).count
+                    result['status'] = 'ok'
+                    return Response(result)
+            else:     
+                result = ont_server.execute_dl_query(query, query_type, ontology, axioms, labels)
+                result['status'] = 'ok'
+                result['total'] = len(result['result'])
+                return Response(result)
+                
+        except Exception as e:
+            return Response({'status': 'exception', 'message': str(e)})
+        
+
+class DLQueryLogsDownloadAPIView(APIView):
+
+    def get(self, request, format=None):
+        filename = 'aberowl-dl-logs.txt'
+        file_path = '{log_folder}/{filename}'.format(log_folder=LOG_FOLDER, filename=filename)
+        FilePointer = open(file_path,"r")
+        response = HttpResponse(FilePointer,content_type='text/plain')
+        response['Content-Disposition'] = 'attachment; filename=' + filename
+
+        return response

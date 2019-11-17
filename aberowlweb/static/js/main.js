@@ -177,7 +177,7 @@ class DLResultTab extends React.Component {
   
 	executeDLQuery(pageNumber, dlQuery, query) {
 		var that = this;
-		const response = fetch(`/api/backend?script=runQuery.groovy&type=${dlQuery ? dlQuery : this.state.dlQuery}&labels=true&query=${encodeURIComponent(query ? query : this.state.query)}&offset=${pageNumber}`)
+		const response = fetch(`/api/dlquery?type=${dlQuery ? dlQuery : this.state.dlQuery}&labels=true&query=${encodeURIComponent(query ? query : this.state.query)}&offset=${pageNumber}`)
 		.then(function(response){ return response.json(); })
 		.then(function(data) {
 			that.setState({
@@ -352,7 +352,7 @@ class Main extends React.Component {
 
     executeDLQuery(query, dlQuery, page) {
 	var that = this;
-	fetch('/api/backend?script=runQuery.groovy&type=' + dlQuery + '&labels=true&query=' + encodeURIComponent(query) + '&offset=' + page)
+	fetch('/api/dlquery?type=' + dlQuery + '&labels=true&query=' + encodeURIComponent(query) + '&offset=' + page)
 	    .then(function(response){ return response.json(); })
 	    .then(function(data) {
 		var dlQueryResults = {

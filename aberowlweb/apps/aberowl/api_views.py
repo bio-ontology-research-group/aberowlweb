@@ -303,7 +303,7 @@ class QueryNamesAPIView(APIView):
             query_list.append({ 'match': { 'ontology': ontology } })
 
         f_query = {
-            'query': { 'bool': { 'must': query_list } },
+            'query': { 'bool': { 'should': query_list } },
             '_source': {'excludes': ['embedding_vector',]},
             'from': 0,
             'size': 100}

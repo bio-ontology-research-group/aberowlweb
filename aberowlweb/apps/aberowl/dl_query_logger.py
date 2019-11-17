@@ -44,7 +44,6 @@ def DLQueryLogger(get_response):
         response = get_response(request)
         request_url = request.get_full_path()
         query = request.GET.get('query', None)
-        print(request_url)
         if '/api/dlquery' not in request_url:
             return response
 

@@ -10,6 +10,7 @@ import json
 import itertools
 
 from django.http import HttpResponse
+from django.http import HttpResponseNotFound
 from django.conf import settings
 from collections import defaultdict
 from gevent.pool import Pool
@@ -631,8 +632,10 @@ class DLQueryLogsDownloadAPIView(APIView):
     def get(self, request, format=None):
         filename = 'aberowl-dl-logs.txt'
         file_path = '{log_folder}/{filename}'.format(log_folder=LOG_FOLDER, filename=filename)
-        FilePointer = open(file_path,"r")
-        response = HttpResponse(FilePointer,content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename=' + filename
-
-        return response
+        try :
+            FilePointer = open(file_path,"r")
+            response = HttpResponse(FilePointer,content_type='text/plain')
+            response['Content-Disposition'] = 'attachment; filename=' + filename
+            return response
+        except FileNotFoundError as e:
+            return HttpResponseNotFound()

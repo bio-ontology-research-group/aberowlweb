@@ -292,16 +292,17 @@ class QueryNamesAPIView(APIView):
         omap = {}
         omap['dis_max'] = {}
         queries = [
-            {'match': { 'oboid' : { 'query': query, 'boost': 10000 }}},
-            {'match': { 'label' : { 'query': query, 'boost': 1000 }}},
-            {'match': { 'synonym' : { 'query': query, 'boost': 100 }}},
-            {'match': { 'ontology' : { 'query': query, 'boost': 100 }}},
-            {'match': { 'definition' : { 'query': query, 'boost': 10 }}},
+            {'match': { 'oboid' : { 'query': query, 'boost': 150 }}},
+            {'match': { 'label' : { 'query': query, 'boost': 100 }}},
+            {'match': { 'synonym' : { 'query': query, 'boost': 50 }}},
+            {'match': { 'definition' : { 'query': query, 'boost': 30 }}},
         ]
         omap['dis_max']['queries'] = queries
         query_list.append(omap)
         if ontology is not None:
-            query_list.append({ 'match': { 'ontology': ontology } })
+            query_list.append({ 'match': { 'ontology': ontology, "boost":500 } })
+        else:
+            query_list.append({ 'terms': { 'ontology' : query.lower().split(), 'boost': 150 }})
 
         f_query = {
             'query': { 'bool': { 'should': query_list } },

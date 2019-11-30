@@ -290,9 +290,9 @@ class Production(BaseConfiguration):
         'http://10.254.145.27:8080/api/',
         'http://10.254.145.30:8080/api/']
     ABEROWL_SERVER_URL = 'http://10.254.145.9/'
-    SESSION_COOKIE_SECURE=True
-    SESSION_COOKIE_HTTPONLY=True
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
+    # SESSION_COOKIE_SECURE=True
+    # SESSION_COOKIE_HTTPONLY=True
+    # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
 
 
 class ProductionCelery(BaseConfiguration):

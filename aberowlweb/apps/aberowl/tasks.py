@@ -263,7 +263,7 @@ def sync_bioportal():
                 print('Classifying ontology %s failed!' % (acronym,))
 
             if submission.classifiable:
-                index_submission(ontology.pk, submission.pk).delay()
+                index_submission(ontology.pk, submission.pk)
             
         except Exception as e:
             print(acronym, e)

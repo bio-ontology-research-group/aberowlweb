@@ -24,6 +24,9 @@ from elasticsearch import Elasticsearch
 from django.core.paginator import Paginator
 from expiringdict import ExpiringDict
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 ELASTIC_SEARCH_URL = getattr(
     settings, 'ELASTIC_SEARCH_URL', 'http://localhost:9200/')
@@ -287,28 +290,24 @@ class QueryNamesAPIView(APIView):
                 {'status': 'error',
                  'message': 'Please provide query parameter!'})
 
-        query_list = []
-
-        omap = {}
-        omap['dis_max'] = {}
         queries = [
             {'match': { 'oboid' : { 'query': query, 'boost': 150 }}},
             {'match': { 'label' : { 'query': query, 'boost': 100 }}},
             {'match': { 'synonym' : { 'query': query, 'boost': 50 }}},
             {'match': { 'definition' : { 'query': query, 'boost': 30 }}},
         ]
-        omap['dis_max']['queries'] = queries
-        query_list.append(omap)
         if ontology is not None:
-            query_list.append({ 'match': { 'ontology': ontology, "boost":500 } })
+            queries.append({ 'match': { 'ontology': ontology, "boost":500 } })
         else:
-            query_list.append({ 'terms': { 'ontology' : query.lower().split(), 'boost': 150 }})
+            queries.append({ 'terms': { 'ontology' : query.lower().split(), 'boost': 150 }})
 
         f_query = {
-            'query': { 'bool': { 'should': query_list } },
+            'query': { 'bool': { 'should': queries } },
             '_source': {'excludes': ['embedding_vector',]},
             'from': 0,
             'size': 100}
+            
+        logger.info("Executing query:" + str(f_query))
 
         result = search(ELASTIC_CLASS_INDEX_NAME, f_query)
         data = defaultdict(list)

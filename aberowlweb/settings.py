@@ -168,6 +168,53 @@ class BaseConfiguration(Configuration):
         },
     ]
 
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'console': {
+                'format': '%(name)-12s %(levelname)-2s %(message)s'
+            },
+            'file': {
+                'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'
+            }
+        },
+        'handlers': {
+            'file': {
+                'level': 'DEBUG',
+                'class': 'logging.FileHandler',
+                'filename': '/tmp/aberowl.log',
+                'formatter': 'file'
+            },
+            'console': {
+                'class': 'logging.StreamHandler',
+                'formatter': 'console'
+            }
+        },
+        'loggers': {
+            'django': {
+                'handlers': ['file', 'console'],
+                'level': 'DEBUG',
+                'propagate': True,
+            },
+            'aberowlweb': {
+                'handlers': ['file', 'console'],
+                'level': 'DEBUG',
+                'propagate': True,
+            },
+            'aberowl': {
+                'handlers': ['file', 'console'],
+                'level': 'DEBUG',
+                'propagate': True,
+            },
+            'account': {
+                'handlers': ['file', 'console'],
+                'level': 'DEBUG',
+                'propagate': True,
+            }
+        },
+    }
+
 
     # Internationalization
     # https://docs.djangoproject.com/en/1.11/topics/i18n/
@@ -241,7 +288,7 @@ class BaseConfiguration(Configuration):
 
     # AberOWL setttings
     ABEROWL_API_URL = 'http://localhost:8080/api/'
-    ABEROWL_SERVER_URL = 'http://localhost/'
+    ABEROWL_SERVER_URL = 'http://localhost:8000/'
     
     ABEROWL_API_WORKERS = [
         'http://localhost:8080/api/']

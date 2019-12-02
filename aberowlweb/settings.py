@@ -192,11 +192,11 @@ class BaseConfiguration(Configuration):
             }
         },
         'loggers': {
-            'django': {
-                'handlers': ['file', 'console'],
-                'level': 'DEBUG',
-                'propagate': True,
-            },
+            # 'django': {
+            #     'handlers': ['file'],
+            #     'level': 'DEBUG',
+            #     'propagate': True,
+            # },
             'aberowlweb': {
                 'handlers': ['file', 'console'],
                 'level': 'DEBUG',

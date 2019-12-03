@@ -27,7 +27,7 @@ def managers = application.managers
 
 try {
     def response = queryEngine.expandAndExecQuery(managers, query)
-    print response;
+    print new JsonBuilder(response).toString() 
 } catch(java.lang.IllegalArgumentException e) {
     response.setStatus(400)
     print new JsonBuilder([ 'error': true, 'message': 'Invalid Sparql query' ]).toString() 

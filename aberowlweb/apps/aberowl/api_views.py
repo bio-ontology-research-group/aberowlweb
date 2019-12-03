@@ -12,6 +12,7 @@ import itertools
 from django.http import HttpResponse
 from django.http import HttpResponseNotFound
 from django.conf import settings
+from django.shortcuts import redirect
 from collections import defaultdict
 from gevent.pool import Pool
 import time
@@ -562,26 +563,48 @@ class SparqlAPIView(APIView):
                         required=True,
                         type='string',
                         description='the aberowl SPARQL query field'
+                    ),
+                    coreapi.Field(
+                        name='result_format',
+                        location='query',
+                        required=True,
+                        type='string',
+                        description='result format for the aberowl SPARQL query'
                     )
                 ])
 
     def get(self, request, format=None):
         query = request.GET.get('query', None)
+        res_format = request.GET.get('result_format', None)
         try:
-            return self.process_query(query)
+            return self.process_query(query, res_format)
         except KeyError:
             raise Exception("Malformed data!")
 
-    def process_query(self, query):
+    def process_query(self, query, res_format):
         if query is None:
             return Response(
                 {'status': 'error',
                  'message': 'query is required'})
+        if res_format is None:
+            return Response(
+                {'status': 'error',
+                 'message': 'result format is required'})
         try:
             url = ABEROWL_API_URL + 'sparql.groovy'
-            print("URL" + url)
-            r = requests.get(url, params = {'query': query})
-            return HttpResponse(r.text)
+            logger.debug("URL:" + url)
+            response = requests.get(url, params = {'query': query})
+            if response.status_code == 400:
+                return HttpResponse(response.text)
+            if response.status_code == 200:
+                content = response.json()
+                query_url="{endpoint}?query={query}&format={res_format}&timeout=0&debug=on&run={run}"\
+                    .format(endpoint=content['endpoint'], query=parse.quote(content['query']), res_format=parse.quote(res_format), 
+                    run=parse.quote('Run Query'))
+                
+                logger.debug("redirect to:" + query_url)
+                response = redirect(query_url)
+                return response
         except Exception as e:
             return Response({'status': 'exception', 'message': str(e)})
 

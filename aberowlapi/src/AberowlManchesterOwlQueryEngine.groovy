@@ -48,24 +48,25 @@ public class AberowlManchesterOwlQueryEngine {
         }
 
         println("Expanded Sparql: " + queryString)  
-        return executeSparql(query, queryString);
+        return ["query": queryString, "endpoint": query.sparqlServiceUrl];
+        // return executeSparql(query, queryString);
     }
 
-    private def executeSparql(AberowlManchesterOwlQuery query, String sparql) {
-        SPARQLRepository repo = new SPARQLRepository(query.sparqlServiceUrl);
-        repo.initialize();
-        RepositoryConnection conn;
-        try {
-            conn = repo.getConnection();
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, sparql);
-            def out = new ByteArrayOutputStream();
-            TupleQueryResultHandler jsonWriter = new SPARQLResultsJSONWriter(out);
-			tupleQuery.evaluate(jsonWriter);
-            return out.toString("UTF-8")
-        } finally {
-            conn.close();
-        }
-    }
+    // private def executeSparql(AberowlManchesterOwlQuery query, String sparql) {
+    //     SPARQLRepository repo = new SPARQLRepository(query.sparqlServiceUrl);
+    //     repo.initialize();
+    //     RepositoryConnection conn;
+    //     try {
+    //         conn = repo.getConnection();
+    //         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, sparql);
+    //         def out = new ByteArrayOutputStream();
+    //         TupleQueryResultHandler jsonWriter = new SPARQLResultsJSONWriter(out);
+	// 		tupleQuery.evaluate(jsonWriter);
+    //         return out.toString("UTF-8")
+    //     } finally {
+    //         conn.close();
+    //     }
+    // }
 
     private def executeQuery(def managers, AberowlManchesterOwlQuery query) {
         if (query.getOntologyIri() != null && !query.getOntologyIri().isEmpty()) {

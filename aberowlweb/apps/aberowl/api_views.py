@@ -618,7 +618,8 @@ class DLQueryAPIView(APIView):
         axioms = request.GET.get('axioms', None)
         labels = request.GET.get('labels', None)
         offset = request.GET.get('offset', None)
-
+        direct = request.GET.get('direct', True)
+        
         if query is None:
             return Response({'status': 'error', 'message': 'query is required'})
         if query_type is None:
@@ -641,7 +642,7 @@ class DLQueryAPIView(APIView):
                     result['status'] = 'ok'
                     return Response(result)
             else:     
-                result = ont_server.execute_dl_query(query, query_type, ontology, axioms, labels)
+                result = ont_server.execute_dl_query(query, query_type, ontology, axioms, labels, direct)
                 result['status'] = 'ok'
                 result['total'] = len(result['result'])
                 return Response(result)

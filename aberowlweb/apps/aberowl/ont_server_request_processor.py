@@ -34,9 +34,9 @@ class OntServerRequestProcessor:
         return self.__execute_request(url, RequestType.LIST_OBJ_PROPS.value, urllib.urlencode(query_string))
 
 
-    def execute_dl_query(self, query, query_type, ontology_acronym=None, axioms=None, labels=None):
+    def execute_dl_query(self, query, query_type, ontology_acronym=None, axioms=None, labels=None, direct=True):
         url = None
-        query_string = { 'query': query, 'type': query_type, 'axioms': axioms, 'labels': labels }
+        query_string = { 'query': query, 'type': query_type, 'axioms': axioms, 'labels': labels, 'direct': direct }
         if ontology_acronym is not None:
             queryset = Ontology.objects.filter(acronym=ontology_acronym)
             if queryset.exists():

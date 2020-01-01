@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 class RequestType(Enum):
     DL_QUERY = "runQuery.groovy"
     FIND_ROOT = "findRoot.groovy"
-    LIST_OBJ_PROPS = "getObjectProperties.groovy"
+    FIND_OBJ_PROPS = "getObjectProperties.groovy"
+    FIND_INSTANCES = "findInstances.groovy"
 
 class OntServerRequestProcessor:
 
@@ -24,17 +25,25 @@ class OntServerRequestProcessor:
         ontology = self.__load_ontology(ontology_acronym)
         url = ontology.get_api_url()
         query_string = { 'query': owl_class, 'ontology': ontology_acronym }
-        return self.__execute_request(url, RequestType.FIND_ROOT.value, urllib.urlencode(query_string))
+        return self.__execute_request(url, RequestType.FIND_ROOT.value, urllib.parse.urlencode(query_string))
 
                 
-    def find_ontology_object_properties(self, ont_property, ontology_acronym):
+    def find_ontology_object_properties(self, ontology_acronym, ont_property = None):
         ontology = self.__load_ontology(ontology_acronym)
         url = ontology.get_api_url()
-        query_string = { 'query': ont_property, 'ontology': ontology_acronym }
-        return self.__execute_request(url, RequestType.LIST_OBJ_PROPS.value, urllib.urlencode(query_string))
+        query_string = { 'ontology': ontology_acronym }
+        if ont_property:
+            query_string['property'] = ont_property
+        return self.__execute_request(url, RequestType.FIND_OBJ_PROPS.value, urllib.parse.urlencode(query_string))
 
 
-    def execute_dl_query(self, query, query_type, ontology_acronym=None, axioms=None, labels=None, direct=True):
+    def find_by_ontology_and_class(self, ontology_acronym, class_iri):
+        ontology = self.__load_ontology(ontology_acronym)
+        url = ontology.get_api_url()
+        query_string = { 'ontology': ontology_acronym, 'class_iri': class_iri }
+        return self.__execute_request(url, RequestType.FIND_INSTANCES.value, urllib.parse.urlencode(query_string))
+
+    def execute_dl_query(self, query, query_type, ontology_acronym=None, axioms=None, labels=None):
         url = None
         query_string = { 'query': query, 'type': query_type, 'axioms': axioms, 'labels': labels, 'direct': direct }
         if ontology_acronym is not None:

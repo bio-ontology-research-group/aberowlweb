@@ -9,7 +9,7 @@ import requests
 import json
 import itertools
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.http import HttpResponseNotFound
 from django.conf import settings
 from django.shortcuts import redirect
@@ -603,7 +603,7 @@ class SparqlAPIView(APIView):
                     run=parse.quote('Run Query'))
                 
                 logger.debug("redirect to:" + query_url)
-                response = redirect(query_url)
+                response = HttpResponseRedirect(redirect_to=query_url)
                 return response
         except Exception as e:
             return Response({'status': 'exception', 'message': str(e)})

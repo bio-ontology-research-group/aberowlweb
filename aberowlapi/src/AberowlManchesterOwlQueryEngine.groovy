@@ -11,6 +11,8 @@ import org.eclipse.rdf4j.query.TupleQuery;
 
 import java.io.ByteArrayOutputStream;
 
+import groovyx.gpars.GParsPool;
+
 /**
  * Aberowl manchester owl query engine process the query and retrieve 
  * results from a Sparql endpoint provided in query itself. Query processing
@@ -69,7 +71,7 @@ public class AberowlManchesterOwlQueryEngine {
     // }
 
     private def executeQuery(def managers, AberowlManchesterOwlQuery query) {
-        if (query.getOntologyIri() != null && !query.getOntologyIri().isEmpty()) {
+        if (query.getOntologyIri() != null && !query.getOntologyIri().isEmpty() && managers[query.getOntologyIri()] != null) {
             def out = managers[query.getOntologyIri()].runQuery(query.query, query.queryType, false, true, false)
             return out;
         } else {

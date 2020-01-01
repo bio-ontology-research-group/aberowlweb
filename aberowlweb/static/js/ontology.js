@@ -29,7 +29,8 @@ class Ontology extends React.Component {
 	    simResults: [],
 	    search: '',
 	    searchResults: [],
-	    searchResultsShow: false,
+		searchResultsShow: false,
+		format: 'text/html'
 	};
     }
 
@@ -448,33 +449,29 @@ class Ontology extends React.Component {
 	}
 
     renderSPARQL() {
-		var resultDisplay = '';
-		if (this.state.sparqlResults) {
-			const fields = this.state.sparqlResults.head.vars;
-			const header = fields.map(
-				(item) => <th class="padding-8">{ item }</th>);
+		const formats = [
+			{name: 'HTML',  format:'text/html'},
+			{name: 'XML',  format:'application/sparql-results+xml'},
+			{name: 'JSON',  format:'application/sparql-results+json'},
+			{name: 'Javascript',  format:'application/javascript'},
+			{name: 'Turtle',  format:'text/turtle'},
+			{name: 'RDF/XML',  format:'application/rdf+xml'},
+			{name: 'N-Triples',  format:'text/plain'},
+			{name: 'CSV',  format:'text/csv'},
+			{name: 'TSV',  format:'text/tab-separated-values'}
+		];
 
-			const content = this.state.sparqlResults.results.bindings.map((item) =>
-					<tr>
-						{ Object.keys(item).map(key => <td>{ item[key].value }</td>) }
-					</tr>
-				);
-			resultDisplay = (	
-					<table class="table table-striped table-bordered">
-					<thead>{ header }</thead>
-					<tbody>
-					{ content }
-						</tbody>
-					</table> 
-				);
-		} else if (this.state.errorMessage) {
-			resultDisplay = (
-				<div class="alert alert-danger alert-dismissible show">
-					<strong>Error:</strong> {this.state.errorMessage}
-				</div>
-			);
-		}
-		
+		const formatOptions = formats.map((item) => <option value={ item.format }>{ item.name }</option> );
+
+		const exampleContent = (
+			<ul>
+				<li>List of 'metabolite replacement' procedures and phenotypes corrected in DDIEM with aberowl Values form query. 
+					<a href='#/SPARQL' onClick={(e) => this.setDDIEMExampleQuery(e)}> Show Query </a></li>
+				<li>List of 'metabolite replacement' procedures and phenotypes corrected in DDIEM with aberowl Filter form query. 
+					<a href='#/SPARQL' onClick={(e) => this.setDDIEMFilterExampleQuery(e)}> Show Query </a></li>
+				<li>Retreive interacting proteins involved in 'response to hypoxia' from BioGateway Sparql endpoint. <a href='#/SPARQL' onClick={(e) => this.setBioGatewayExampleQuery(e)}> Show Query </a></li>
+			</ul>
+		);
 		return (
 			<div>
 				<form onSubmit={(e) => this.executeSparql(e)}>
@@ -485,10 +482,20 @@ class Ontology extends React.Component {
 						</div>
 					</div>
 					<div layout="row">
+						<label for="format">Results Format</label>
+						<select class="form-control" onChange={(e) => this.onFormatChange(e)} value={this.state.format}>
+							{formatOptions}
+						</select>
+					</div>
+					<div layout="row" class="margin-top-15">
 						<button type="submit" class="btn btn-primary">Execute</button>
 					</div>
 				</form>
-				<div layout="row" class="margin-top-15 result-container"> {resultDisplay} </div>
+				{/* <div layout="row" class="margin-top-15 result-container"> {resultDisplay} </div> */}
+				<div layout="row" class="margin-top-15"> 
+				<h4>Example Queries</h4>
+				{exampleContent} 
+				</div>
 			</div>
         );
 	}
@@ -496,21 +503,74 @@ class Ontology extends React.Component {
 	onSparqlChange(event) {
 		this.setState({query: event.target.value});
 	}
+
+	onFormatChange(event) {
+		console.log(event)
+		this.setState({format: event.target.value});
+	}
+
+	setDDIEMExampleQuery(event) {
+		const query = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>   \n" +
+		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>   \n" +
+		"PREFIX obo: <http://purl.obolibrary.org/obo/>   \n" +
+		"SELECT ?procedure ?evidenceCode ?phenotypeCorrected   \n" +
+		"FROM <http://ddiem.phenomebrowser.net>   \n" +
+		"WHERE {   \n" +
+		"	VALUES ?procedureType {     \n" +
+		"		OWL equivalent <http://ddiem.phenomebrowser.net/sparql> <DDIEM> {     \n" +
+		"			'metabolite replacement'    \n" +
+		"		}     \n" +
+		"	} .     \n" +
+		"	?procedure rdf:type ?procedureType .   \n" +
+		"	?procedure obo:RO_0002558 ?evidenceCode .   \n" +
+		"	?procedure obo:RO_0002212 ?phenotypes .   \n" +
+		"	?phenotypes rdfs:label ?phenotypeCorrected .   \n" +
+		"}";
+		this.setState({query: query});
+	}
+
+	setDDIEMFilterExampleQuery(event) {
+		const query = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>      \n" +
+		"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>   \n" +
+		"PREFIX obo: <http://purl.obolibrary.org/obo/>   \n" +   
+		"SELECT ?procedure ?evidenceCode ?phenotypeCorrected   \n" +   
+		"FROM <http://ddiem.phenomebrowser.net>    \n" +  
+		"WHERE {    \n" +     
+		"	?procedure rdf:type ?procedureType .    \n" +  
+		"	?procedure obo:RO_0002558 ?evidenceCode .     \n" + 
+		"	?procedure obo:RO_0002212 ?phenotypes .      \n" +
+		"	?phenotypes rdfs:label ?phenotypeCorrected .      \n" +
+		"	FILTER ( ?procedureType in (    \n" +
+		"		OWL equivalent <http://ddiem.phenomebrowser.net/sparql> <DDIEM> {     \n" +   
+		"			'metabolite replacement'       \n" +
+		"		}        \n" +
+		"	) ).     \n" +
+		"}";
+		this.setState({query: query});
+	}
+
+	setBioGatewayExampleQuery(event) {
+		const query = "SELECT ?interacting_protein ?gene   \n" +
+		"WHERE   \n" +
+		"{   \n" +
+		"    ?interacting_protein <http://purl.obolibrary.org/obo/RO_0002331> ?gene .   \n" +
+		"    VALUES ?gene {    \n" +
+		"          OWL equivalent <https://biogw-db.nt.ntnu.no:4333/sparql> <GO> {    \n" +
+		"             'response to hypoxia'   \n" +
+		"          }    \n" +
+		"    } .  \n" +  
+		"}";
+		this.setState({query: query});
+	}
 	
 
 	executeSparql(event) {
 		event.preventDefault();
 		const query = this.state.query;	
+		const format = this.state.format;	
 		var that = this;
-	    fetch('/api/sparql?query=' + encodeURIComponent(query))
-	    .then((response) => response.json())
-	    .then(function(data) {
-			if (data.error) {
-				that.setState({ errorMessage: data.message, sparqlResults : null});
-			} else {
-				that.setState({ sparqlResults: data});
-			}
-	    });
+		const sparqlUrl = '/api/sparql?query=' + encodeURIComponent(query) + '&result_format=' + encodeURIComponent(format)
+		window.open(sparqlUrl, "_blank") 
 	}
 
     renderSimilarClasses() {
@@ -718,8 +778,7 @@ class Ontology extends React.Component {
 	    state.selectedProp = obj;
 	    if (!('children' in obj)) {
 		fetch(
-		    '/api/backend?script=getObjectProperties.groovy&property='
-			+ encodeURIComponent(obj.class) + '&ontology=' + obj.ontology)
+		    '/api/ontology/' + obj.ontology + '/objectproperty/' + encodeURIComponent(obj.class))
 		    .then(function(response){
 			return response.json();
 		    })
@@ -735,6 +794,7 @@ class Ontology extends React.Component {
 		this.setState(state);
 	    }
 	} else {
+		this.setDDIEMExampleQuery();
 	    this.setState(state);
 	}
 	

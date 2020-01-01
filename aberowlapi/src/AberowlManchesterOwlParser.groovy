@@ -5,11 +5,11 @@ import java.util.regex.Pattern;
 
 public class AberowlManchesterOwlParser {
 
-    private static final String VALUE_FRAME_REGEX = 
-        "(VALUES|values)[\\s]+\\?[A-Za-z0-9]+[\\s]+\\{[\\r\\n\\s]*(OWL|owl){1}[\\s]*(superclass|subclass|equivalent|supeq|subeq|realize){1}[\\s]*\\<.+\\>[\\s]+[\\r\\n\\s]*\\<.*\\>[\\s]+[\\r\n\\s]*\\{[\\r\\n\\s]+.+[\\r\\n\\s]+\\}[\\s]*[\\.]*[\\r\\n\\s]*\\}[\\s]*[\\.]*";
-    private static final String FILTER_FRAME_REGEX = 
+    private static final String VALUE_FRAME_REGEX =
+        "(VALUES|values)[\\s]+\\?[A-Za-z0-9]+[\\s]+\\{[\\s]*(OWL|owl){1}[\\s]*(superclass|subclass|equivalent|supeq|subeq|realize){1}[\\s]*\\<.+\\>[\\s]+\\<.*\\>[\\s]+\\{[\\s]+[\\d\\w\\\'\\\"\\<\\>:._~\\/\\-\\?\\#\\[\\]\\@\\!\\\$\\&\\(\\)\\*\\+\\,\\;\\=\\s]+[\\s]+\\}[\\s]*[\\.]*[\\s]*\\}[\\s]*[\\.]*";
+    private static final String FILTER_FRAME_REGEX =
         "(FILTER|filter)[\\r\\n\\s]+[\\(]{1}[\\r\\n\\s]+\\?[A-Za-z0-9]+[\\s]+in+[\\s]+\\([\\r\\n\\s]*(OWL|owl){1}[\\s]*(superclass|subclass|equivalent|supeq|subeq|realize){1}[\\s]*\\<.+\\>[\\s]+[\\r\\n\\s]*\\<.*\\>[\\s]+[\\r\\n\\s]*\\{[\\r\\n\\s]+.+[\\r\\n\\s]+\\}[\\r\\n\\s]*\\)[\\r\\n\\s]*\\)[\\s]*[\\.]*";
-    
+
     private static final String QUERY_REGEX = 
         "(OWL|owl){1}[\\s]*(superclass|subclass|equivalent|supeq|subeq|realize){1}[\\s]*\\<(.+)\\>[\\s]+[\\r\\n\\s]*\\<(.*)\\>[\\s]+[\\r\\n\\s]*\\{[\\r\\n\\s]+(.+)[\\r\\n\\s]+\\}[\\s]*[\\.]*";
 

@@ -9,7 +9,7 @@ import requests
 import json
 import itertools
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.http import HttpResponseNotFound
 from django.conf import settings
 from django.shortcuts import redirect
@@ -603,7 +603,7 @@ class SparqlAPIView(APIView):
                     run=parse.quote('Run Query'))
                 
                 logger.debug("redirect to:" + query_url)
-                response = redirect(query_url)
+                response = HttpResponseRedirect(redirect_to=query_url)
                 return response
         except Exception as e:
             return Response({'status': 'exception', 'message': str(e)})
@@ -663,3 +663,42 @@ class DLQueryLogsDownloadAPIView(APIView):
             return response
         except FileNotFoundError as e:
             return HttpResponseNotFound()
+
+class ListOntologyObjectPropertiesView(APIView):
+    def get(self, request, acronym):
+        try:
+            result = ont_server.find_ontology_object_properties(acronym)
+            result['status'] = 'ok'
+            result['total'] = len(result['result'])
+            return Response(result)
+                
+        except Exception as e:
+            return Response({'status': 'exception', 'message': str(e)})
+
+
+class GetOntologyObjectPropertyView(APIView):
+    def get(self, request, acronym, property_iri):
+        try:
+            result = ont_server.find_ontology_object_properties(acronym, property_iri)
+            result['status'] = 'ok'
+            return Response(result)
+                
+        except Exception as e:
+            return Response({'status': 'exception', 'message': str(e)})
+
+class ListInstanceAPIView(APIView):
+    def get(self, request):
+        ontology = request.GET.get('ontology', None)
+        class_iri = request.GET.get('class_iri', None)
+
+        if ontology is None:
+            return Response({'status': 'error', 'message': 'ontology acronym is required'})
+        if class_iri is None:
+            return Response({'status': 'error', 'message': 'class_iri is required'})
+        print(ontology, class_iri)
+        try:
+            result = ont_server.find_by_ontology_and_class(ontology, class_iri)
+            return Response(result)
+                
+        except Exception as e:
+            return Response({'status': 'exception', 'message': str(e)})

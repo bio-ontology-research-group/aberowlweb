@@ -43,7 +43,7 @@ class OntServerRequestProcessor:
         query_string = { 'ontology': ontology_acronym, 'class_iri': class_iri }
         return self.__execute_request(url, RequestType.FIND_INSTANCES.value, urllib.parse.urlencode(query_string))
 
-    def execute_dl_query(self, query, query_type, ontology_acronym=None, axioms=None, labels=None):
+    def execute_dl_query(self, query, query_type, ontology_acronym=None, axioms=None, labels=None, direct=None):
         url = None
         query_string = { 'query': query, 'type': query_type, 'axioms': axioms, 'labels': labels, 'direct': direct }
         if ontology_acronym is not None:

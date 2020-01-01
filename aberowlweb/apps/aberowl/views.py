@@ -11,12 +11,15 @@ import json
 
 from aberowl.models import Ontology, Submission
 from aberowl.serializers import OntologySerializer, SubmissionSerializer
+from aberowlweb.apps.aberowl.ont_server_request_processor import OntServerRequestProcessor
 from rest_framework.renderers import JSONRenderer
 
 
 ABEROWL_API_URL = getattr(
     settings, 'ABEROWL_API_URL', 'http://localhost/')
 
+
+ont_server = OntServerRequestProcessor()
 
 class MainView(TemplateView):
 
@@ -68,9 +71,7 @@ class OntologyDetailView(DetailView):
                 data['classes'] = res['result']
             else:
                 print(res)
-            rq = requests.get(
-                ontology.get_api_url() + 'getObjectProperties.groovy?ontology=' + ontology.acronym)
-            res = rq.json()
+            res = ont_server.find_ontology_object_properties(ontology.acronym)
             if 'result' in res:
                 data['properties'] = res['result']
             else:

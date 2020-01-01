@@ -22,5 +22,11 @@ urlpatterns = [
     url(r'^dlquery/$',
         api_views.DLQueryAPIView.as_view(), name='api-dlquery'),
     url(r'^dlquery/logs$',
-        api_views.DLQueryLogsDownloadAPIView.as_view(), name='api-dlquery-logs')
+        api_views.DLQueryLogsDownloadAPIView.as_view(), name='api-dlquery-logs'),
+    url(r'ontology/(?P<acronym>[-\w]+)/objectproperty/$',
+        api_views.ListOntologyObjectPropertiesView.as_view(), name='api-ontology_object_properties_list'),
+    url(r'^ontology/(?P<acronym>[-\w]+)/objectproperty/(?P<property_iri>.+)$',
+        api_views.GetOntologyObjectPropertyView.as_view(), name='api-ontology_object_properties_details'),
+    url(r'instance/$',
+        api_views.ListInstanceAPIView.as_view(), name='api-instance-list'),
 ]

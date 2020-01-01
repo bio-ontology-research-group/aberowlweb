@@ -778,8 +778,7 @@ class Ontology extends React.Component {
 	    state.selectedProp = obj;
 	    if (!('children' in obj)) {
 		fetch(
-		    '/api/backend?script=getObjectProperties.groovy&property='
-			+ encodeURIComponent(obj.class) + '&ontology=' + obj.ontology)
+		    '/api/ontology/' + obj.ontology + '/objectproperty/' + encodeURIComponent(obj.class))
 		    .then(function(response){
 			return response.json();
 		    })

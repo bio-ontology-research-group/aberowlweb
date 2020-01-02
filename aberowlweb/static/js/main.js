@@ -393,11 +393,11 @@ class Main extends React.Component {
 	this.setState({inputQuery: query});
 	var that = this;
 	Promise.all([
-	    fetch('/api/querynames?query=' + encodeURIComponent(query))
+	    fetch('/api/class/_find?query=' + encodeURIComponent(query))
 	    .then(function(response){
 		return response.json();
 	    }),
-	    fetch('/api/queryontologies?query=' + encodeURIComponent(query))
+	    fetch('/api/ontology/_find?query=' + encodeURIComponent(query))
 	    .then(function(response){
 		return response.json();
 	    }),

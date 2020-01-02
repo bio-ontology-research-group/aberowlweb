@@ -45,9 +45,8 @@ class Ontology extends React.Component {
 		selectedClass = classesMap.get(owlClass);
 		this.setState({ selectedClass: selectedClass });
 	    } else {
-		fetch('/api/backend?script=findRoot.groovy&query='
-		      + encodeURIComponent(owlClass) + '&ontology='
-		      + that.state.ontology.acronym)
+		fetch('/api/ontology/'+ that.state.ontology.acronym 
+			+ '/root/' + encodeURIComponent(owlClass))
 		    .then(function(response){ return response.json(); })
 		    .then(function(data){
 			var state = that.findRoot(owlClass, data);
@@ -64,9 +63,8 @@ class Ontology extends React.Component {
 		this.setState({ selectedClass: selectedClass });
 	    } else {
 		queries.push(
-		    fetch('/api/backend?script=findRoot.groovy&query='
-			  + encodeURIComponent(owlClass) + '&ontology='
-			  + this.state.ontology.acronym)
+		    fetch('/api/ontology/'+ that.state.ontology.acronym 
+			+ '/root/' + encodeURIComponent(owlClass))
 		    .then((response) => response.json())
 		);
 	    }
@@ -101,9 +99,8 @@ class Ontology extends React.Component {
 		this.setState({ selectedClass: selectedClass });
 	    } else {
 		queries.push(
-		    fetch('/api/backend?script=findRoot.groovy&query='
-			  + encodeURIComponent(owlClass) + '&ontology='
-			  + this.state.ontology.acronym)
+		    fetch('/api/ontology/'+ that.state.ontology.acronym 
+			+ '/root/' + encodeURIComponent(owlClass))
 		    .then((response) => response.json())
 		);
 	    }
@@ -730,9 +727,8 @@ class Ontology extends React.Component {
 		    this.setState(state);
 		}
 	    } else {
-		fetch('/api/backend?script=findRoot.groovy&query='
-		      + encodeURIComponent(owlClass) + '&ontology='
-		      + that.state.ontology.acronym)
+		fetch('/api/ontology/'+ that.state.ontology.acronym 
+		+ '/root/' + encodeURIComponent(owlClass))
 		    .then(function(response){ return response.json(); })
 		    .then(function(data){
 			var state = that.findRoot(owlClass, data);
@@ -879,7 +875,7 @@ class Ontology extends React.Component {
 
     executeSearch(search) {
 	var that = this;
-	fetch('/api/searchclasses?query=' + encodeURIComponent(search)
+	fetch('/api/class/_startwith?query=' + encodeURIComponent(search)
 		  + '&ontology=' + this.state.ontology.acronym)
 	    .then((response) => response.json())
 	    .then(function(data) {

@@ -1,0 +1,87 @@
+openapi: 3.0.0
+info:
+  title: Aberowl
+  description: 'AberOWL is a framework for ontology-based access to biological data. It consists of a repository of bio-ontologies, a set of webservices which provide access to OWL(-EL) reasoning over the ontologies, and several frontends which utilise the ontology repository and reasoning services to provide access to specific biological datasets.'
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+- url: http://aber-owl.net
+paths:
+  /api/ontology:
+    get:
+      tags:
+      - Ontology
+      summary: Lists all the ontologies
+      description: Lists all the ontologies in the repository
+      operationId: api-find_ontolog
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ontology'
+  /api/ontology/{acronym}/objectproperty:
+    get:
+      tags:
+      - Ontology
+  /api/ontology/{acronym}/objectproperty/{property_iri}:
+    get:
+      tags:
+      - Ontology
+  /api/ontology/{acronym}/class/{class_iri}:
+    get:
+      tags:
+      - Ontology
+  /api/ontology/{acronym}/root/{class_iri}:
+    get:
+      tags:
+      - Ontology
+  /api/class/_find:
+    get:
+      tags:
+      - Class
+  /api/class/_startwith:
+    get:
+      tags:
+      - Class
+  /api/sparql:
+    get:
+      tags:
+      - SPARQL
+  /api/dlquery:
+    get:
+      tags:
+      - Discription Logic Query
+  /api/dlquery/logs:
+    get:
+      tags:
+      - Discription Logic Query Logs
+  /api/backend:
+    tags:
+      - Ontology Server API
+    deprecated: true
+components:
+  schemas:
+    Ontology:
+      type: object
+      properties:
+        acronym:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+        topics:
+          type: string
+          description: topics covered by ontology
+        species:
+          type: string
+      xml:
+        name: Ontology

@@ -393,22 +393,39 @@ class Main extends React.Component {
 	this.setState({inputQuery: query});
 	var that = this;
 	Promise.all([
-	    fetch('/api/querynames?query=' + encodeURIComponent(query))
+	    fetch('/api/class/_find?query=' + encodeURIComponent(query))
 	    .then(function(response){
 		return response.json();
 	    }),
-	    fetch('/api/queryontologies?query=' + encodeURIComponent(query))
+	    fetch('/api/ontology/_find?query=' + encodeURIComponent(query))
 	    .then(function(response){
 		return response.json();
 	    }),
 	]).then(function(data) {
-	
 	    var classes = {
 		headers: ['Class', 'Definition', 'Ontology'], rows: []};
-	    var rest = [];
-	    for (var i in data[0]) {
-		var term = data[0][i][0];
-		var res = data[0][i][1];
+		var rest = [];
+		
+		var classResp = {};
+        for (var item in data[0]['result']) {
+			if (!classResp[data[0]['result'][item]['owlClass']]) {
+				classResp[data[0]['result'][item]['owlClass']] = []
+			} 
+			classResp[data[0]['result'][item]['owlClass']].push(data[0]['result'][item])
+		}
+
+		var compiledResult = [];
+        for (var item in data[0]['result']) {
+			var owlClass = data[0]['result'][item]['owlClass'];
+            if(classResp[owlClass]) {
+				compiledResult.push([owlClass, classResp[owlClass]]);
+				delete classResp[owlClass];
+			}
+		}
+
+	    for (var i in compiledResult) {
+		var term = compiledResult[i][0];
+		var res = compiledResult[i][1];
 		var ontos = [];
 		if (!res[0].definition) res[0].definition = '';
 		var definition = that.innerHTML(res[0].definition);

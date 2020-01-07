@@ -1,0 +1,585 @@
+openapi: 3.0.0
+info:
+  title: Aberowl
+  description: 'AberOWL is a framework for ontology-based access to biological data. It consists of a repository of bio-ontologies, a set of webservices which provide access to OWL(-EL) reasoning over the ontologies, and several frontends which utilise the ontology repository and reasoning services to provide access to specific biological datasets.'
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+- url: http://aber-owl.net
+paths:
+  /api/ontology:
+    get:
+      tags:
+      - Ontology
+      summary: Lists all the ontologies
+      description: Lists all the ontologies in the repository
+      operationId: api-find_ontolog
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ontology'
+  /api/ontology/_find:
+    get:
+      tags:
+      - Ontology 
+      summary: Finds ontologies for given search criteria.
+      description: Finds ontologies for given search criteria.      
+      operationId: api-find_ontology
+      parameters:
+      - name: query
+        in: query
+        description: term or phrase that contain name of the ontology, acronym of the ontology or text part of ontology description
+        required: true
+        style: form
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OntologyES'
+  /api/ontology/{acronym}/objectproperty:
+    get:
+      tags:
+      - Ontology
+      summary: Lists object properties in an ontology
+      description: Lists object properties in an ontology     
+      operationId: api-ontology_object_properties_list
+      parameters:
+      - name: acronym
+        in: path
+        description: ontology acronym
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Class'
+                  status:
+                    type: string
+  /api/ontology/{acronym}/objectproperty/{property_iri}:
+    get:
+      tags:
+      - Ontology
+      summary: Gets object property by property IRI
+      description: Gets object property details by property IRI   
+      operationId: api-ontology_object_property_details
+      parameters:
+      - name: acronym
+        in: path
+        description: ontology acronym
+        required: true
+        schema:
+          type: string
+      - name: property_iri
+        in: path
+        description: Object Property IRI
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Class'
+                  status:
+                    type: string
+  /api/ontology/{acronym}/class/{class_iri}:
+    get:
+      tags:
+      - Ontology
+      summary: Gets owl class by class IRI
+      description: Gets owl class details by class IRI   
+      operationId: api-ontology_class_details
+      parameters:
+      - name: acronym
+        in: path
+        description: ontology acronym
+        required: true
+        schema:
+          type: string
+      - name: class_iri
+        in: path
+        description: Owl Class IRI
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Class'
+                  status:
+                    type: string
+  /api/ontology/{acronym}/root/{class_iri}:
+    get:
+      tags:
+      - Ontology
+      summary: Finds root classes of the class
+      description: Finds root classes of th class in ontology by class IRI. It is useful to find the position of the given class in class hierarchy of a ontology
+      operationId: api-ontology_class_root
+      parameters:
+      - name: acronym
+        in: path
+        description: ontology acronym
+        required: true
+        schema:
+          type: string
+      - name: class_iri
+        in: path
+        description: Owl Class IRI
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/HierarchicalClass'
+                  status:
+                    type: string
+  /api/class/_find:
+    get:
+      tags:
+      - Class 
+      summary: List classes for given search criteria
+      description: Lists ontology classes in aberowl repository for given search criteria.
+      operationId: api-find_class
+      parameters:
+      - name: query
+        in: query
+        description: term or phrase that contains name, synonym, oboid or definition of the class 
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: ontology
+        in: query
+        description: ontology acronym to search classes in a given ontology
+        required: true
+        style: form
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClassES'
+                  status:
+                    type: string
+  /api/class/_startwith:
+    get:
+      tags:
+      - Class 
+      summary: Lists classes that start with given search term
+      description: Lists classes that start with given search term. The API useful for suggesting class names that start with the term user provided.
+      operationId: api-find_class_startwith
+      parameters:
+      - name: query
+        in: query
+        description: term or phrase to look for in class label
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: ontology
+        in: query
+        description: ontology acronym to search classes in a given ontology
+        required: true
+        style: form
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClassES'
+                  status:
+                    type: string
+  /api/class/_similar:
+    get:
+      tags:
+      - Class 
+      summary: Finds most similar classes
+      description: Finds most similar classes of a given class in an ontology
+      operationId: api-find_class_similar
+      parameters:
+      - name: ontology
+        in: query
+        description: ontology acronym to search classes in a given ontology
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: class
+        in: query
+        description: name of the class
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: size
+        in: query
+        description: number of most similar classes to be fetched.
+        required: true
+        style: form
+        schema:
+          type: integer
+          format: int64
+          default: 50
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClassES'
+                  status:
+                    type: string
+  /api/sparql:
+    get:
+      tags:
+      - SPARQL
+      summary: Executes the given aberowl SPARQL query
+      description: Executes the given aberowl SPARQL query and returns the results of the query in given format
+      operationId: api-sparql
+      parameters:
+      - name: query
+        in: query
+        description: aberowl SPARQL query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: result_format
+        in: query
+        description: result format for the aberowl SPARQL query
+        required: true
+        style: form
+        schema:
+          type: string
+      responses:
+        200:
+          description: Response will be in format provided in result_format parameter of query string.
+  /api/dlquery:
+    get:
+      tags:
+      - Discription Logic Query
+      summary: Executes the given DL query
+      description: Executes the given DL query on aberowl ontologies
+      operationId: api-dlquery
+      parameters:
+      - name: query
+        in: query
+        description: DL query
+        required: true
+        style: form
+        schema:
+          type: string
+      - name: type
+        in: query
+        description: type of DL query
+        required: true
+        style: form
+        schema:
+          type: string
+          enum:
+          - superclass
+          - subclass
+          - equivalent
+          - supeq
+          - subeq
+          - realize
+      - name: ontology
+        in: query
+        description: ontology acronym
+        required: false
+        style: form
+        schema:
+          type: string
+      - name: axioms
+        in: query
+        description: Flag for including or excluding class axioms
+        required: false
+        style: form
+        schema:
+          type: boolean
+      - name: labels
+        in: query
+        description: Flag for DL query contains class labels or class IRIs. If true query engine will expect the dl query to contain class labels and if false then query engine will expect query to contain class IRIs
+        required: false
+        style: form
+        schema:
+          type: boolean
+      - name: direct
+        in: query
+        description: flag for getting directly linked classes
+        required: false
+        style: form
+        schema:
+          type: boolean
+          default: true
+      - name: offset
+        in: query
+        description: page number if given will convert the query result into pages and will send a page at offset provided. Note that the page size in this case will be by default 10. 
+        required: false
+        style: form
+        schema:
+          type: integer
+          format: int64
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClassES'
+                  status:
+                    type: string
+  /api/dlquery/logs:
+    get:
+      tags:
+      - Discription Logic Query
+      summary: Downloads DL query log
+      description: Downloads DL query log from aberowl server.
+      operationId: api-dlquery_logs
+      responses:
+        200:
+          description: successful operation
+          content:
+            text/plain:
+              schema: 
+                 type: string
+                 format: binary
+components:
+  schemas:
+    Submission:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        download_url:
+          type: string
+        submission_id:
+          type: integer
+          format: int64
+        domain:
+          type: string
+        description:
+          type: string
+        documentation:
+          type: string
+        publication:
+          type: string
+        publications:
+          type: string
+        products:
+          type: string
+        taxon:
+          type: string
+        date_released:
+          type: string
+        date_created:
+          type: string
+        home_page:
+          type: string
+        version:
+          type: string
+        has_ontology_language:
+          type: string
+        nb_classes:
+          type: integer
+          format: int64
+        nb_individuals:
+          type: integer
+          format: int64
+        nb_properties:
+          type: integer
+          format: int64
+        max_depth:
+          type: integer
+          format: int64
+        max_children:
+          type: integer
+          format: int64
+        avg_children:
+          type: integer
+          format: int64
+        classifiable:
+          type: boolean
+        nb_inconsistent:
+          type: integer
+          format: int64
+        indexed:
+          type: boolean
+      xml:
+        name: Submission
+    Ontology:
+      type: object
+      properties:
+        acronym:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+        topics:
+          type: string
+          description: topics covered by ontology
+        species:
+          type: string
+        submission:
+          $ref: '#/components/schemas/Submission'
+      xml:
+        name: Ontology
+    Class:
+      type: object
+      properties:
+        class:
+          type: string
+        definition:
+          type: array
+          items: 
+            type: string
+        identifier:
+          type: array
+          items: 
+            type: string
+        label:
+          type: array
+          items: 
+            type: string
+        ontology:
+          type: string
+        owlClass:
+          type: string
+        synonyms:
+          type: array
+          items: 
+            type: string
+        deprecated:
+          type: boolean
+          default: false
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      xml:
+        name: Class
+    HierarchicalClass:
+      allOf: [ $ref: '#/components/schemas/Class' ]
+      properties:
+        children:
+          type: array
+          items: 
+            allOf: [ $ref: '#/components/schemas/Class' ]
+    ClassES:
+      type: object
+      properties:
+        class:
+          type: string
+        definition:
+          type: array
+          items: 
+            type: string
+        identifier:
+          type: array
+          items: 
+            type: string
+        label:
+          type: array
+          items: 
+            type: string
+        oboid:
+          type: string
+        ontology:
+          type: string
+        owlClass:
+          type: string
+        synonyms:
+          type: array
+          items: 
+            type: string
+      xml:
+        name: ClassES
+    OntologyES:
+      type: object
+      properties:
+        ontology:
+          type: string
+          description: ontology acronym
+        name:
+          type: string
+        description:
+          type: string
+      xml:
+        name: OntologyES
+        

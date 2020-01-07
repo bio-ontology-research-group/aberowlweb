@@ -1,7 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
-from rest_framework import schemas
 from urllib import parse
 
 import coreapi
@@ -77,26 +76,7 @@ def search(indexName, query_data):
         print("elasticsearch err", e)
         return {'hits': {'hits': []}}
 
-
-
-class SearchClassesAPIView(APIView):
-
-    schema = schemas.ManualSchema(fields=[
-                    coreapi.Field(
-                        name='query',
-                        location='query',
-                        required=True,
-                        type='string',
-                        description='query may contain text that contains name of the class or part of class name'
-                    ),
-                    coreapi.Field(
-                        name='ontology',
-                        location='query',
-                        required=True,
-                        type='string',
-                        description='ontology acronym to search classes in a given ontology'
-                    )
-                ], description="API for searching a class in an ontology for given text which can be full name of the class or a part of it")
+class FindClassByMethodStartWithAPIView(APIView):
 
     def get(self, request, format=None):
         query = request.GET.get('query', None)
@@ -132,33 +112,55 @@ class SearchClassesAPIView(APIView):
         except Exception as e:
             return Response({'status': 'exception', 'message': str(e)})
 
+class FindClassAPIView(APIView):
+
+    def get(self, request, format=None):
+        
+        query = request.GET.get('query', None)
+        ontology = request.GET.get('ontology', None)
+        if query is None:
+            return Response(
+                {'status': 'error',
+                 'message': 'Please provide query parameter!'})
+
+        queries = [
+            {'match': { 'oboid' : { 'query': query, 'boost': 150 }}},
+            {'match': { 'label' : { 'query': query, 'boost': 100 }}},
+            {'match': { 'synonym' : { 'query': query, 'boost': 50 }}},
+            {'match': { 'definition' : { 'query': query, 'boost': 30 }}},
+        ]
+        if ontology is not None:
+            queries.append({ 'match': { 'ontology': ontology, "boost":500 } })
+        else:
+            queries.append({ 'terms': { 'ontology' : query.lower().split(), 'boost': 150 }})
+
+        f_query = {
+            'query': { 'bool': { 'should': queries } },
+            '_source': {'excludes': ['embedding_vector',]},
+            'from': 0,
+            'size': 100}
+            
+        logger.info("Executing query:" + str(f_query))
+
+        result = search(ELASTIC_CLASS_INDEX_NAME, f_query)
+        # data = defaultdict(list)
+        # for hit in result['hits']['hits']:
+        #     item = hit['_source']
+        #     data[item['owlClass']].append(item)
+        # ret = []
+        # for hit in result['hits']['hits']:
+        #     owl_class = hit['_source']['owlClass']
+        #     if owl_class in data:
+        #         ret.append([owl_class, data[owl_class]])
+        #         del data[owl_class]
+        data = []
+        for hit in result['hits']['hits']:
+            item = hit['_source']
+            data.append(item)
+        result = {'status': 'ok', 'result': data}
+        return Response(result)
 
 class MostSimilarAPIView(APIView):
-
-    schema = schemas.ManualSchema(description="Search API for finding most similar classes of a given class in an ontology",
-                fields=[
-                    coreapi.Field(
-                        name='ontology',
-                        location='query',
-                        required=True,
-                        type='string',
-                        description='ontology acronym'
-                    ),
-                    coreapi.Field(
-                        name='class',
-                        location='query',
-                        required=True,
-                        type='string',
-                        description='name of the class'
-                    ),
-                    coreapi.Field(
-                        name='size',
-                        location='query',
-                        required=False,
-                        type='string',
-                        description='number of most similar classes to be fetched. By default, the size is 50.'
-                    )
-                ])
 
     def get(self, request, format=None):
         cls = request.GET.get('class', None)
@@ -222,150 +224,10 @@ class MostSimilarAPIView(APIView):
         except Exception as e:
             return Response({'status': 'exception', 'message': str(e)})
 
-    
-class QueryOntologiesAPIView(APIView):
-
-    schema = schemas.ManualSchema(description="Search API for ontologies in aberowl repository for given text.",
-                fields=[
-                    coreapi.Field(
-                        name='query',
-                        location='query',
-                        required=True,
-                        type='string',
-                        description='query may contain name of the ontology, acronym of the ontology or text part of ontology description'
-                    )
-                ])
-
-    def get(self, request, format=None):
-        query = request.GET.get('query', None)
-
-        if query is None:
-            return Response(
-                {'status': 'error',
-                 'message': 'query field is required'})
-        
-        fields = ['name', 'ontology', 'description']
-        query_list = []
-        for field in fields:
-            q = { 'match': { field: { 'query': query } } }
-            query_list.append(q)
-        omap = {
-            'query': { 'bool': { 'should': query_list } },
-            '_source': {'excludes': ['embedding_vector',]}
-        }
-        result = search(ELASTIC_ONTOLOGY_INDEX_NAME, omap)
-        data = []
-        for hit in result['hits']['hits']:
-            item = hit['_source']
-            data.append(item)
-        data = sorted(data, key=lambda x: len(x['name']))
-        return Response(data)
-        
-
-class QueryNamesAPIView(APIView):
-
-    schema = schemas.ManualSchema(description="Search API for ontology classes in aberowl repository for given search criteria.",
-                fields=[
-                    coreapi.Field(
-                        name='query',
-                        location='query',
-                        required=True,
-                        type='string',
-                        description='query may contain text that contains name, synonym, and oboid of the class'
-                    ),
-                    coreapi.Field(
-                        name='ontology',
-                        location='query',
-                        required=False,
-                        type='string',
-                        description='ontology acronym to search classes in a given ontology'
-                    )
-                ])
-
-    def get(self, request, format=None):
-        
-        query = request.GET.get('query', None)
-        ontology = request.GET.get('ontology', None)
-        if query is None:
-            return Response(
-                {'status': 'error',
-                 'message': 'Please provide query parameter!'})
-
-        queries = [
-            {'match': { 'oboid' : { 'query': query, 'boost': 150 }}},
-            {'match': { 'label' : { 'query': query, 'boost': 100 }}},
-            {'match': { 'synonym' : { 'query': query, 'boost': 50 }}},
-            {'match': { 'definition' : { 'query': query, 'boost': 30 }}},
-        ]
-        if ontology is not None:
-            queries.append({ 'match': { 'ontology': ontology, "boost":500 } })
-        else:
-            queries.append({ 'terms': { 'ontology' : query.lower().split(), 'boost': 150 }})
-
-        f_query = {
-            'query': { 'bool': { 'should': queries } },
-            '_source': {'excludes': ['embedding_vector',]},
-            'from': 0,
-            'size': 100}
-            
-        logger.info("Executing query:" + str(f_query))
-
-        result = search(ELASTIC_CLASS_INDEX_NAME, f_query)
-        data = defaultdict(list)
-        for hit in result['hits']['hits']:
-            item = hit['_source']
-            data[item['owlClass']].append(item)
-        ret = []
-        for hit in result['hits']['hits']:
-            owl_class = hit['_source']['owlClass']
-            if owl_class in data:
-                ret.append([owl_class, data[owl_class]])
-                del data[owl_class]
-        return Response(ret)
 
 
-
-
+# This API is depricated there is API defined for aberowl knowledge graph functions.
 class BackendAPIView(APIView):
-
-    schema = schemas.ManualSchema(description="Multi function API for executing different functions on aberowl knowledge graph including executing DL query, finding root class in an ontology and getting object properties of an ontology",
-                fields=[
-                    coreapi.Field(
-                        name='script',
-                        location='query',
-                        required=True,
-                        type='string',
-                        description='functions to be performed on aberowl knowledge base include findRoot.groovy, runQuery.groovy and getObjectProperties.groovy'
-                    ),
-                    coreapi.Field(
-                        name='query',
-                        location='query',
-                        required=False,
-                        type='string',
-                        description='DL query to be executed'
-                    ),
-                    coreapi.Field(
-                        name='type',
-                        location='query',
-                        required=False,
-                        type='string',
-                        description='Type of DL query includes subclass, subeq, equivalent, superclass and supeq'
-                    ),
-                    coreapi.Field(
-                        name='ontology',
-                        location='query',
-                        required=False,
-                        type='string',
-                        description='ontology acronym'
-                    ),
-                    coreapi.Field(
-                        name='offset',
-                        location='query',
-                        required=False,
-                        type='string',
-                        description='page number if given will return a page with 10 results by default'
-                    )
-                ])
 
     def __init__(self, *args, **kwargs):
         super(BackendAPIView, self).__init__(*args, **kwargs)
@@ -434,144 +296,42 @@ class BackendAPIView(APIView):
             return Response({'status': 'exception', 'message': str(e)})
         
 
-class OntologyListAPIView(ListAPIView):
+class FindOntologyAPIView(APIView):
+
+    def get(self, request, format=None):
+        query = request.GET.get('query', None)
+
+        if query is None:
+            return Response(
+                {'status': 'error',
+                 'message': 'query field is required'})
+        
+        fields = ['name', 'ontology', 'description']
+        query_list = []
+        for field in fields:
+            q = { 'match': { field: { 'query': query } } }
+            query_list.append(q)
+        omap = {
+            'query': { 'bool': { 'should': query_list } },
+            '_source': {'excludes': ['embedding_vector',]}
+        }
+        result = search(ELASTIC_ONTOLOGY_INDEX_NAME, omap)
+        data = []
+        for hit in result['hits']['hits']:
+            item = hit['_source']
+            data.append(item)
+        data = sorted(data, key=lambda x: len(x['name']))
+        return Response(data)
+
+class ListOntologyAPIView(ListAPIView):
     """
     get: Returns the list of all ontologies in aberowl
     """
 
     queryset = Ontology.objects.all()
     serializer_class = OntologySerializer
-
-class CustomClassInfoAPISchema(schemas.AutoSchema):
-    def __init__(self, description=''):
-        self._description=description
-    
-    """
-    Overrides `get_link()` to provide Custom Behavior X
-    """
-    def get_link(self, path, method, base_url):
-        # link = super().get_link(path, method, base_url)
-        encoding=None
-        fields=[]
-        if method=='GET':
-            fields = [
-                    coreapi.Field(
-                        name='ontology',
-                        location='query',
-                        required=True,
-                        type='string',
-                    ),
-                    coreapi.Field(
-                        name='iri',
-                        location='query',
-                        required=True,
-                        type='string'
-                    )
-                ]
-        elif method=='POST':
-            fields = [
-                    coreapi.Field(
-                        name='ontology',
-                        location='form',
-                        required=True,
-                        type='string'
-                    ),
-                    coreapi.Field(
-                        name='iri',
-                        location='form',
-                        required=True,
-                        type='string'
-                    )
-                ]
-            encoding = "application/x-www-form-urlencoded"
-        if base_url and path.startswith('/'):
-            path = path[1:]
-
-        return coreapi.Link(
-            url=parse.urljoin(base_url, path),
-            action=method.lower(),
-            encoding=encoding,
-            fields=fields,
-            description=self._description
-        )
-        
-class ClassInfoAPIView(APIView):
-
-    schema = CustomClassInfoAPISchema("""Search API for ontology class objects in aberowl based on ontology acronym and 
-        class iris. Returns a list of classes for given ontology and class iris""")
-
-    def __init__(self, *args, **kwargs):
-        super(ClassInfoAPIView, self).__init__(*args, **kwargs)
-
-    def post(self, request, format=None):
-        ontology = request.POST.get('ontology', None)
-        iris = request.POST.getlist('iri', None)
-        print(request.POST)
-        return self.process_query(iris, ontology)
-
-
-    def get(self, request, format=None):
-        ontology = request.GET.get('ontology', None)
-        iris = request.GET.getlist('iri', None)
-        return self.process_query(iris, ontology)
-
-    def process_query(self, iris, ontology):
-        if ontology is None:
-            return Response(
-                {'status': 'error',
-                 'message': 'ontoglogy is required'})
-        if iris is None:
-            return Response(
-                {'status': 'error',
-                 'message': 'Please provide at least one IRI!'})
-        try: 
-            queryset = Ontology.objects.filter(acronym=ontology)
-            if queryset.exists():
-                ontology = queryset.get()
-                if ontology.nb_servers:
-                    result = {'status': 'ok', 'result': {}}
-                    for query in iris:
-                        params = {
-                            'type': 'equivalent',
-                            'direct': 'true',
-                            'axioms': 'false',
-                            'query': '<' + query + '>',
-                            'ontology': ontology.acronym
-                        }
-                        url = ontology.get_api_url() + 'runQuery.groovy'
-                        r = requests.get(url, params=params)
-                        res = r.json()
-                        if 'result' in res and len(res['result']) > 0:
-                            for item in res['result']:
-                                if item['class'] == query:
-                                    result['result'][query] = item
-                                    break
-                    return Response(result)
-                else:
-                    raise Exception('API server is down!')
-            else:
-                raise Exception('Ontology does not exist!')
-        except Exception as e:
-            return Response({'status': 'exception', 'message': str(e)})
         
 class SparqlAPIView(APIView):
-    schema = schemas.ManualSchema(description="Executes the given aberowl SPARQL query and returns the results of the query in json format",
-                fields=[
-                    coreapi.Field(
-                        name='query',
-                        location='query',
-                        required=True,
-                        type='string',
-                        description='the aberowl SPARQL query field'
-                    ),
-                    coreapi.Field(
-                        name='result_format',
-                        location='query',
-                        required=True,
-                        type='string',
-                        description='result format for the aberowl SPARQL query'
-                    )
-                ])
 
     def get(self, request, format=None):
         query = request.GET.get('query', None)
@@ -681,6 +441,59 @@ class GetOntologyObjectPropertyView(APIView):
         try:
             result = ont_server.find_ontology_object_properties(acronym, property_iri)
             result['status'] = 'ok'
+            return Response(result)
+                
+        except Exception as e:
+            return Response({'status': 'exception', 'message': str(e)})
+
+class GetOntologyClassView(APIView):
+
+    def __init__(self, *args, **kwargs):
+        super(GetOntologyClassView, self).__init__(*args, **kwargs)
+
+    def post(self, request, acronym, class_iri):
+        return self.process_query(class_iri, acronym)
+
+
+    def get(self, request, acronym, class_iri):
+        return self.process_query(class_iri, acronym)
+
+    def process_query(self, iri, ontology):
+        try: 
+            queryset = Ontology.objects.filter(acronym=ontology)
+            if queryset.exists():
+                ontology = queryset.get()
+                if ontology.nb_servers:
+                    result = {'status': 'ok', 'result': {}}
+                    params = {
+                        'type': 'equivalent',
+                        'direct': 'true',
+                        'axioms': 'false',
+                        'query': '<' + iri + '>',
+                        'ontology': ontology.acronym
+                    }
+                    url = ontology.get_api_url() + 'runQuery.groovy'
+                    r = requests.get(url, params=params)
+                    res = r.json()
+                    if 'result' in res and len(res['result']) > 0:
+                        for item in res['result']:
+                            if item['class'] == iri:
+                                result['result'][query] = item
+                    return Response(result)
+                else:
+                    raise Exception('API server is down!')
+            else:
+                raise Exception('Ontology does not exist!')
+        except Exception as e:
+            return Response({'status': 'exception', 'message': str(e)})
+
+
+class FindOntologyRootClassView(APIView):
+    def get(self, request, acronym, class_iri):
+        try:
+            result = ont_server.find_ontology_root(class_iri, acronym)
+            result['status'] = 'ok'
+            result['total'] = len(result['result'])
             return Response(result)
                 
         except Exception as e:

@@ -402,13 +402,30 @@ class Main extends React.Component {
 		return response.json();
 	    }),
 	]).then(function(data) {
-	
 	    var classes = {
 		headers: ['Class', 'Definition', 'Ontology'], rows: []};
-	    var rest = [];
-	    for (var i in data[0]) {
-		var term = data[0][i][0];
-		var res = data[0][i][1];
+		var rest = [];
+		
+		var classResp = {};
+        for (var item in data[0]['result']) {
+			if (!classResp[data[0]['result'][item]['owlClass']]) {
+				classResp[data[0]['result'][item]['owlClass']] = []
+			} 
+			classResp[data[0]['result'][item]['owlClass']].push(data[0]['result'][item])
+		}
+
+		var compiledResult = [];
+        for (var item in data[0]['result']) {
+			var owlClass = data[0]['result'][item]['owlClass'];
+            if(classResp[owlClass]) {
+				compiledResult.push([owlClass, classResp[owlClass]]);
+				delete classResp[owlClass];
+			}
+		}
+
+	    for (var i in compiledResult) {
+		var term = compiledResult[i][0];
+		var res = compiledResult[i][1];
 		var ontos = [];
 		if (!res[0].definition) res[0].definition = '';
 		var definition = that.innerHTML(res[0].definition);

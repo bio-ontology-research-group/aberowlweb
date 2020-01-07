@@ -199,7 +199,7 @@ paths:
       - name: ontology
         in: query
         description: ontology acronym to search classes in a given ontology
-        required: true
+        required: false
         style: form
         schema:
           type: string

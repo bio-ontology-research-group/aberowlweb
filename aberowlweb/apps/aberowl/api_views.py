@@ -122,24 +122,27 @@ class FindClassAPIView(APIView):
             return Response(
                 {'status': 'error',
                  'message': 'Please provide query parameter!'})
-
-        queries = [
+        should = [
             {'match': { 'oboid' : { 'query': query, 'boost': 150 }}},
             {'match': { 'label' : { 'query': query, 'boost': 100 }}},
             {'match': { 'synonym' : { 'query': query, 'boost': 50 }}},
             {'match': { 'definition' : { 'query': query, 'boost': 30 }}},
         ]
+        es_query = None
         if ontology is not None:
-            queries.append({ 'match': { 'ontology': ontology, "boost":500 } })
+            ontology = { 'match': { 'ontology': { 'query': ontology } } }
+            es_query = { 'bool': { 'should': should, 'must': ontology } }
         else:
-            queries.append({ 'terms': { 'ontology' : query.lower().split(), 'boost': 150 }})
+            should.append({ 'terms': { 'ontology' : query.lower().split(), 'boost': 150 }})
+            es_query = { 'bool': { 'should': should } }
 
         f_query = {
-            'query': { 'bool': { 'should': queries } },
+            'query': es_query,
             '_source': {'excludes': ['embedding_vector',]},
             'from': 0,
             'size': 100}
-            
+        
+        print(ontology, query)
         logger.info("Executing query:" + str(f_query))
 
         result = search(ELASTIC_CLASS_INDEX_NAME, f_query)

@@ -26,7 +26,7 @@ if(query && ontology && managers.containsKey(ontology)) {
     while(true) {
 	q = supers[it]
 	parents = manager.runQuery(q, 'superclass', true, false, true).toArray()
-	if (parents.size() == 0 || parents[0].owlClass == owlThing) {
+	if (parents.size() == 0 || parents[0].owlClass.equals(owlThing)) {
 	    break
 	}
 	supers.add(parents[0].owlClass)
@@ -38,10 +38,11 @@ if(query && ontology && managers.containsKey(ontology)) {
     // expand children
     def result = manager.runQuery(owlThing, 'subclass', true, false, true).toArray()
     def classes = result
+    def classlabels; 
     it = 0
     for (int i = 0; i < supers.size(); i++) {
 	for (int j = 0; j < classes.size(); j++) {
-	    if (classes[j].owlClass == supers[i]) {
+	    if (classes[j].owlClass.equals(supers[i])) {
 		def children = manager.runQuery(
 		    classes[j].owlClass, 'subclass', true, false, true).toArray()
 		classes[j]["children"] = children

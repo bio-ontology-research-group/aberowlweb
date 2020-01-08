@@ -24,8 +24,8 @@ class OntServerRequestProcessor:
     def find_ontology_root(self, owl_class, ontology_acronym):
         ontology = self.__load_ontology(ontology_acronym)
         url = ontology.get_api_url()
-        query_string = { 'query': owl_class, 'ontology': ontology_acronym }
-        return self.__execute_request(url, RequestType.FIND_ROOT.value, urllib.parse.urlencode(query_string))
+        query_string = 'query=' + owl_class + '&ontology=' + ontology_acronym 
+        return self.__execute_request(url, RequestType.FIND_ROOT.value, query_string)
 
                 
     def find_ontology_object_properties(self, ontology_acronym, ont_property = None):

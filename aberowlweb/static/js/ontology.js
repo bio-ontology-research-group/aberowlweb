@@ -46,7 +46,7 @@ class Ontology extends React.Component {
 		this.setState({ selectedClass: selectedClass });
 	    } else {
 		fetch('/api/ontology/'+ that.state.ontology.acronym 
-			+ '/root/' + owlClass)
+			+ '/root/' + encodeURIComponent(owlClass))
 		    .then(function(response){ return response.json(); })
 		    .then(function(data){
 			var state = that.findRoot(owlClass, data);
@@ -64,7 +64,7 @@ class Ontology extends React.Component {
 	    } else {
 		queries.push(
 		    fetch('/api/ontology/'+ that.state.ontology.acronym 
-			+ '/root/' + owlClass)
+			+ '/root/' + encodeURIComponent(owlClass))
 		    .then((response) => response.json())
 		);
 	    }
@@ -100,7 +100,7 @@ class Ontology extends React.Component {
 	    } else {
 		queries.push(
 		    fetch('/api/ontology/'+ that.state.ontology.acronym 
-			+ '/root/' + owlClass)
+			+ '/root/' + encodeURIComponent(owlClass))
 		    .then((response) => response.json())
 		);
 	    }
@@ -728,7 +728,7 @@ class Ontology extends React.Component {
 		}
 	    } else {
 		fetch('/api/ontology/'+ that.state.ontology.acronym 
-		+ '/root/' + owlClass)
+		+ '/root/' + encodeURIComponent(owlClass))
 		    .then(function(response){ return response.json(); })
 		    .then(function(data){
 			var state = that.findRoot(owlClass, data);

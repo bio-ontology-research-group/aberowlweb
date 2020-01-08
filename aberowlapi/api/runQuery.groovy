@@ -32,9 +32,9 @@ if (type == null) {
     type = "all"
 }
 
-direct = (direct == "true") ? true : false;
-labels = (labels == "true") ? true : false;
-axioms = (axioms == "true") ? true : false;
+direct = (direct.equals("true")) ? true : false;
+labels = (labels.equals("true")) ? true : false;
+axioms = (axioms.equals("true")) ? true : false;
 
 response.contentType = 'application/json'
 

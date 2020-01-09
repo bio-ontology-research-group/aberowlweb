@@ -441,6 +441,7 @@ class ListOntologyObjectPropertiesView(APIView):
 
 class GetOntologyObjectPropertyView(APIView):
     def get(self, request, acronym, property_iri):
+        property_iri = parse.unquote(property_iri)
         try:
             result = ont_server.find_ontology_object_properties(acronym, property_iri)
             result['status'] = 'ok'
@@ -459,6 +460,7 @@ class GetOntologyClassView(APIView):
 
 
     def get(self, request, acronym, class_iri):
+        class_iri = parse.unquote(class_iri)
         return self.process_query(class_iri, acronym)
 
     def process_query(self, iri, ontology):
@@ -493,6 +495,7 @@ class GetOntologyClassView(APIView):
 
 class FindOntologyRootClassView(APIView):
     def get(self, request, acronym, class_iri):
+        class_iri = parse.unquote(class_iri)
         try:
             result = ont_server.find_ontology_root(class_iri, acronym)
             result['status'] = 'ok'

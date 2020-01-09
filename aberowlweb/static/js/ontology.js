@@ -45,8 +45,9 @@ class Ontology extends React.Component {
 		selectedClass = classesMap.get(owlClass);
 		this.setState({ selectedClass: selectedClass });
 	    } else {
+		//path param with iri require double encoding
 		fetch('/api/ontology/'+ that.state.ontology.acronym 
-			+ '/root/' + encodeURIComponent(owlClass))
+			+ '/root/' + encodeURIComponent(encodeURIComponent(owlClass)))
 		    .then(function(response){ return response.json(); })
 		    .then(function(data){
 			var state = that.findRoot(owlClass, data);
@@ -63,8 +64,9 @@ class Ontology extends React.Component {
 		this.setState({ selectedClass: selectedClass });
 	    } else {
 		queries.push(
+			//path param with iri require double encoding
 		    fetch('/api/ontology/'+ that.state.ontology.acronym 
-			+ '/root/' + encodeURIComponent(owlClass))
+			+ '/root/' + encodeURIComponent(encodeURIComponent(owlClass)))
 		    .then((response) => response.json())
 		);
 	    }
@@ -99,8 +101,9 @@ class Ontology extends React.Component {
 		this.setState({ selectedClass: selectedClass });
 	    } else {
 		queries.push(
+			//path param with iri require double encoding
 		    fetch('/api/ontology/'+ that.state.ontology.acronym 
-			+ '/root/' + encodeURIComponent(owlClass))
+			+ '/root/' + encodeURIComponent(encodeURIComponent(owlClass)))
 		    .then((response) => response.json())
 		);
 	    }
@@ -728,7 +731,8 @@ class Ontology extends React.Component {
 		}
 	    } else {
 		fetch('/api/ontology/'+ that.state.ontology.acronym 
-		+ '/root/' + encodeURIComponent(owlClass))
+		//path param with iri require double encoding
+		+ '/root/' + encodeURIComponent(encodeURIComponent(owlClass)))
 		    .then(function(response){ return response.json(); })
 		    .then(function(data){
 			var state = that.findRoot(owlClass, data);
@@ -774,7 +778,7 @@ class Ontology extends React.Component {
 	    state.selectedProp = obj;
 	    if (!('children' in obj)) {
 		fetch(
-		    '/api/ontology/' + obj.ontology + '/objectproperty/' + encodeURIComponent(obj.class))
+		    '/api/ontology/' + obj.ontology + '/objectproperty/' + encodeURIComponent(encodeURIComponent(obj.class)))//path param with iri require double encoding
 		    .then(function(response){
 			return response.json();
 		    })

@@ -312,7 +312,13 @@ def index_submission(ontology_pk, submission_pk, skip_embedding = True, es_url=E
     submission.save()
 
 @task
-def reload_ontology(ont, ontIRI):
+def reload_ontology(ont, ontIRI = None):
+    if ontIRI is None:
+        ontologies =  Ontology.objects.filter(acronym=ont)
+        if len(ontologies) > 0:
+            submission = ontologies[0].get_latest_submission()
+            ontIRI = ABEROWL_SERVER_URL + submission.get_filepath()
+
     for api_worker_url in ABEROWL_API_WORKERS:
         print('Running request: ', api_worker_url)
         r = requests.get(

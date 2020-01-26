@@ -8,6 +8,7 @@ from django.utils import timezone
 import requests
 import shutil
 from aberowl.models import Ontology, Submission
+from django.db.models import F
 from subprocess import Popen, PIPE, DEVNULL
 import json
 import random
@@ -318,14 +319,48 @@ def reload_ontology(ont, ontIRI = None):
         if len(ontologies) > 0:
             submission = ontologies[0].get_latest_submission()
             ontIRI = ABEROWL_SERVER_URL + submission.get_filepath()
-
+    
+    responses = []
     for api_worker_url in ABEROWL_API_WORKERS:
         print('Running request: ', api_worker_url)
         r = requests.get(
             api_worker_url + 'reloadOntology.groovy',
             params={'ontology': ont, 'ontologyIRI': ontIRI})
         print(r.json())
+        responses.append(r.json())
+    return responses
 
+
+@periodic_task(run_every=crontab(hour=12, minute=0, day_of_week=1))
+def retry_unloadable_ontology():
+    ontologies =  Ontology.objects.filter(
+            status=Ontology.UNLOADABLE)
+    
+    unloadable = []
+    for ont in ontologies :
+        results = reload_ontology(ont.acronym)
+        ontResult = { 'ontology': ont.acronym, 'results': []}
+        for result in results:
+            if result['status'] and result['status'] == 'ok':
+                ontResult['results'].append(True)
+            else :
+                ontResult['results'].append(False)
+                ont.update(nb_servers=F('nb_servers') - 1)
+        unloadable.append(ontResult)
+
+    for ontology in unloadable:
+        server_count = 0
+        for result in ontology['results']:
+            if result:
+                server_count += 1 
+            else :
+                server_count -= 1
+
+        if server_count == len(ABEROWL_API_WORKERS):      
+            try:                
+                Ontology.objects.filter(acronym=ont.acronym).update(status=Ontology.CLASSIFIED, nb_servers=F('nb_servers') + server_count)
+            except Exception as e:
+                    print('Exception:', e)           
 @task
 def generate_embeddings(filepath):
     p = Popen(

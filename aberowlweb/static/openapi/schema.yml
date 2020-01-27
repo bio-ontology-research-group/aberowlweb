@@ -3,13 +3,11 @@ info:
   title: Aberowl
   description: 'AberOWL is a framework for ontology-based access to biological data. It consists of a repository of bio-ontologies, a set of webservices which provide access to OWL(-EL) reasoning over the ontologies, and several frontends which utilise the ontology repository and reasoning services to provide access to specific biological datasets.'
   contact:
-    email: apiteam@swagger.io
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
+    email: ali.syed@kaust.edu.sa
   version: 1.0.0
 servers:
 - url: http://aber-owl.net
+- url: http://localhost:8000
 paths:
   /api/ontology:
     get:
@@ -507,14 +505,17 @@ components:
           type: string
         definition:
           type: array
+          description: List of values from annontation properties of the class including obo:IAO_0000115, skos:definition, dcmi:description, dcterms:description and go:hasDefinition
           items: 
             type: string
         identifier:
           type: array
+          description: List of values from dcmi:identifier annontation property
           items: 
             type: string
         label:
           type: array
+          description: List of values from annontation properties of the class including rdfs:label, skos:prefLabel and obo:IAO_0000111
           items: 
             type: string
         ontology:
@@ -523,6 +524,7 @@ components:
           type: string
         synonyms:
           type: array
+          description: List of values from annontation properties of the class including skos:altLabel, obo:IAO_0000118, go:hasExactSynonym, go:hasSynonym, go:hasNarrowSynonym and go:hasBroadSynonym
           items: 
             type: string
         deprecated:
@@ -548,14 +550,17 @@ components:
           type: string
         definition:
           type: array
+          description: List of values from annontation properties of the class including obo:IAO_0000115, skos:definition, dcmi:description, dcterms:description and go:hasDefinition
           items: 
             type: string
         identifier:
           type: array
+          description: List of values from dcmi:identifier annontation property
           items: 
             type: string
         label:
           type: array
+          description: List of values from annontation properties of the class including rdfs:label, skos:prefLabel and obo:IAO_0000111
           items: 
             type: string
         oboid:
@@ -566,6 +571,7 @@ components:
           type: string
         synonyms:
           type: array
+          description: List of values from annontation properties of the class including skos:altLabel, obo:IAO_0000118, go:hasExactSynonym, go:hasSynonym, go:hasNarrowSynonym and go:hasBroadSynonym
           items: 
             type: string
       xml:
@@ -582,4 +588,3 @@ components:
           type: string
       xml:
         name: OntologyES
-        

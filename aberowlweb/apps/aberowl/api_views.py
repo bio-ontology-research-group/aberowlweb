@@ -405,7 +405,7 @@ class DLQueryAPIView(APIView):
                     return Response(result)
                 
                 else:
-                    result = ont_server.execute_dl_query(query, query_type, None, axioms, labels)
+                    result = ont_server.execute_dl_query(query, query_type, None, axioms, labels, direct)
                     page_cache[pages_key] = Paginator(result['result'], DEFUALT_PAGE_SIZE)
                     result['result'] = page_cache.get(pages_key).page(offset).object_list
                     result['total'] = page_cache.get(pages_key).count

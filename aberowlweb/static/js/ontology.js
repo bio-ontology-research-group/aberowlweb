@@ -71,9 +71,8 @@ class Ontology extends React.Component {
 		);
 	    }
 	    queries.push(
-		fetch('/api/dlquery?type=' + params.query
-		      + '&direct=true&axioms=true&query=' + encodeURIComponent(owlClass)
-		      + '&ontology=' + this.state.ontology.acronym)
+		fetch('/api/dlquery?direct=true&axioms=true&query=' + encodeURIComponent(owlClass)
+		      + '&ontology=' + this.state.ontology.acronym + '&type=' + params.query)
 		    .then((response) => response.json())
 		
 	    );
@@ -713,8 +712,8 @@ class Ontology extends React.Component {
 		state.dlResults=[];
 		if (!('children' in obj)) {
 		    fetch(
-			'/api/dlquery?type=subclass&direct=true&axioms=true&query='
-			    + encodeURIComponent(obj.owlClass) + '&ontology=' + obj.ontology)
+			'/api/dlquery?direct=true&axioms=true&query='
+			    + encodeURIComponent(obj.owlClass) + '&type=subclass&ontology=' + obj.ontology)
 			.then(function(response){
 			    return response.json();
 			})
@@ -744,8 +743,8 @@ class Ontology extends React.Component {
 	    const owlClass = decodeURIComponent(params.owlClass);
 	    var queries = [];
 	    const dlQuery = params.query;
-	    fetch('/api/dlquery?type=' + params.query
-		  + '&axioms=true&labels=true&query=' + encodeURIComponent(owlClass)
+	    fetch('/api/dlquery?axioms=true&labels=true&type=' + params.query
+		  + '&query=' + encodeURIComponent(owlClass)
 		  + '&ontology=' + this.state.ontology.acronym)
 	    .then((response) => response.json())
 	    .then(function(data) {

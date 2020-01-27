@@ -352,7 +352,7 @@ class Main extends React.Component {
 
     executeDLQuery(query, dlQuery, page) {
 	var that = this;
-	fetch('/api/dlquery?type=' + dlQuery + '&labels=true&query=' + encodeURIComponent(query) + '&offset=' + page)
+	fetch('/api/dlquery?labels=true&query=' + encodeURIComponent(query) + '&type=' + dlQuery +'&offset=' + page)
 	    .then(function(response){ return response.json(); })
 	    .then(function(data) {
 		var dlQueryResults = {

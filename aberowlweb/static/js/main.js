@@ -177,7 +177,7 @@ class DLResultTab extends React.Component {
   
 	executeDLQuery(pageNumber, dlQuery, query) {
 		var that = this;
-		const response = fetch(`/api/dlquery?type=${dlQuery ? dlQuery : this.state.dlQuery}&labels=true&query=${encodeURIComponent(query ? query : this.state.query)}&offset=${pageNumber}`)
+		const response = fetch(`/api/dlquery?labels=true&query=${encodeURIComponent(query ? query : this.state.query)}&type=${dlQuery ? dlQuery : this.state.dlQuery}&offset=${pageNumber}`)
 		.then(function(response){ return response.json(); })
 		.then(function(data) {
 			that.setState({

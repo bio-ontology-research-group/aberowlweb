@@ -345,7 +345,6 @@ def retry_unloadable_ontology():
                 ontResult['results'].append(True)
             else :
                 ontResult['results'].append(False)
-                ont.update(nb_servers=F('nb_servers') - 1)
         unloadable.append(ontResult)
 
     for ontology in unloadable:

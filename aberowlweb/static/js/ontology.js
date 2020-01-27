@@ -47,7 +47,7 @@ class Ontology extends React.Component {
 	    } else {
 		//path param with iri require double encoding
 		fetch('/api/ontology/'+ that.state.ontology.acronym 
-			+ '/root/' + encodeURIComponent(encodeURIComponent(owlClass)))
+			+ '/root/' + encodeURIComponent(owlClass))
 		    .then(function(response){ return response.json(); })
 		    .then(function(data){
 			var state = that.findRoot(owlClass, data);
@@ -66,7 +66,7 @@ class Ontology extends React.Component {
 		queries.push(
 			//path param with iri require double encoding
 		    fetch('/api/ontology/'+ that.state.ontology.acronym 
-			+ '/root/' + encodeURIComponent(encodeURIComponent(owlClass)))
+			+ '/root/' + encodeURIComponent(owlClass))
 		    .then((response) => response.json())
 		);
 	    }
@@ -103,7 +103,7 @@ class Ontology extends React.Component {
 		queries.push(
 			//path param with iri require double encoding
 		    fetch('/api/ontology/'+ that.state.ontology.acronym 
-			+ '/root/' + encodeURIComponent(encodeURIComponent(owlClass)))
+			+ '/root/' + encodeURIComponent(owlClass))
 		    .then((response) => response.json())
 		);
 	    }
@@ -732,7 +732,7 @@ class Ontology extends React.Component {
 	    } else {
 		fetch('/api/ontology/'+ that.state.ontology.acronym 
 		//path param with iri require double encoding
-		+ '/root/' + encodeURIComponent(encodeURIComponent(owlClass)))
+		+ '/root/' + encodeURIComponent(owlClass))
 		    .then(function(response){ return response.json(); })
 		    .then(function(data){
 			var state = that.findRoot(owlClass, data);
@@ -778,7 +778,7 @@ class Ontology extends React.Component {
 	    state.selectedProp = obj;
 	    if (!('children' in obj)) {
 		fetch(
-		    '/api/ontology/' + obj.ontology + '/objectproperty/' + encodeURIComponent(encodeURIComponent(obj.class)))//path param with iri require double encoding
+		    '/api/ontology/' + obj.ontology + '/objectproperty/' + encodeURIComponent(obj.class))//path param with iri require double encoding
 		    .then(function(response){
 			return response.json();
 		    })

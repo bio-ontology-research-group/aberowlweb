@@ -24,6 +24,8 @@ from elasticsearch import Elasticsearch
 from django.core.paginator import Paginator
 from expiringdict import ExpiringDict
 
+import re
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -75,6 +77,11 @@ def search(indexName, query_data):
     except Exception as e:
         print("elasticsearch err", e)
         return {'hits': {'hits': []}}
+
+def fix_iri_path_param(iri):
+    iri = re.sub(r'(?!http:\/\/)(http:\/){1}', 'http://', iri)
+    iri = re.sub(r'(?!https:\/\/)(https:\/){1}', 'https://', iri)
+    return iri
 
 class FindClassByMethodStartWithAPIView(APIView):
 
@@ -381,7 +388,7 @@ class DLQueryAPIView(APIView):
         axioms = request.GET.get('axioms', None)
         labels = request.GET.get('labels', None)
         offset = request.GET.get('offset', None)
-        direct = request.GET.get('direct', True)
+        direct = request.GET.get('direct', 'true')
         
         if query is None:
             return Response({'status': 'error', 'message': 'query is required'})
@@ -441,7 +448,7 @@ class ListOntologyObjectPropertiesView(APIView):
 
 class GetOntologyObjectPropertyView(APIView):
     def get(self, request, acronym, property_iri):
-        property_iri = parse.unquote(property_iri)
+        property_iri = fix_iri_path_param(property_iri)
         try:
             result = ont_server.find_ontology_object_properties(acronym, property_iri)
             result['status'] = 'ok'
@@ -460,7 +467,7 @@ class GetOntologyClassView(APIView):
 
 
     def get(self, request, acronym, class_iri):
-        class_iri = parse.unquote(class_iri)
+        class_iri = fix_iri_path_param(class_iri)
         return self.process_query(class_iri, acronym)
 
     def process_query(self, iri, ontology):
@@ -469,21 +476,8 @@ class GetOntologyClassView(APIView):
             if queryset.exists():
                 ontology = queryset.get()
                 if ontology.nb_servers:
-                    result = {'status': 'ok', 'result': {}}
-                    params = {
-                        'type': 'equivalent',
-                        'direct': 'true',
-                        'axioms': 'false',
-                        'query': '<' + iri + '>',
-                        'ontology': ontology.acronym
-                    }
-                    url = ontology.get_api_url() + 'runQuery.groovy'
-                    r = requests.get(url, params=params)
-                    res = r.json()
-                    if 'result' in res and len(res['result']) > 0:
-                        for item in res['result']:
-                            if item['class'] == iri:
-                                result['result'][query] = item
+                    result = ont_server.execute_dl_query('<' + iri + '>', 'equivalent', ontology.acronym, 'false', None, 'true')
+                    result['status'] = 'ok'
                     return Response(result)
                 else:
                     raise Exception('API server is down!')
@@ -495,7 +489,7 @@ class GetOntologyClassView(APIView):
 
 class FindOntologyRootClassView(APIView):
     def get(self, request, acronym, class_iri):
-        class_iri = parse.unquote(class_iri)
+        class_iri = fix_iri_path_param(class_iri)
         try:
             result = ont_server.find_ontology_root(class_iri, acronym)
             result['status'] = 'ok'

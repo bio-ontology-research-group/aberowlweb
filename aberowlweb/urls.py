@@ -27,5 +27,5 @@ urlpatterns = [
     url(r'^accounts/', include('accounts.urls')),
     url(r'^about/$', AboutPageView.as_view(), name='about'),
     url(r'^healthcheck', TemplateView.as_view(template_name='health.html')),
-    url(r'docs/', TemplateView.as_view(template_name="index.html")),
+    url(r'docs/', TemplateView.as_view(template_name="index.html"), name='api_docs'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL)

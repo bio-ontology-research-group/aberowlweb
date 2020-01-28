@@ -1,8 +1,12 @@
 # AberOWL
 
-Aberowl is a framework for ontology-based data access that consists of an ontology repository that can be queried through an OWL 2 EL reasoner.
+Aberowl is a framework for ontology-based data access that consists of an ontology repository that can be queried through an OWL 2 EL reasoner. Aberowl is hosted on [aber-owl.net](http://aber-owl.net/).
 
-# Prerequisites
+## API Documentation
+
+The Aberowl API is organized around Open API specifications. Our API is a RESTful API that has predictable resource URIs, accepts form-encoded, request bodies, returns JSON responses. The complete API documentation is available [here](http://aber-owl.net/docs).
+
+## Prerequisites
 
 You will need the following list of tools installed before we could run aberowl framework.
 
@@ -16,7 +20,7 @@ You will need the following list of tools installed before we could run aberowl 
   - Elasticsearch
   - Supervisor
 
-# Installing Aberowl
+## Installing Aberowl
 
 Firstly, you will need to download aberowl from github and extract the source to opt/aberowl folder. Aberowl directory path will look like the following:
 
@@ -50,8 +54,6 @@ To install aberowl dependencies, you can run simply the following command:
 ```sh
 pip install -r .\requirements.txt
 ```
-
-However sometimes pip package manager causes problem while installing *word2vec* module. It is recommeded to use *conda* package manager to install *word2vec* module in case pip does not resolve the package. After installing it with conda, run the above command again to install the other dependencies.
 
 #### Create a database in PostgreSQL
 

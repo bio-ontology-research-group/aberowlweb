@@ -376,6 +376,7 @@ class SparqlAPIView(APIView):
                 response = HttpResponseRedirect(redirect_to=query_url)
                 return response
         except Exception as e:
+            logger.exception("message")
             return Response({'status': 'exception', 'message': str(e)})
 
 
@@ -418,6 +419,7 @@ class DLQueryAPIView(APIView):
                 return Response(result)
                 
         except Exception as e:
+            logger.exception("message")
             return Response({'status': 'exception', 'message': str(e)})
         
 
@@ -484,6 +486,7 @@ class GetOntologyClassView(APIView):
             else:
                 raise Exception('Ontology does not exist!')
         except Exception as e:
+            logger.exception("message")
             return Response({'status': 'exception', 'message': str(e)})
 
 

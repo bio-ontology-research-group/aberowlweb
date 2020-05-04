@@ -334,9 +334,9 @@ class Production(BaseConfiguration):
     SITE_DOMAIN = 'aber-owl.net'
     ABEROWL_API_URL = 'http://10.254.145.41/api/'
     ABEROWL_API_WORKERS = [
-        'http://10.254.145.27:8080/api/',
-        'http://10.254.145.30:8080/api/']
-    ABEROWL_SERVER_URL = 'http://10.254.145.9/'
+        'http://10.254.146.227:8080/api/',
+        'http://10.254.146.61:8080/api/']
+    ABEROWL_SERVER_URL = 'http://10.254.147.137/'
     # SESSION_COOKIE_SECURE=True
     # SESSION_COOKIE_HTTPONLY=True
     # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')
@@ -348,9 +348,9 @@ class ProductionCelery(BaseConfiguration):
     SITE_DOMAIN = 'aber-owl.net'
     ABEROWL_API_URL = 'http://10.254.145.41/api/'
     ABEROWL_API_WORKERS = [
-        'http://10.254.145.27:8080/api/',
-        'http://10.254.145.30:8080/api/']
-    ABEROWL_SERVER_URL = 'http://10.254.145.9/'
+        'http://10.254.146.227:8080/api/',
+        'http://10.254.146.61:8080/api/']
+    ABEROWL_SERVER_URL = 'http://10.254.147.137/'
 
 
 class TestConfiguration(BaseConfiguration):

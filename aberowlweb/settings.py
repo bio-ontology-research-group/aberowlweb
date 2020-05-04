@@ -192,11 +192,11 @@ class BaseConfiguration(Configuration):
             }
         },
         'loggers': {
-            # 'django': {
-            #     'handlers': ['file'],
-            #     'level': 'DEBUG',
-            #     'propagate': True,
-            # },
+             'django': {
+                 'handlers': ['file'],
+                 'level': 'DEBUG',
+                 'propagate': True,
+             },
             'aberowlweb': {
                 'handlers': ['file', 'console'],
                 'level': 'DEBUG',
@@ -337,6 +337,7 @@ class Production(BaseConfiguration):
         'http://10.254.146.227:8080/api/',
         'http://10.254.146.61:8080/api/']
     ABEROWL_SERVER_URL = 'http://10.254.147.137/'
+    DLQUERY_LOGS_FOLDER='/tmp'
     # SESSION_COOKIE_SECURE=True
     # SESSION_COOKIE_HTTPONLY=True
     # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')

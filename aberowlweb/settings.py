@@ -332,7 +332,7 @@ class Production(BaseConfiguration):
 
     DEBUG = False
     SITE_DOMAIN = 'aber-owl.net'
-    ABEROWL_API_URL = 'http://10.254.145.41/api/'
+    ABEROWL_API_URL = 'http://10.254.146.227:8080/api/' # TODO: update to LB ip
     ABEROWL_API_WORKERS = [
         'http://10.254.146.227:8080/api/',
         'http://10.254.146.61:8080/api/']

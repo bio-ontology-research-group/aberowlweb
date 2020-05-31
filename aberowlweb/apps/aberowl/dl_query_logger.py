@@ -1,4 +1,4 @@
-# Http interceptor for logging complex Discriptive Logic queries
+# Http interceptor for logging complex Description Logic queries
 #
 # The current implementation logs the data in a text file with every log
 # entry in json format.

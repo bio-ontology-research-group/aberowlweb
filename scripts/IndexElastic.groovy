@@ -277,57 +277,59 @@ void indexOntology(String fileName, def data) {
 	    def aProp = annot.getProperty()
 	    if (annot.isDeprecatedIRIAnnotation()) {
 		deprecated = true
-	    } else if (aProp in identifiers) {
-		if (annot.getValue() instanceof OWLLiteral) {
-		    def aVal = annot.getValue().getLiteral()
-		    info["identifier"] << aVal
-		}
+	    } else 
+		if (aProp in identifiers) {
+			if (annot.getValue() instanceof OWLLiteral) {
+				def aVal = annot.getValue().getLiteral()
+				info["identifier"] << aVal
+			}
 	    } else if (aProp in labels) {
-		if (annot.getValue() instanceof OWLLiteral) {
-		    def aVal = annot.getValue().getLiteral()
-		    info["label"] << aVal
-		    hasLabel = true
-		}
+			if (annot.getValue() instanceof OWLLiteral) {
+				def aVal = annot.getValue().getLiteral()
+				info["label"] << aVal
+				hasLabel = true
+			}
 	    } else if (aProp in definitions) {
-		if (annot.getValue() instanceof OWLLiteral) {
-		    def aVal = annot.getValue().getLiteral()
-		    info["definition"] << StringEscapeUtils.escapeJava(aVal)
-		}
+			if (annot.getValue() instanceof OWLLiteral) {
+				def aVal = annot.getValue().getLiteral()
+				info["definition"] << StringEscapeUtils.escapeJava(aVal)
+			}
 	    } else if (aProp in synonyms) {
-		if (annot.getValue() instanceof OWLLiteral) {
-		    def aVal = annot.getValue().getLiteral()
-		    info["synonyms"] << aVal
-		}
+			if (annot.getValue() instanceof OWLLiteral) {
+				def aVal = annot.getValue().getLiteral()
+				info["synonyms"] << aVal
+			}
 	    } 
 	}
-	if (!deprecated) {
-	
-	    if (!hasLabel) {
-		info["label"] << c.getIRI().getFragment().toString()
-	    }
+	// if (!deprecated) {
 
-	    // Add an embedding to the document
-	    if (data["embeds"] != null && data["embeds"].containsKey(cIRI)) {
-			info["embedding_vector"] = data["embeds"][cIRI];
-	    } 
-	    
-	    // generate OBO-style ID for the index
-	    def oboId = ""
-	    if (cIRI.lastIndexOf('?') > -1) {
-		oboId = cIRI.substring(cIRI.lastIndexOf('?') + 1)
-	    } else if (cIRI.lastIndexOf('#') > -1) {
-		oboId = cIRI.substring(cIRI.lastIndexOf('#') + 1)
-	    } else if (cIRI.lastIndexOf('/') > -1) {
-		oboId = cIRI.substring(cIRI.lastIndexOf('/') + 1)
-	    }
-	    if (oboId.length() > 0) {
-		oboId = oboId.replaceAll("_", ":")
-		info["oboid"] = oboId
-	    }
-	    
-	    
-	    index(owlClassIndexName, info)
+	info['deprecated'] = deprecated
+	if (!hasLabel) {
+	info["label"] << c.getIRI().getFragment().toString()
 	}
+
+	// Add an embedding to the document
+	if (data["embeds"] != null && data["embeds"].containsKey(cIRI)) {
+		info["embedding_vector"] = data["embeds"][cIRI];
+	} 
+	
+	// generate OBO-style ID for the index
+	def oboId = ""
+	if (cIRI.lastIndexOf('?') > -1) {
+	oboId = cIRI.substring(cIRI.lastIndexOf('?') + 1)
+	} else if (cIRI.lastIndexOf('#') > -1) {
+	oboId = cIRI.substring(cIRI.lastIndexOf('#') + 1)
+	} else if (cIRI.lastIndexOf('/') > -1) {
+	oboId = cIRI.substring(cIRI.lastIndexOf('/') + 1)
+	}
+	if (oboId.length() > 0) {
+	oboId = oboId.replaceAll("_", ":")
+	info["oboid"] = oboId
+	}
+	
+	
+	index(owlClassIndexName, info)
+	// }
     }
 
 	println('Finished indexing :' + acronym)

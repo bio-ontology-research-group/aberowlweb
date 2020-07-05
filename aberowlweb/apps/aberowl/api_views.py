@@ -105,7 +105,7 @@ class FindClassByMethodStartWithAPIView(APIView):
                 { 'match_bool_prefix': { 'label': query.lower() } }
             ]
             docs = {
-                'query': { 'bool': { 'must': query_list }, 'filter': { 'term': { 'deprecated': False } } },
+                'query': { 'bool': { 'must': query_list , 'filter': { 'term': { 'deprecated': False } } } },
                 '_source': {'excludes': ['embedding_vector',]}
             }
             result = search(ELASTIC_CLASS_INDEX_NAME, docs)

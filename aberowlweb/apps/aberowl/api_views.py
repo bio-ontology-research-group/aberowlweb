@@ -105,7 +105,7 @@ class FindClassByMethodStartWithAPIView(APIView):
                 { 'match_bool_prefix': { 'label': query.lower() } }
             ]
             docs = {
-                'query': { 'bool': { 'must': query_list } },
+                'query': { 'bool': { 'must': query_list }, 'filter': { 'term': { 'deprecated': False } } },
                 '_source': {'excludes': ['embedding_vector',]}
             }
             result = search(ELASTIC_CLASS_INDEX_NAME, docs)
@@ -138,10 +138,10 @@ class FindClassAPIView(APIView):
         es_query = None
         if ontology is not None:
             ontology = { 'match': { 'ontology': { 'query': ontology } } }
-            es_query = { 'bool': { 'should': should, 'must': ontology } }
+            es_query = { 'bool': { 'should': should, 'must': ontology, 'filter': { 'term': { 'deprecated': False } } } }
         else:
             should.append({ 'terms': { 'ontology' : query.lower().split(), 'boost': 150 }})
-            es_query = { 'bool': { 'should': should } }
+            es_query = { 'bool': { 'should': should, 'filter': { 'term': { 'deprecated': False } } } }
 
         f_query = {
             'query': es_query,

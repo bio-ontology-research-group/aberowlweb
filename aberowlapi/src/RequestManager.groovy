@@ -128,7 +128,10 @@ public class RequestManager {
      */
     void loadOntology() throws OWLOntologyCreationException, IOException {
 	OWLOntologyManager lManager = OWLManager.createOWLOntologyManager()
-	def ontology = lManager.loadOntologyFromOntologyDocument(IRI.create(this.ontIRI));
+	OWLOntologyLoaderConfiguration config = new OWLOntologyLoaderConfiguration();
+	config.setConnectionTimeout(120 * 60 * 1000);
+
+	def ontology = lManager.loadOntologyFromOntologyDocument(new IRIDocumentSource(IRI.create(this.ontIRI)), config);
 	OWLOntologyImportsClosureSetProvider provider = new OWLOntologyImportsClosureSetProvider(lManager, ontology);
 	OWLOntologyMerger merger = new OWLOntologyMerger(provider, false);
 	ontology = merger.createMergedOntology(lManager, IRI.create("http://merged.owl"));

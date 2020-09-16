@@ -48,7 +48,7 @@ class Command(BaseCommand):
             data.append({'ontId': ont.acronym, 'ontIRI': ontIRI})
         data = json.dumps(data)
         env = os.environ.copy()
-        env['JAVA_OPTS'] = '-Xmx200g -Xms8g'
+        env['JAVA_OPTS'] = '-Xmx200g -Xms8g -XX:+UseParallelGC'
         self.proc = Popen(
             ['groovy', 'OntologyServer.groovy'],
             cwd='aberowlapi/', stdin=PIPE, stdout=PIPE,

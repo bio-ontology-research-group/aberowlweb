@@ -129,7 +129,7 @@ public class RequestManager {
     void loadOntology() throws OWLOntologyCreationException, IOException {
 	OWLOntologyManager lManager = OWLManager.createOWLOntologyManager()
 	OWLOntologyLoaderConfiguration config = new OWLOntologyLoaderConfiguration();
-	config.setRetriesToAttempt(3);
+	config = config.setRetriesToAttempt(3).setConnectionTimeout(60 * 60 * 1000)
 
 	def ontology = lManager.loadOntologyFromOntologyDocument(new IRIDocumentSource(IRI.create(this.ontIRI)), config);
 	OWLOntologyImportsClosureSetProvider provider = new OWLOntologyImportsClosureSetProvider(lManager, ontology);

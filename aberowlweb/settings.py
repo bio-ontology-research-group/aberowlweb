@@ -315,6 +315,14 @@ class BaseConfiguration(Configuration):
 
     CORS_ORIGIN_ALLOW_ALL = True
     CORS_URLS_REGEX = r'^/api/.*$'
+    CORS_ALLOW_HEADERS = [
+        'accept',
+        'accept-encoding',
+        'authorization',
+        'content-type',
+        'origin',
+        'x-requested-with',
+    ]
 
     ELASTIC_SEARCH_URL=config['elasticsearch']['ELASTIC_SEARCH_URL']
     ELASTIC_SEARCH_USERNAME=config['elasticsearch']['ELASTIC_SEARCH_USERNAME']

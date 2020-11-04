@@ -75,7 +75,6 @@ class BaseConfiguration(Configuration):
         'widget_tweaks',
         'aberowl',
         'snowpenguin.django.recaptcha2',
-        'corsheaders',
     ]
 
     REST_FRAMEWORK = {
@@ -88,13 +87,13 @@ class BaseConfiguration(Configuration):
     MIDDLEWARE = [
         'django.middleware.security.SecurityMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
-        'corsheaders.middleware.CorsMiddleware',
         'django.middleware.common.CommonMiddleware',
         'django.middleware.csrf.CsrfViewMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
         'django.contrib.messages.middleware.MessageMiddleware',
         'django.middleware.clickjacking.XFrameOptionsMiddleware',
-        'aberowl.dl_query_logger.DLQueryLogger'
+        'aberowl.dl_query_logger.DLQueryLogger',
+        'aberowl.cors_middleware.CorsMiddleware'
     ]
 
     ROOT_URLCONF = 'aberowlweb.urls'
@@ -312,17 +311,6 @@ class BaseConfiguration(Configuration):
         messages.WARNING: 'list-group-item-warning',
         messages.ERROR: 'list-group-item-danger',
     }
-
-    CORS_ORIGIN_ALLOW_ALL = True
-    CORS_URLS_REGEX = r'^/api/.*$'
-    CORS_ALLOW_HEADERS = [
-        'accept',
-        'accept-encoding',
-        'authorization',
-        'content-type',
-        'origin',
-        'x-requested-with',
-    ]
 
     ELASTIC_SEARCH_URL=config['elasticsearch']['ELASTIC_SEARCH_URL']
     ELASTIC_SEARCH_USERNAME=config['elasticsearch']['ELASTIC_SEARCH_USERNAME']

@@ -1,6 +1,4 @@
-amqp==2.2.2
-billiard==3.5.0.3
-celery==4.1.0
+celery==4.4.2
 certifi==2017.7.27.1
 chardet==3.0.4
 Cython==0.28.5
@@ -8,7 +6,6 @@ defusedxml==0.5.0
 Django==1.11.23
 django-allauth==0.33.0
 django-configurations==2.0
-django-cors-headers==2.4.0
 django-recaptcha2==1.0.3
 django-rest-framework==0.1.0
 django-widget-tweaks==1.4.1
@@ -16,7 +13,7 @@ djangorestframework==3.9.1
 gevent==1.4
 greenlet==0.4.14
 idna==2.6
-kombu==4.1.0
+kombu==4.6.8
 numpy==1.15.1
 oauthlib==2.0.4
 psycopg2==2.7.3.1
@@ -29,7 +26,6 @@ requests==2.20.0
 requests-oauthlib==0.8.0
 six==1.11.0
 urllib3==1.24.2
-vine==1.1.4
 word2vec==0.9.4
 elasticsearch==7.0.4
 pytest==5.1.2

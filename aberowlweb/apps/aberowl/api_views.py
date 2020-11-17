@@ -45,7 +45,7 @@ ABEROWL_API_URL = getattr(
     settings, 'ABEROWL_API_URL', 'http://localhost:8080/api/')
 
 LOG_FOLDER = getattr(
-    settings, 'DLQUERY_LOGS_FOLDER', 'logs')
+    settings, 'DLQUERY_LOGS_FOLDER', 'dl')
 
 DEFUALT_PAGE_SIZE = 10
 page_cache = ExpiringDict(max_len=100, max_age_seconds=3600)

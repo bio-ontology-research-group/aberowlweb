@@ -1,50 +1,22 @@
-version: '2'
+version: "3.7"
 services:
-  elasticsearch1:
-    build: .
-    container_name: elasticsearch1
+  elesticsearch_aber:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.3
+    container_name: elesticsearch_aber
     environment:
-      - cluster.name=docker-cluster
       - xpack.security.enabled=false
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms12g -Xmx12g"
+      - discovery.type=single-node
     ulimits:
       memlock:
         soft: -1
         hard: -1
-    mem_limit: 15g
+      nofile:
+        soft: 65536
+        hard: 655366
+    cap_add:
+      - IPC_LOCK
     volumes:
-      - esdata1:/usr/share/elasticsearch/data
+      - ./elasticsearch/data:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
-    networks:
-      - esnet
     restart: unless-stopped
-
-  elasticsearch2:
-    build: .
-    environment:
-      - cluster.name=docker-cluster
-      - xpack.security.enabled=false
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms12g -Xmx12g"
-      - "discovery.zen.ping.unicast.hosts=elasticsearch1"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    mem_limit: 15g
-    volumes:
-      - esdata2:/usr/share/elasticsearch/data
-    networks:
-      - esnet
-    restart: unless-stopped
-
-volumes:
-  esdata1:
-    driver: local
-  esdata2:
-    driver: local
-
-networks:
-  esnet:

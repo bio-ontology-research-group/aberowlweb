@@ -424,7 +424,7 @@ class Ontology extends React.Component {
 		const content =  dlResults.map(
 			(item) =>
 			<tr>
-			<td><a href={'#/Browse/' + encodeURIComponent(this.state.dlQueryExp) + '/' + this.dlQuery}>{ item.owlClass }</a></td>
+			<td><a href={'#/Browse/' + encodeURIComponent(item.owlClass)}>{ item.owlClass }</a></td> 
 			<td>{ item.label }</td>
 			<td>{ item.definition }</td>
 			</tr>

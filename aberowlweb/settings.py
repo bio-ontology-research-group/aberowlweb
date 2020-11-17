@@ -318,7 +318,7 @@ class BaseConfiguration(Configuration):
     ELASTIC_ONTOLOGY_INDEX_NAME = config['elasticsearch']['ELASTIC_ONTOLOGY_INDEX_NAME']
     ELASTIC_CLASS_INDEX_NAME = config['elasticsearch']['ELASTIC_CLASS_INDEX_NAME']
     
-    DLQUERY_LOGS_FOLDER='logs'
+    DLQUERY_LOGS_FOLDER='dl'
 
 class Development(BaseConfiguration):
     pass
@@ -333,7 +333,7 @@ class Production(BaseConfiguration):
         'http://10.254.146.227:8080/api/',
         'http://10.254.146.61:8080/api/']
     ABEROWL_SERVER_URL = 'http://10.254.147.137/'
-    DLQUERY_LOGS_FOLDER='/tmp'
+    DLQUERY_LOGS_FOLDER='dl'
     # SESSION_COOKIE_SECURE=True
     # SESSION_COOKIE_HTTPONLY=True
     # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTOCOL', 'https')

@@ -11,9 +11,10 @@ from datetime import datetime
 from django.conf import settings
 
 LOG_FOLDER = getattr(
-    settings, 'DLQUERY_LOGS_FOLDER', 'logs')
+    settings, 'DLQUERY_LOGS_FOLDER', 'dl')
 
 def append_log(log_entry):
+    os.makedirs(LOG_FOLDER, exist_ok=True)
     with open('{log_folder}/aberowl-dl-logs.txt'.format(log_folder=LOG_FOLDER), 'a') as file:
         json.dump(log_entry, file)
         file.write(os.linesep)

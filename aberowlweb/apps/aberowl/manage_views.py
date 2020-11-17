@@ -20,8 +20,8 @@ class MyOntologyListView(ActionMixin, ListView):
 
     def get_queryset(self, *args, **kwargs):
         if self.request.user.is_superuser:
-            return Ontology.objects.order_by('acronym')
-            
+            return self.model.objects.order_by('acronym')
+
         return self.request.user.created_ontologies.all().order_by(
             'acronym')
 

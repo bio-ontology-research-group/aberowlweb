@@ -111,13 +111,13 @@ paths:
                       $ref: '#/components/schemas/Class'
                   status:
                     type: string
-  /api/ontology/{acronym}/class/{class_iri}:
-    get:
+  /api/ontology/{acronym}/class/_matchsuperclasses:
+    post:
       tags:
       - Ontology
-      summary: Gets owl class by class IRI
-      description: Gets owl class details by class IRI   
-      operationId: api-ontology_class_details
+      summary: Finds matching superclasses between two sets of classes
+      description: Finds matching superclasses between two sets of classes  
+      operationId: api-matach_super_class
       parameters:
       - name: acronym
         in: path
@@ -125,12 +125,12 @@ paths:
         required: true
         schema:
           type: string
-      - name: class_iri
-        in: path
-        description: Owl Class IRI
+      - in: "body"
+        name: "body"
+        description: "request content containing two sets of classes for matching superclasses"
         required: true
         schema:
-          type: string
+          $ref: '#/components/schemas/SuperclassMatchRequest'
       responses:
         200:
           description: successful operation
@@ -588,3 +588,18 @@ components:
           type: string
       xml:
         name: OntologyES
+    SuperclassMatchRequest:
+      type: object
+      properties:
+        source_classes:
+          type: array
+          description: List of class uris of source set
+          items: 
+            type: string
+        target_classes:
+          type: array
+          description: List of class uris of target set
+          items: 
+            type: string
+      xml:
+        name: SuperclassMatchRequest

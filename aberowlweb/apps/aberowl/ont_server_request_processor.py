@@ -37,6 +37,32 @@ class OntServerRequestProcessor:
         return self.__execute_request(url, RequestType.FIND_OBJ_PROPS.value, urllib.parse.urlencode(query_string))
 
 
+    def match_superclasses(self, source_classes, target_classes, ontology):
+        supercls_map = {}
+        for source_cls in source_classes:
+            result = self.execute_dl_query(f'<{source_cls}>', 'superclass', ontology, axioms=False, labels=False, direct=False)
+            for supercls in result['result']:
+                if supercls['owlClass'] in supercls_map:
+                    continue
+
+                supercls_map[supercls['owlClass']] = supercls
+
+        for target_cls in target_classes:
+            result = self.execute_dl_query(f'<{target_cls}>', 'superclass', ontology, axioms=False, labels=False, direct=False)
+            for supercls in result['result']:
+                if supercls['owlClass'] in supercls_map:
+                    continue
+
+                supercls_map[supercls['owlClass']] = supercls
+        
+        for key in list(supercls_map):
+            result = self.execute_dl_query(key, 'superclass', ontology, axioms=False, labels=False, direct=False)
+            for supercls in result['result']:
+                if supercls['owlClass'] in supercls_map:
+                    del supercls_map[supercls['owlClass']]
+
+        return { 'result' : supercls_map.values() }
+
     def find_by_ontology_and_class(self, ontology_acronym, class_iri):
         ontology = self.__load_ontology(ontology_acronym)
         url = ontology.get_api_url()

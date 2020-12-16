@@ -21,6 +21,8 @@ urlpatterns = [
         api_views.ListOntologyAPIView.as_view(), name='api-list_ontologies'),
     url(r'^ontology/_find$',
         api_views.FindOntologyAPIView.as_view(), name='api-find_ontology'),
+    url(r'^ontology/(?P<acronym>[-\w]+)/class/_matchsuperclasses$', 
+        api_views.MatchSuperClasses.as_view(), name='api-matach_super_class'),
     url(r'ontology/(?P<acronym>[-\w]+)/objectproperty/$',
         api_views.ListOntologyObjectPropertiesView.as_view(), name='api-ontology_object_properties_list'),
     url(r'^ontology/(?P<acronym>[-\w]+)/objectproperty/(?P<property_iri>.+)$',
@@ -32,3 +34,5 @@ urlpatterns = [
     url(r'instance/$',
         api_views.ListInstanceAPIView.as_view(), name='api-instance_list'),
 ]
+
+

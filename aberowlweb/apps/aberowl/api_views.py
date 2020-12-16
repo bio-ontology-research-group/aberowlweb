@@ -518,3 +518,26 @@ class ListInstanceAPIView(APIView):
                 
         except Exception as e:
             return Response({'status': 'exception', 'message': str(e)})
+
+class MatchSuperClasses(APIView):
+    authentication_classes = []
+
+    def post(self, request, acronym):
+        try:
+            source_classes = None
+            if 'source_classes' in request.data:
+                source_classes = request.data['source_classes']
+            else:
+                raise Exception("'source_classes' element is required")
+
+            target_classes = None
+            if 'target_classes' in request.data:
+                target_classes = request.data['target_classes']
+            else:
+                raise Exception("'target_classes' element is required")
+
+            result = ont_server.match_superclasses(source_classes, target_classes, acronym)
+            return Response(result)
+        except Exception as e:
+            logger.exception("message")
+            return Response({'status': 'exception', 'message': str(e)})

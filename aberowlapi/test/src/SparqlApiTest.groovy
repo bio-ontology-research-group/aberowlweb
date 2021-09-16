@@ -27,7 +27,7 @@ class SparqlApiTest extends GroovyTestCase {
                     "        } .  \n" +
                     "    }";
 
-        def response = restClient.get(path: '/api/sparql', query : [query : sparql, result_format:'application/sparql-results+json'])
+        def response = restClient.get(path: '/api/sparql', query : [query : sparql, format:'application/sparql-results+json'])
 
         assertEquals(200, response.status)
 
@@ -62,7 +62,7 @@ class SparqlApiTest extends GroovyTestCase {
                 "       ))  \n" +
                 "    }";
 
-        def response = restClient.get(path: '/api/sparql', query : [query : sparql, result_format:'application/sparql-results+json'])
+        def response = restClient.get(path: '/api/sparql', query : [query : sparql, format:'application/sparql-results+json'])
 
         assertEquals(200, response.status)
 

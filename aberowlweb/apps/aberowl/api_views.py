@@ -346,8 +346,10 @@ class SparqlAPIView(APIView):
     def get(self, request, format=None):
         query = request.GET.get('query', None)
         res_format = request.GET.get('result_format', None)
+        format = request.GET.get('format', None)
         try:
-            return self.process_query(query, res_format)
+            format_param = format if format.strip() else res_format
+            return self.process_query(query, format_param)
         except KeyError:
             raise Exception("Malformed data!")
 

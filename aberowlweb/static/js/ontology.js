@@ -568,7 +568,7 @@ class Ontology extends React.Component {
 		const query = this.state.query;	
 		const format = this.state.format;	
 		var that = this;
-		const sparqlUrl = '/api/sparql?query=' + encodeURIComponent(query) + '&result_format=' + encodeURIComponent(format)
+		const sparqlUrl = '/api/sparql?query=' + encodeURIComponent(query) + '&format=' + encodeURIComponent(format)
 		window.open(sparqlUrl, "_blank") 
 	}
 

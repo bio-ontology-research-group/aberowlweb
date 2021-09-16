@@ -311,16 +311,23 @@ paths:
         style: form
         schema:
           type: string
+      - name: format
+        in: query
+        description: format for the result of aberowl SPARQL query
+        required: true
+        style: form
+        schema:
+          type: string
       - name: result_format
         in: query
-        description: result format for the aberowl SPARQL query
-        required: true
+        description: Deprecated* the query parameter is deprecated and will be removed in later release. Use format query parameter instead
+        required: false
         style: form
         schema:
           type: string
       responses:
         200:
-          description: Response will be in format provided in result_format parameter of query string.
+          description: Response will be in format provided in format parameter of query string.
   /api/dlquery:
     get:
       tags:

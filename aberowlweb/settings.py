@@ -81,7 +81,8 @@ class BaseConfiguration(Configuration):
         'DEFAULT_RENDERER_CLASSES': [
             'rest_framework.renderers.JSONRenderer',
             'rest_framework.renderers.BrowsableAPIRenderer',
-        ]
+        ],
+        'URL_FORMAT_OVERRIDE':'drf_fromat'
     }
 
     MIDDLEWARE = [

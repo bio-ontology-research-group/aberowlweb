@@ -343,7 +343,7 @@ class ListOntologyAPIView(ListAPIView):
         
 class SparqlAPIView(APIView):
 
-    def get(self, request, format=None):
+    def get(self, request):
         query = request.GET.get('query', None)
         res_format = request.GET.get('result_format', None)
         format = request.GET.get('format', None)

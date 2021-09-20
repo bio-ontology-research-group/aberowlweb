@@ -12,6 +12,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.http import HttpResponseNotFound
 from django.conf import settings
 from django.shortcuts import redirect
+from urllib.parse import urlencode
 from collections import defaultdict
 from gevent.pool import Pool
 import time
@@ -369,11 +370,12 @@ class SparqlAPIView(APIView):
             if response.status_code == 400:
                 return HttpResponse(response.text)
             if response.status_code == 200:
-                content = response.json()
-                query_url="{endpoint}?query={query}&format={res_format}&timeout=0&debug=on&run={run}"\
-                    .format(endpoint=content['endpoint'], query=parse.quote(content['query']), res_format=parse.quote(res_format), 
-                    run=parse.quote('Run Query'))
+                content = response.json()    
                 
+                querystr = urlencode({'query':content['query'], 'format':res_format, 
+                    'timeout': 0, 'debug':'on', 'run': 'Run Query'}, doseq=True)
+
+                query_url=f"{content['endpoint']}?{querystr}"
                 logger.debug("redirect to:" + query_url)
                 response = HttpResponseRedirect(redirect_to=query_url)
                 return response

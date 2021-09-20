@@ -167,6 +167,7 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
       def sparql = " SELECT ?a ?b ?abt \n" +
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
+                    "       ?b rdf:type ?abt .\n" +
                     "       VALUES ?abt {  \n" +
                     "         OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
                     "            part_of some 'someclass' \n" + 
@@ -174,7 +175,27 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "       }. \n" +
                     "    }";  
       def result = parser.removeAberowlManchesterOwlFrame(sparql);
-      def expected ="SELECT ?a ?b  \n" +
+      def expected ="SELECT ?a ?b ?abt \n" +
+                    "   WHERE {\n" +
+                    "       ?a rdf:label ?b .\n" +
+                    "       ?b rdf:type ?abt .\n" +
+                    "        \n" + 
+                    "    }"; 
+      assertToString(expected, result.trim())
+   }
+
+   void testRemoveAberowlManchesterOwlFrameWhenValueFrameAndNotSelectVar() {
+      def sparql = " SELECT ?a ?b \n" +
+                    "   WHERE {\n" +
+                    "       ?a rdf:label ?b .\n" +
+                    "       VALUES ?abt {  \n" +
+                    "         OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "            part_of some 'someclass' \n" + 
+                    "         } \n" +
+                    "       }. \n" +
+                    "    }";  
+      def result = parser.removeAberowlManchesterOwlFrame(sparql);
+      def expected ="SELECT ?a ?b \n" +
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
                     "        \n" + 
@@ -183,10 +204,9 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
    }
 
    void testRemoveAberowlManchesterOwlFrameWhenFilterFrame() {
-      def sparql = " SELECT ?a ?b ?abt \n" +
+      def sparql = " SELECT ?a ?b \n" +
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
-                    "       ?b rdf:type ?abt .\n" +
                     "       FILTER ( ?abt in ( \n" +
                     "           OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
                     "               part_of some 'someclass' \n" +
@@ -194,16 +214,15 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "       )) \n" +
                     "    }"; 
       def result = parser.removeAberowlManchesterOwlFrame(sparql);
-      def expected ="SELECT ?a ?b ?abt \n" +
+      def expected ="SELECT ?a ?b \n" +
                   "   WHERE {\n" +
                   "       ?a rdf:label ?b .\n" +
-                  "       ?b rdf:type ?abt .\n" +
                   "       }"; 
       assertToString(expected, result.trim())
    }
 
    void testReplaceAberowlManchesterOwlFrameWhenValueFrame() {
-      def sparql = " SELECT ?a ?b ?abt \n" +
+      def sparql = " SELECT ?a ?b \n" +
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
                     "       VALUES ?abt {  \n" +
@@ -214,11 +233,32 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "    }";  
       def commaJoinedClassesIriList = "<https://www.w3.org/TR/owl2-manchester-syntax/1>, <https://www.w3.org/TR/owl2-manchester-syntax/2>";
       def result = parser.replaceAberowlManchesterOwlFrame(sparql, commaJoinedClassesIriList);
-      def expected ="SELECT ?a ?b ?abt \n" +
+      def expected ="SELECT ?a ?b \n" +
                      "   WHERE {\n" +
                      "       ?a rdf:label ?b .\n" +
                      "       VALUES ?abt {  \n" +
                      "         <https://www.w3.org/TR/owl2-manchester-syntax/1>, <https://www.w3.org/TR/owl2-manchester-syntax/2>}. \n" +
+                     "    }";
+      assertToString(expected, result.trim())
+   }
+
+   void testReplaceAberowlManchesterOwlFrameWhenValueFrameAndNoClassFound() {
+      def sparql = " SELECT ?a ?b ?abt \n" +
+                    "   WHERE {\n" +
+                    "       ?a rdf:label ?b .\n" +
+                    "       VALUES ?abt {  \n" +
+                    "         OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "            part_of some 'someclass' \n" +
+                    "         } \n" +
+                    "       }. \n" +
+                    "    }";  
+      def commaJoinedClassesIriList = "";
+      def result = parser.replaceAberowlManchesterOwlFrame(sparql, commaJoinedClassesIriList);
+      def expected ="SELECT ?a ?b ?abt \n" +
+                     "   WHERE {\n" +
+                     "       ?a rdf:label ?b .\n" +
+                     "       VALUES ?abt {  \n" +
+                     "         ''}. \n" +
                      "    }";
       assertToString(expected, result.trim())
    }
@@ -242,6 +282,29 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "       ?b rdf:type ?abt .\n" +
                     "       FILTER ( ?abt in ( \n" +
                     "           <https://www.w3.org/TR/owl2-manchester-syntax/1>, <https://www.w3.org/TR/owl2-manchester-syntax/2>)) \n" +
+                    "    }";
+      assertToString(expected, result.trim())
+   }
+
+   void testReplaceAberowlManchesterOwlFrameWhenFilterFrameAndNoClassFound() {
+      def sparql = " SELECT ?a ?b ?abt \n" +
+                    "   WHERE {\n" +
+                    "       ?a rdf:label ?b .\n" +
+                    "       ?b rdf:type ?abt .\n" +
+                    "       FILTER ( ?abt in ( \n" +
+                    "           OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "               part_of some 'someclass' \n" +
+                    "           } \n" +
+                    "       )) \n" +
+                    "    }"; 
+      def commaJoinedClassesIriList = "";
+      def result = parser.replaceAberowlManchesterOwlFrame(sparql, commaJoinedClassesIriList);
+      def expected ="SELECT ?a ?b ?abt \n" +
+                    "   WHERE {\n" +
+                    "       ?a rdf:label ?b .\n" +
+                    "       ?b rdf:type ?abt .\n" +
+                    "       FILTER ( ?abt in ( \n" +
+                    "           '')) \n" +
                     "    }";
       assertToString(expected, result.trim())
    }

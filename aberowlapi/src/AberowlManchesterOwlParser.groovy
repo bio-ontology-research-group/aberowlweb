@@ -24,6 +24,11 @@ public class AberowlManchesterOwlParser {
             query.setSparqlServiceUrl(matcher.group(3));
             query.setOntologyIri(matcher.group(4));
             query.setQuery(matcher.group(5));
+            def var = manchesterOwlQuery.findAll(VARIABLE_REGEX);
+            if (var.size() > 0) {
+                query.setVariable(var[0]);
+            }
+
             return query;
         }
         return null;
@@ -76,6 +81,9 @@ public class AberowlManchesterOwlParser {
         println("In replaceAberowlManchesterOwlFrame");
         if (sparql == null) {
             throw new RuntimeException("SPARQL query is null");
+        }
+        if (replaceWith.trim().isEmpty()) {
+            return sparql.replaceAll(QUERY_REGEX, "''");
         }
         return sparql.replaceAll(QUERY_REGEX, replaceWith);
     }

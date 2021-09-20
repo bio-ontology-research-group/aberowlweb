@@ -46,7 +46,8 @@ public class AberowlManchesterOwlQueryEngine {
             }
             queryString = parser.replaceAberowlManchesterOwlFrame(sparql, commaJoinedClassesIriList);
         } else {
-            queryString = parser.removeAberowlManchesterOwlFrame(sparql);
+            // queryString = parser.removeAberowlManchesterOwlFrame(sparql),;
+            queryString = parser.replaceAberowlManchesterOwlFrame(sparql, '');
         }
 
         println("Expanded Sparql: " + queryString)  

@@ -344,6 +344,14 @@ class ListOntologyAPIView(ListAPIView):
         
 class SparqlAPIView(APIView):
 
+    def post(self, request):
+        query = request.data['query'] if 'query' in request.data else None
+        format = request.data['format'] if 'format' in request.data else None
+        try:
+            return self.process_query(query, format)
+        except KeyError:
+            raise Exception("Malformed data!")
+
     def get(self, request):
         query = request.GET.get('query', None)
         res_format = request.GET.get('result_format', None)

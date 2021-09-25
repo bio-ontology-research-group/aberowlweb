@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from urllib import parse
+from rest_framework.parsers import FormParser, MultiPartParser
 
 import coreapi
 import requests
@@ -22,7 +23,7 @@ from aberowl.models import Ontology
 from aberowl.serializers import OntologySerializer
 from elasticsearch import Elasticsearch
 
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, QuerySetPaginator
 from expiringdict import ExpiringDict
 
 import re
@@ -344,11 +345,13 @@ class ListOntologyAPIView(ListAPIView):
         
 class SparqlAPIView(APIView):
 
+    parser_classes = [FormParser, MultiPartParser]
+
     def post(self, request):
         query = request.data['query'] if 'query' in request.data else None
         format = request.data['format'] if 'format' in request.data else None
         try:
-            return self.process_query(query, format)
+            return self.process_query(query, format, ispost=True)
         except KeyError:
             raise Exception("Malformed data!")
 
@@ -362,7 +365,7 @@ class SparqlAPIView(APIView):
         except KeyError:
             raise Exception("Malformed data!")
 
-    def process_query(self, query, res_format):
+    def process_query(self, query, res_format, ispost=False):
         if query is None:
             return Response(
                 {'status': 'error',
@@ -382,9 +385,12 @@ class SparqlAPIView(APIView):
                 
                 querystr = urlencode({'query':content['query'], 'format':res_format, 
                     'timeout': 0, 'debug':'on', 'run': 'Run Query'}, doseq=True)
+                query_url=f"{content['endpoint'].strip()}?{querystr}"
+                if ispost:
+                    response = Response()
+                    response['Location'] = query_url
+                    return response
 
-                query_url=f"{content['endpoint']}?{querystr}"
-                logger.debug("redirect to:" + query_url)
                 response = HttpResponseRedirect(redirect_to=query_url)
                 return response
         except Exception as e:

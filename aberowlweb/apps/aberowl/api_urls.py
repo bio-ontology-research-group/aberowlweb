@@ -11,7 +11,7 @@ urlpatterns = [
         api_views.BackendAPIView.as_view(), name='api-backend'),
     url(r'^class/_similar$',
         api_views.MostSimilarAPIView.as_view(), name='api-find_class_similar'),
-    url(r'^sparql/$',
+    url(r'^sparql$',
         api_views.SparqlAPIView.as_view(), name='api-sparql'),
     url(r'^dlquery$',
         api_views.DLQueryAPIView.as_view(), name='api-dlquery'),

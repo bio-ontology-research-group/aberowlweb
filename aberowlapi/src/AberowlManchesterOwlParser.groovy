@@ -11,7 +11,7 @@ public class AberowlManchesterOwlParser {
         "(FILTER|filter)[\\r\\n\\s]+[\\(]{1}[\\r\\n\\s]+\\?[A-Za-z0-9]+[\\s]+in+[\\s]+\\([\\r\\n\\s]*(OWL|owl){1}[\\s]*(superclass|subclass|equivalent|supeq|subeq|realize){1}[\\s]*\\<.+\\>[\\s]+[\\r\\n\\s]*\\<.*\\>[\\s]+[\\r\\n\\s]*\\{[\\r\\n\\s]+.+[\\r\\n\\s]+\\}[\\r\\n\\s]*\\)[\\r\\n\\s]*\\)[\\s]*[\\.]*";
 
     private static final String QUERY_REGEX = 
-        "(OWL|owl){1}[\\s]*(superclass|subclass|equivalent|supeq|subeq|realize){1}[\\s]*\\<(.+)\\>[\\s]+[\\r\\n\\s]*\\<(.*)\\>[\\s]+[\\r\\n\\s]*\\{[\\r\\n\\s]+(.+)[\\r\\n\\s]+\\}[\\s]*[\\.]*";
+        "(OWL|owl){1}[\\s]*(superclass|subclass|equivalent|supeq|subeq|realize){1}[\\s]*\\<([\\w]+:\\/\\/[\\w\\.\\/]+)>[\\s]+[\\r\\n\\s]*\\<([\\w-]*)\\>[\\s]+[\\r\\n\\s]*\\{[\\r\\n\\s]+([\\w\\s\']+)[\\r\\n\\s]+\\}[\\s]*[\\.]*";
 
     private static final String VARIABLE_REGEX = "\\?[A-Za-z0-9]+"
 

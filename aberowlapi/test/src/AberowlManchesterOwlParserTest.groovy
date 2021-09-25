@@ -12,26 +12,26 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
 
     void testParseWhenValueFrame() {
       def sparql = "VALUES ?abt {  \n" +
-                    "   OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "   OWL subclass <https://www.w3.org/sparql> <> { \n" +
                     "       part_of some 'someclass' \n" +
                     "   } \n" +
                     "}";  
       def result = parser.parse(sparql);
       assertToString("subclass", result.queryType.trim())
-      assertToString("https://www.w3.org/TR/owl2-manchester-syntax/", result.sparqlServiceUrl.trim())
+      assertToString("https://www.w3.org/sparql", result.sparqlServiceUrl.trim())
       assertToString("", result.ontologyIri.trim())
       assertToString("part_of some 'someclass'", result.query.trim())
     }
 
     void testParseWhenFilterFrame() {
       def sparql = "FILTER ( ?abt in ( \n" +
-                    "   OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "   OWL subclass <https://www.w3.org/sparql> <> { \n" +
                     "       part_of some 'someclass' \n" +
                     "   } \n" +
                     "))";    
       def result = parser.parse(sparql);
       assertToString("subclass", result.queryType.trim())
-      assertToString("https://www.w3.org/TR/owl2-manchester-syntax/", result.sparqlServiceUrl.trim())
+      assertToString("https://www.w3.org/sparql", result.sparqlServiceUrl.trim())
       assertToString("", result.ontologyIri.trim())
       assertToString("part_of some 'someclass'", result.query.trim())
     }
@@ -41,14 +41,14 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
                     "       VALUES ?abt {  \n" +
-                    "           OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "           OWL subclass <https://www.w3.org/sparql> <> { \n" +
                     "               part_of some 'someclass' \n" +
                     "           } \n" +
                     "       }. \n" +
                     "    }";  
       def result = parser.parseSparql(sparql);
       assertToString("subclass", result.queryType.trim())
-      assertToString("https://www.w3.org/TR/owl2-manchester-syntax/", result.sparqlServiceUrl.trim())
+      assertToString("https://www.w3.org/sparql", result.sparqlServiceUrl.trim())
       assertToString("", result.ontologyIri.trim())
       assertToString("part_of some 'someclass'", result.query.trim())
       assertTrue(result.isInValueFrame())
@@ -60,14 +60,14 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "       ?a rdf:label ?b .\n" +
                     "       ?b rdf:type ?abt .\n" +
                     "       FILTER ( ?abt in ( \n" +
-                    "           OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "           OWL subclass <https://www.w3.org/sparql> <> { \n" +
                     "               part_of some 'someclass' \n" +
                     "           } \n" +
                     "       )) \n" +
                     "    }";    
       def result = parser.parseSparql(sparql);
       assertToString("subclass", result.queryType.trim())
-      assertToString("https://www.w3.org/TR/owl2-manchester-syntax/", result.sparqlServiceUrl.trim())
+      assertToString("https://www.w3.org/sparql", result.sparqlServiceUrl.trim())
       assertToString("", result.ontologyIri.trim())
       assertToString("part_of some 'someclass'", result.query.trim())
       assertFalse(result.isInValueFrame())
@@ -87,14 +87,14 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
                     "       VALUES ?abt {  \n" +
-                    "         OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "         OWL subclass <https://www.w3.org/sparql> <> { \n" +
                     "           part_of some 'someclass' \n" +
                     "         } \n" +
                     "       }. \n" +
                     "    }";  
       def result = parser.matchManchesterOwlValueFrame(sparql);
       def expected ="VALUES ?abt {  \n" +
-                     "         OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                     "         OWL subclass <https://www.w3.org/sparql> <> { \n" +
                      "           part_of some 'someclass' \n" +
                      "         } \n" +
                      "       }.";
@@ -128,14 +128,14 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "       ?a rdf:label ?b .\n" +
                     "       ?b rdf:type ?abt .\n" +
                     "       FILTER ( ?abt in ( \n" +
-                    "           OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "           OWL subclass <https://www.w3.org/sparql> <> { \n" +
                     "               part_of some 'someclass' \n" +
                     "           } \n" +
                     "       )) \n" +
                     "    }";  
       def result = parser.matchManchesterOwlFilterFrame(sparql);
       def expected ="FILTER ( ?abt in ( \n" +
-                    "           OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "           OWL subclass <https://www.w3.org/sparql> <> { \n" +
                     "               part_of some 'someclass' \n" +
                     "           } \n" +
                     "       ))";
@@ -169,7 +169,7 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "       ?a rdf:label ?b .\n" +
                     "       ?b rdf:type ?abt .\n" +
                     "       VALUES ?abt {  \n" +
-                    "         OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "         OWL subclass <https://www.w3.org/sparql> <> { \n" +
                     "            part_of some 'someclass' \n" + 
                     "         } \n" +
                     "       }. \n" +
@@ -189,7 +189,7 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
                     "       VALUES ?abt {  \n" +
-                    "         OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "         OWL subclass <https://www.w3.org/sparql> <> { \n" +
                     "            part_of some 'someclass' \n" + 
                     "         } \n" +
                     "       }. \n" +
@@ -208,7 +208,7 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
                     "       FILTER ( ?abt in ( \n" +
-                    "           OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "           OWL subclass <https://www.w3.org/sparql> <> { \n" +
                     "               part_of some 'someclass' \n" +
                     "           } \n" +
                     "       )) \n" +
@@ -226,7 +226,7 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
                     "       VALUES ?abt {  \n" +
-                    "         OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "         OWL subclass <https://www.w3.org/sparql> <> { \n" +
                     "            part_of some 'someclass' \n" +
                     "         } \n" +
                     "       }. \n" +
@@ -247,7 +247,7 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "   WHERE {\n" +
                     "       ?a rdf:label ?b .\n" +
                     "       VALUES ?abt {  \n" +
-                    "         OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "         OWL subclass <https://www.w3.org/sparql> <> { \n" +
                     "            part_of some 'someclass' \n" +
                     "         } \n" +
                     "       }. \n" +
@@ -269,7 +269,7 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "       ?a rdf:label ?b .\n" +
                     "       ?b rdf:type ?abt .\n" +
                     "       FILTER ( ?abt in ( \n" +
-                    "           OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "           OWL subclass <https://www.w3.org/sparql> <> { \n" +
                     "               part_of some 'someclass' \n" +
                     "           } \n" +
                     "       )) \n" +
@@ -292,7 +292,7 @@ public class AberowlManchesterOwlParserTest extends GroovyTestCase {
                     "       ?a rdf:label ?b .\n" +
                     "       ?b rdf:type ?abt .\n" +
                     "       FILTER ( ?abt in ( \n" +
-                    "           OWL subclass <https://www.w3.org/TR/owl2-manchester-syntax/> <> { \n" +
+                    "           OWL subclass <https://www.w3.org/sparql> <> { \n" +
                     "               part_of some 'someclass' \n" +
                     "           } \n" +
                     "       )) \n" +

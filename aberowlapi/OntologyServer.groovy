@@ -14,7 +14,6 @@
         @Grab(group='net.sourceforge.owlapi', module='owlapi-parsers', version='4.3.2'),
 	@Grab(group='org.codehaus.gpars', module='gpars', version='1.1.0'),
 	@Grab(group='com.google.guava', module='guava', version='19.0'),
-	@Grab(group='org.codehaus.groovy.modules.http-builder', module='http-builder', version='0.7.1' ),
 	@GrabExclude(group='xml-apis', module='xml-apis'),
 	@Grab(group='aopalliance', module='aopalliance', version='1.0'),
 	@Grab(group='javax.el', module='javax.el-api', version='3.0.0'),
@@ -28,15 +27,10 @@ import org.eclipse.jetty.server.handler.*
 import groovy.servlet.*
 import src.*
 import java.util.concurrent.*
-import org.apache.log4j.Logger
-import org.apache.log4j.Level
 import org.eclipse.jetty.server.nio.*
 import org.eclipse.jetty.util.thread.*
 import org.eclipse.jetty.util.log.Log
 import org.eclipse.jetty.util.log.StdErrLog
-import groovyx.net.http.HTTPBuilder
-import groovyx.net.http.Method
-import groovyx.net.http.ContentType
 import groovy.json.*
 import groovyx.gpars.GParsPool
 

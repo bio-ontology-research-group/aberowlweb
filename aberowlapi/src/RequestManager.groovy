@@ -21,9 +21,6 @@ import java.util.timer.*
 
 import groovy.json.*
 import groovy.io.*
-import groovyx.net.http.HTTPBuilder
-import groovyx.net.http.Method
-import groovyx.net.http.ContentType
 import com.google.common.collect.*
 import org.semanticweb.owlapi.model.UnloadableImportException
 

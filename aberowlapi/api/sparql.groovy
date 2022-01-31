@@ -1,8 +1,6 @@
 // An Api for SPARQL query rewriting.
 
 import groovy.json.*
-import org.apache.log4j.*
-import groovy.util.logging.*
 import src.util.Util
 import groovyx.gpars.GParsPool
 import src.AberowlManchesterOwlQueryEngine;
@@ -10,15 +8,7 @@ import src.AberowlManchesterOwlQueryEngine;
 if(!application) {
     application = request.getApplication(true)
 }
-if (!application.log) {
-    Logger log = Logger.getInstance(getClass())
-    log.level = Level.INFO
-    // add an appender to log to file
-    log.addAppender(new RollingFileAppender(new TTCCLayout(), 'queries.log', true))
-    application.log = log
-    log.info 'Logger created'
-}
-def log = application.log
+
 def queryEngine = new AberowlManchesterOwlQueryEngine();
 def params = Util.extractParams(request)
 

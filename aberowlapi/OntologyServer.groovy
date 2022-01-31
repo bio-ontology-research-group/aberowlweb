@@ -15,6 +15,7 @@
 	@Grab(group='org.codehaus.gpars', module='gpars', version='1.1.0'),
 	@Grab(group='com.google.guava', module='guava', version='19.0'),
 	@GrabExclude(group='xml-apis', module='xml-apis'),
+	@GrabExclude(group='log4j', module='log4j'),
 	@Grab(group='aopalliance', module='aopalliance', version='1.0'),
 	@Grab(group='javax.el', module='javax.el-api', version='3.0.0'),
 	@GrabConfig(systemClassLoader=true)

@@ -3,7 +3,10 @@ package src
 // import org.semanticweb.elk.owlapi.ElkReasonerFactory;
 // import org.semanticweb.elk.owlapi.ElkReasonerConfiguration
 // import org.semanticweb.elk.reasoner.config.*
-import org.semanticweb.HermiT.ReasonerFactory;
+
+// import org.semanticweb.HermiT.ReasonerFactory;
+
+import uk.ac.manchester.cs.jfact.JFactFactory;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.reasoner.*
 import org.semanticweb.owlapi.reasoner.structural.StructuralReasoner
@@ -147,7 +150,7 @@ public class RequestManager {
 	    preferredLanguageMap.put(annotationProperty, langs);
 	}
 
-	OWLReasonerFactory reasonerFactory = new ReasonerFactory();
+	OWLReasonerFactory reasonerFactory = new JFactFactory();
 	OWLOntology ontology = this.ontology
 	OWLOntologyManager manager = this.oManager
 	// /* Configure Elk */
@@ -159,10 +162,10 @@ public class RequestManager {
 	// OWLReasonerConfiguration rConf = new ElkReasonerConfiguration(
 	//     ElkReasonerConfiguration.getDefaultOwlReasonerConfiguration(
 	// 	new NullReasonerProgressMonitor()), eConf)
-        ConsoleProgressMonitor progressMonitor = new ConsoleProgressMonitor();
-	OWLReasonerConfiguration rConf = new SimpleConfiguration(progressMonitor);
+	OWLReasonerConfiguration rConf = new SimpleConfiguration(
+            new NullReasonerProgressMonitor());
 	this.oReasoner = reasonerFactory.createReasoner(ontology, rConf);
-	this.oReasoner.precomputeInferences(InferenceType.values());
+	this.oReasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 
 	StructuralReasonerFactory sReasonerFactory = new StructuralReasonerFactory()
 	this.structReasoner = sReasonerFactory.createReasoner(ontology)

@@ -2,7 +2,6 @@
 
 import groovy.json.*
 import org.json.simple.JSONValue;
-import org.semanticweb.elk.owlapi.ElkReasonerFactory;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.reasoner.*
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;

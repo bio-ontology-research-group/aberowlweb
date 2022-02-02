@@ -1,8 +1,9 @@
 package src
 
-import org.semanticweb.elk.owlapi.ElkReasonerFactory;
-import org.semanticweb.elk.owlapi.ElkReasonerConfiguration
-import org.semanticweb.elk.reasoner.config.*
+// import org.semanticweb.elk.owlapi.ElkReasonerFactory;
+// import org.semanticweb.elk.owlapi.ElkReasonerConfiguration
+// import org.semanticweb.elk.reasoner.config.*
+import org.semanticweb.HermiT.ReasonerFactory;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.reasoner.*
 import org.semanticweb.owlapi.reasoner.structural.StructuralReasoner
@@ -146,20 +147,22 @@ public class RequestManager {
 	    preferredLanguageMap.put(annotationProperty, langs);
 	}
 
-	OWLReasonerFactory reasonerFactory = new ElkReasonerFactory();
+	OWLReasonerFactory reasonerFactory = new ReasonerFactory();
 	OWLOntology ontology = this.ontology
 	OWLOntologyManager manager = this.oManager
-	/* Configure Elk */
-	ReasonerConfiguration eConf = ReasonerConfiguration.getConfiguration()
-	eConf.setParameter(ReasonerConfiguration.NUM_OF_WORKING_THREADS, ELK_THREADS)
-	eConf.setParameter(ReasonerConfiguration.INCREMENTAL_MODE_ALLOWED, "true")
+	// /* Configure Elk */
+	// ReasonerConfiguration eConf = ReasonerConfiguration.getConfiguration()
+	// eConf.setParameter(ReasonerConfiguration.NUM_OF_WORKING_THREADS, ELK_THREADS)
+	// eConf.setParameter(ReasonerConfiguration.INCREMENTAL_MODE_ALLOWED, "true")
 
-	/* OWLAPI Reasoner config, no progress monitor */
-	OWLReasonerConfiguration rConf = new ElkReasonerConfiguration(
-	    ElkReasonerConfiguration.getDefaultOwlReasonerConfiguration(
-		new NullReasonerProgressMonitor()), eConf)
+	// /* OWLAPI Reasoner config, no progress monitor */
+	// OWLReasonerConfiguration rConf = new ElkReasonerConfiguration(
+	//     ElkReasonerConfiguration.getDefaultOwlReasonerConfiguration(
+	// 	new NullReasonerProgressMonitor()), eConf)
+        ConsoleProgressMonitor progressMonitor = new ConsoleProgressMonitor();
+	OWLReasonerConfiguration rConf = new SimpleConfiguration(progressMonitor);
 	this.oReasoner = reasonerFactory.createReasoner(ontology, rConf);
-	this.oReasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
+	this.oReasoner.precomputeInferences(InferenceType.values());
 
 	StructuralReasonerFactory sReasonerFactory = new StructuralReasonerFactory()
 	this.structReasoner = sReasonerFactory.createReasoner(ontology)

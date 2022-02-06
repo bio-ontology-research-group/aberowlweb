@@ -1,8 +1,8 @@
 package src
 
-// import org.semanticweb.elk.owlapi.ElkReasonerFactory;
-// import org.semanticweb.elk.owlapi.ElkReasonerConfiguration
-// import org.semanticweb.elk.reasoner.config.*
+import org.semanticweb.elk.owlapi.ElkReasonerFactory;
+import org.semanticweb.elk.owlapi.ElkReasonerConfiguration
+import org.semanticweb.elk.reasoner.config.*
 
 // import org.semanticweb.HermiT.ReasonerFactory;
 
@@ -154,16 +154,16 @@ public class RequestManager {
 	OWLOntology ontology = this.ontology
 	OWLOntologyManager manager = this.oManager
 	// /* Configure Elk */
-	// ReasonerConfiguration eConf = ReasonerConfiguration.getConfiguration()
-	// eConf.setParameter(ReasonerConfiguration.NUM_OF_WORKING_THREADS, ELK_THREADS)
-	// eConf.setParameter(ReasonerConfiguration.INCREMENTAL_MODE_ALLOWED, "true")
+	ReasonerConfiguration eConf = ReasonerConfiguration.getConfiguration()
+	eConf.setParameter(ReasonerConfiguration.NUM_OF_WORKING_THREADS, ELK_THREADS)
+	eConf.setParameter(ReasonerConfiguration.INCREMENTAL_MODE_ALLOWED, "true")
 
-	// /* OWLAPI Reasoner config, no progress monitor */
-	// OWLReasonerConfiguration rConf = new ElkReasonerConfiguration(
-	//     ElkReasonerConfiguration.getDefaultOwlReasonerConfiguration(
-	// 	new NullReasonerProgressMonitor()), eConf)
-	OWLReasonerConfiguration rConf = new SimpleConfiguration(
-            new NullReasonerProgressMonitor());
+	/* OWLAPI Reasoner config, no progress monitor */
+	OWLReasonerConfiguration rConf = new ElkReasonerConfiguration(
+	    ElkReasonerConfiguration.getDefaultOwlReasonerConfiguration(
+		new NullReasonerProgressMonitor()), eConf)
+	// OWLReasonerConfiguration rConf = new SimpleConfiguration(
+        //     new NullReasonerProgressMonitor());
 	this.oReasoner = reasonerFactory.createReasoner(ontology, rConf);
 	this.oReasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 

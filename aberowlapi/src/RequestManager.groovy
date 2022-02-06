@@ -5,8 +5,8 @@ import org.semanticweb.elk.owlapi.ElkReasonerConfiguration
 import org.semanticweb.elk.reasoner.config.*
 
 // import org.semanticweb.HermiT.ReasonerFactory;
+// import uk.ac.manchester.cs.jfact.JFactFactory;
 
-import uk.ac.manchester.cs.jfact.JFactFactory;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.reasoner.*
 import org.semanticweb.owlapi.reasoner.structural.StructuralReasoner

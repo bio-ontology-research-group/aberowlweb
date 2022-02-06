@@ -150,7 +150,7 @@ public class RequestManager {
 	    preferredLanguageMap.put(annotationProperty, langs);
 	}
 
-	OWLReasonerFactory reasonerFactory = new JFactFactory();
+	OWLReasonerFactory reasonerFactory = new ElkReasonerFactory();
 	OWLOntology ontology = this.ontology
 	OWLOntologyManager manager = this.oManager
 	// /* Configure Elk */

@@ -1,11 +1,13 @@
 @Grapes([
-	  @Grab(group='org.semanticweb.elk', module='elk-owlapi', version='0.4.2'),
-          @Grab(group='net.sourceforge.owlapi', module='owlapi-api', version='4.2.3'),
-          @Grab(group='net.sourceforge.owlapi', module='owlapi-apibinding', version='4.2.3'),
-	  @Grab(group='net.sourceforge.owlapi', module='owlapi-impl', version='4.2.3'),
-          @Grab(group='net.sourceforge.owlapi', module='owlapi-parsers', version='4.2.3'),
-	  @Grab(group='org.slf4j', module='slf4j-nop', version='1.7.25'),
-	])
+    @Grab(group='org.semanticweb.elk', module='elk-owlapi', version='0.4.2'),
+    @Grab(group='net.sourceforge.owlapi', module='owlapi-api', version='4.2.3'),
+    @Grab(group='net.sourceforge.owlapi', module='owlapi-apibinding', version='4.2.3'),
+    @Grab(group='net.sourceforge.owlapi', module='owlapi-impl', version='4.2.3'),
+    @Grab(group='net.sourceforge.owlapi', module='owlapi-parsers', version='4.2.3'),
+    @Grab(group='org.slf4j', module='slf4j-nop', version='1.7.25'),
+    @Grab(group='ch.qos.reload4j', module='reload4j', version='1.2.18.5'),
+    @GrabExclude(group='log4j', module='log4j'),
+])
 
 import org.semanticweb.owlapi.model.parameters.*
 import org.semanticweb.elk.owlapi.ElkReasonerFactory;

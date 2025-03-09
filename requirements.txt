@@ -1,4 +1,4 @@
-celery==4.4.2
+celery==5.2.2
 certifi==2017.7.27.1
 chardet==3.0.4
 Cython==0.28.5
